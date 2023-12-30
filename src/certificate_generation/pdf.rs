@@ -49,7 +49,7 @@ impl PDF {
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
-    use chrono::NaiveDate;
+    use chrono::{NaiveDateTime, TimeZone, Utc};
     use crate::certificate_generation::{Athlete, CompetitionType, Group};
     use super::PDF;
 
@@ -73,10 +73,11 @@ mod tests {
 
     #[test]
     fn write_decathlon_certificate() {
+        let birthday = NaiveDateTime::parse_from_str("1997.03.22 0:0:0" , "%Y.%m.%d %H:%M:%S").unwrap();
         let athlete = Athlete::new(
             "Test",
             "Person",
-            NaiveDate::from_ymd_opt(1997, 03, 22),
+            Some(Utc.from_utc_datetime(&birthday)),
             "M",
             Vec::new(),
             CompetitionType::Decathlon
@@ -98,10 +99,11 @@ mod tests {
 
     #[test]
     fn write_triathlon_certificate() {
+        let birthday = NaiveDateTime::parse_from_str("1997.03.22 0:0:0" , "%Y.%m.%d %H:%M:%S").unwrap();
         let athlete = Athlete::new(
             "Test",
             "Person",
-            NaiveDate::from_ymd_opt(1997, 03, 22),
+            Some(Utc.from_utc_datetime(&birthday)),
             "M",
             Vec::new(),
             CompetitionType::Triathlon
@@ -123,10 +125,11 @@ mod tests {
 
     #[test]
     fn write_pentathlon_certificate() {
+        let birthday = NaiveDateTime::parse_from_str("1997.03.22 0:0:0" , "%Y.%m.%d %H:%M:%S").unwrap();
         let athlete = Athlete::new(
             "Test",
             "Person",
-            NaiveDate::from_ymd_opt(1997, 03, 22),
+            Some(Utc.from_utc_datetime(&birthday)),
             "M",
             Vec::new(),
             CompetitionType::Pentathlon

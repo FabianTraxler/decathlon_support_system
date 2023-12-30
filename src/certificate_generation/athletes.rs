@@ -1,12 +1,16 @@
 use super::achievements::Achievement;
-use chrono::naive::NaiveDate;
-use serde::Deserialize;
+use chrono::{DateTime, Utc};
+use chrono::serde::ts_seconds_option;
+use serde::{Deserialize, Serialize};
 use super::CompetitionType;
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub use super::Float;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct Athlete {
     name: String,
     surname: String,
-    birth_date: Option<NaiveDate>,
+    #[serde(with = "ts_seconds_option")]
+    birth_date: Option<DateTime<Utc>>,
     gender: String,
     achievements: Vec<Achievement>,
     competition_type: CompetitionType
@@ -16,7 +20,7 @@ impl Athlete {
     pub fn new(
         name: &str,
         surname: &str,
-        birth_date: Option<NaiveDate>,
+        birth_date: Option<DateTime<Utc>>,
         gender: &str,
         achievements: Vec<Achievement>,
         competition_type: CompetitionType
@@ -35,7 +39,7 @@ impl Athlete {
         &self.gender
     }
 
-    pub fn birth_date(&self) -> Option<NaiveDate> {
+    pub fn birth_date(&self) -> Option<DateTime<Utc>> {
         self.birth_date
     }
 
@@ -45,6 +49,11 @@ impl Athlete {
 
     pub fn competition_type(&self) -> &CompetitionType {
         &self.competition_type
+    }
+
+    pub fn total_point(&self) -> Float {
+        // TODO: Sum all points of all achievements
+        Float::new(0,0)
     }
 }
 
@@ -70,3 +79,21 @@ impl AthleteID {
     }
 }
 
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use crate::certificate_generation::{Athlete, preprocess_json};
+
+    #[test]
+    fn get_final_points() {
+        if let Ok(contents) = fs::read_to_string("tests/athlete.json") {
+            let processed_content = preprocess_json(contents.as_str());
+            let athlete: Athlete = serde_json::from_str(processed_content.as_str()).unwrap();
+            println!("{:?}", athlete);
+
+        } else {
+            panic!("Failed to read the file");
+        }
+    }
+}

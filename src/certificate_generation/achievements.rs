@@ -1,72 +1,16 @@
-use std::cmp::Ordering;
-use std::fmt;
-use serde::de::Error;
 use serde::{Deserialize, Serialize};
-use crate::certificate_generation::Athlete;
+use crate::certificate_generation::{Athlete, Float, preprocess_json};
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Achievement {
     Height(HeightResult),
     Distance(DistanceResult),
     Time(TimeResult),
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-struct Float {
-    integral: u32,
-    fractional: u32,
-}
-
-impl Float {
-    fn new(i: u32, f: u32) -> Self {
-        Float {
-            integral: i,
-            fractional: f,
-        }
-    }
-}
-impl PartialOrd for Float {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.integral > other.integral {
-            Some(Ordering::Greater)
-        } else if self.integral == other.integral {
-            if self.fractional > other.fractional {
-                Some(Ordering::Greater)
-            } else if self.fractional == other.fractional {
-              Some(Ordering::Equal)
-            } else {
-                Some(Ordering::Less)
-            }
-        } else {
-            Some(Ordering::Less)
-        }
-    }
-}
-impl Ord for Float {
-    fn cmp(&self, other: &Self) -> Ordering {
-        if self.integral > other.integral {
-            Ordering::Greater
-        } else if self.integral == other.integral {
-            if self.fractional > other.fractional {
-                Ordering::Greater
-            } else if self.fractional == other.fractional {
-                Ordering::Equal
-            } else {
-                Ordering::Less
-            }
-        } else {
-            Ordering::Less
-        }
-    }
-}
-impl fmt::Display for Float {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{},{}", self.integral, self.fractional)
-    }
-}
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-struct HeightResult {
+pub struct HeightResult {
     name: String,
     start_height: u32,
     height_increase: u32,
@@ -82,7 +26,7 @@ impl HeightResult {
 
         match result {
             Ok(result) => Ok(result),
-            Err(E) => Err(E)
+            Err(e) => Err(e)
         }
     }
 
@@ -112,7 +56,7 @@ impl HeightResult {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-struct DistanceResult{
+pub struct DistanceResult{
     name: String,
     first_try: Float,
     second_try: Float,
@@ -133,7 +77,7 @@ impl DistanceResult {
                 result.final_result = Some(result.final_result());
                 Ok(result)
             }
-            Err(E) => Err(E)
+            Err(e) => Err(e)
         }
     }
 
@@ -158,7 +102,7 @@ impl DistanceResult {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-struct TimeResult {
+pub struct TimeResult {
     name: String,
     final_result: Float,
     unit: String,
@@ -173,7 +117,7 @@ impl TimeResult {
 
         match result {
             Ok(result) => Ok(result),
-            Err(E) => Err(E)
+            Err(e) => Err(e)
         }
     }
 
@@ -187,30 +131,6 @@ impl TimeResult {
     }
 }
 
-
-fn preprocess_json<'a>(json_string: &'a str) -> String {
-    let json_fields: Vec<&str> = json_string.split(",").collect();
-    let mut new_json: Vec<String> = vec![];
-
-    for field in json_fields {
-        if field.contains(".") {
-            let key_value: Vec<&str> = field.split(":").collect();
-            let key = key_value[0];
-            let value = key_value[1];
-            let integral_fractional: Vec<&str> = value.split(".").collect();
-            let integral = integral_fractional[0];
-            let fractional = integral_fractional[1];
-            let new_field = vec![key, ":", r#"{"integral":"#, integral, r#", "fractional":"#, fractional, "}"];
-            new_json.push(new_field.join(" "));
-
-        } else {
-            new_json.push(field.to_string());
-        }
-    }
-
-    new_json.join(",").to_string()
-
-}
 
 #[cfg(test)]
 mod tests {

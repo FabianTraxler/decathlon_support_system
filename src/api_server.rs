@@ -1,14 +1,15 @@
+use crate::Storage;
 use actix_web::{web, App, HttpServer, Responder};
 use std::io::Result;
 
-mod routes;
+mod athlete_routes;
 
 #[actix_web::main]
-pub async fn start_server(db_handler: web::Data<super::DataBase>) -> Result<()> {
+pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<()> {
     HttpServer::new(move || {
         App::new().app_data(db_handler.clone()).service(
             web::scope("/api")
-                .configure(routes::configure_routes)
+                .configure(athlete_routes::configure_routes)
                 .route("/status", web::get().to(status)),
         )
     })
