@@ -1,8 +1,11 @@
 mod pdf_generation;
 use pdf_generation::{new_group_result, new_decathlon_certificate, new_pentathlon_certificate, new_triathlon_certificate, PdfDocumentReference};
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::BufWriter;
+use std::path::Path;
+use log::info;
 use crate::certificate_generation::{CompetitionType, Athlete, Group};
 
 //const FONT_DIR: &'static str = "assets/fonts";
@@ -29,6 +32,11 @@ impl PDF {
     }
 
     pub fn write_pdf(self, path: &str) -> Result<(), Box<dyn Error>> {
+        let parent = Path::new(path).parent();
+        match parent {
+            Some(value) => fs::create_dir_all(value)?,
+            None => info!("Parent folder does not exists")
+        }
         self.content.save(&mut BufWriter::new(File::create(path)?))?;
         Ok(())
     }
@@ -49,7 +57,7 @@ mod tests {
     fn write_group_resutt() {
         let group = Group::new("Gruppe 1", HashSet::new());
         let pdf = PDF::new_group_result(&group);
-        let pdf_write_result = pdf.write_pdf("test_output/write_group_result.pdf");
+        let pdf_write_result = pdf.write_pdf("tests/output/write_group_result.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -74,7 +82,7 @@ mod tests {
             CompetitionType::Decathlon
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("test_output/write_decathlon_certificate.pdf");
+        let pdf_write_result = pdf.write_pdf("tests/output/write_decathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -99,7 +107,7 @@ mod tests {
             CompetitionType::Triathlon
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("test_output/write_triathlon_certificate.pdf");
+        let pdf_write_result = pdf.write_pdf("tests/output/write_triathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -124,7 +132,7 @@ mod tests {
             CompetitionType::Pentathlon
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("test_output/write_pentathlon_certificate.pdf");
+        let pdf_write_result = pdf.write_pdf("tests/output/write_pentathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
