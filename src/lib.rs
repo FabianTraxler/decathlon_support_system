@@ -4,18 +4,25 @@ use log::info;
 use std::error::Error;
 
 mod api_server;
-mod collections;
+mod certificate_generation;
+mod database;
 
-pub struct DataBase;
+use certificate_generation::PersistantStorage;
+use database::in_memory_db::InMemoryDB;
+
+trait Storage: PersistantStorage {}
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     env_logger::init();
 
-    info!("Connection to Database");
-    let db = DataBase {};
-    let db_state = web::Data::new(db);
+    info!("Connecting to Database...");
+    let db = InMemoryDB::new();
+    let db_state = web::Data::new(Box::new(db) as Box<dyn Storage + Send + Sync>);
+    info!("DB connection successfull!");
 
     info!("Starting Rust API server...");
     let _server = api_server::start_server(db_state);
+
+    info!("Server shut down! Exiting Program");
     Ok(())
 }
