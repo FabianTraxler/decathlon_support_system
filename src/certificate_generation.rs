@@ -7,15 +7,18 @@ mod pdf;
 use std::cmp::Ordering;
 use std::fmt;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
-pub use groups::{AgeGroup, AgeGroupID, Group, GroupID};
+pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
 
 pub trait PersistantStorage {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
-    fn write_athlete(&mut self, athlete_id: AthleteID, athlete: Athlete);
+    fn write_athlete(&mut self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
+    fn update_athlete(&mut self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
     fn get_group(&self, group_id: &GroupID) -> Option<Group>;
-    fn write_group(&mut self, group_id: GroupID, group: Group);
+    fn write_group_store(&mut self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
+    fn write_group(&mut self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
     fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
 }
 
