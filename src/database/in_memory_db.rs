@@ -2,15 +2,17 @@ use crate::certificate_generation::{
     AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore
 };
 use std::collections::{HashMap, HashSet};
-use log::{debug, warn};
+use std::error::Error;
+use std::sync::Mutex;
+use log::warn;
 
 use crate::{PersistantStorage};
 use crate::database::db_errors::ItemNotFound;
 
 
 pub struct InMemoryDB {
-    athlete_store: HashMap<AthleteID, Athlete>,
-    group_store: HashMap<GroupID, GroupStore>,
+    athlete_store: Mutex<HashMap<AthleteID, Athlete>>,
+    group_store: Mutex<HashMap<GroupID, GroupStore>>
 }
 
 unsafe impl Send for InMemoryDB {}
@@ -20,8 +22,8 @@ unsafe impl Sync for InMemoryDB {}
 impl InMemoryDB {
     pub fn new() -> Self {
         InMemoryDB {
-            athlete_store: HashMap::new(),
-            group_store: HashMap::new(),
+            athlete_store: Mutex::new(HashMap::new()),
+            group_store: Mutex::new(HashMap::new()),
             // result_store: HashMap::new(),
         }
     }
@@ -29,7 +31,7 @@ impl InMemoryDB {
     fn select_age_group_athletes(&self, age_group_selector: AgeGroupSelector) -> HashSet<Athlete> {
         let mut result: HashSet<Athlete> = HashSet::new();
 
-        for athlete in self.athlete_store.values() {
+        for athlete in self.athlete_store.lock().expect("Mutex Lock posied").values() {
             if age_group_selector == *athlete {
                 result.insert(athlete.clone());
             }
@@ -41,17 +43,17 @@ impl InMemoryDB {
 
 impl PersistantStorage for InMemoryDB {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete> {
-        self.athlete_store.get(athlete_id).cloned()
+        self.athlete_store.lock().expect("Mutex Lox poised").get(athlete_id).cloned()
     }
 
-    fn write_athlete(&mut self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn std::error::Error>> {
-        match self.athlete_store.insert(athlete_id, athlete) {
+    fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn std::error::Error>> {
+        match self.athlete_store.lock().expect("Mutex Lox poised").insert(athlete_id, athlete) {
             Some(_) => Ok(String::from("Old athlete overwritten")),
             None => Ok(String::from("New athlete inserted"))
         }
     }
 
-    fn update_athlete(&mut self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn std::error::Error>> {
+    fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn std::error::Error>> {
         // TODO: Implement check if key is updated and then update key also
         let mut athlete = self.get_athlete(&athlete_id).ok_or(ItemNotFound::new("Key not found", "404"))?;
 
@@ -65,8 +67,7 @@ impl PersistantStorage for InMemoryDB {
     }
 
     fn get_group(&self, group_id: &GroupID) -> Option<Group> {
-        let group_store = self.group_store.get(group_id).cloned();
-        debug!("{:?}", group_id);
+        let group_store = self.group_store.lock().expect("Mutex Lox poised").get(group_id).cloned();
         match group_store {
             Some(group_store) => {
                 let mut athletes= HashSet::new();
@@ -83,21 +84,40 @@ impl PersistantStorage for InMemoryDB {
         }
     }
 
-    fn write_group_store(&mut self, group_id: GroupID, group: GroupStore) -> Result<String, Box<dyn std::error::Error>> {
-        match self.group_store.insert(group_id, group) {
+    fn write_group_store(&self, group_id: GroupID, group: GroupStore) -> Result<String, Box<dyn Error>> {
+        {
+            // Check if all athletes exists
+            for athlete_id in &group.athlete_ids {
+                if !self.athlete_store.lock().expect("Mutex Lock posed").contains_key(athlete_id){
+                    return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id)));
+                }
+            }
+        }
+        match self.group_store.lock().expect("Mutex Lock poised").insert(group_id, group) {
             Some(_) => Ok(String::from("Old group overwritten")),
             None => Ok(String::from("New group inserted"))
         }
     }
 
-    fn write_group(&mut self, group_id: GroupID, group: Group) -> Result<String, Box<dyn std::error::Error>> {
+    fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>> {
         let group_store = GroupStore{
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids()
         };
-        match self.group_store.insert(group_id, group_store) {
-            Some(_) => Ok(String::from("Old group overwritten")),
-            None => Ok(String::from("New group inserted"))
+
+        self.write_group_store(group_id, group_store)
+    }
+
+    fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
+        // TODO: Implement check if key is updated and then update key also
+        let mut group = self.get_group(&group_id).ok_or(ItemNotFound::new("Key not found", "404"))?;
+
+        match group.update_values(json_string, Box::new(self)) {
+            Ok(_) => {
+                self.write_group(group_id, group)?;
+                Ok(String::from("Group updated"))
+            },
+            Err(e) => Err(e)
         }
     }
 
@@ -311,6 +331,12 @@ mod tests {
     fn insert_and_access_group() {
         let mut db = InMemoryDB::new();
         let athletes = get_athletes();
+        for athlete in &athletes {
+            match db.write_athlete(AthleteID::from_athlete(&athlete), athlete.clone()) {
+                Ok(_) => {},
+                Err(e) => {panic!("Failed to write athlete: {e}");}
+            }
+        }
 
         let new_group = Group::new("Gruppe 1", athletes);
         let group_key = GroupID::new("Gruppe 1");
@@ -335,7 +361,7 @@ mod tests {
             db.write_athlete(athlete_key, athlete.clone());
         }
 
-        assert_eq!(athletes.len(), db.athlete_store.len());
+        assert_eq!(athletes.len(), db.athlete_store.lock().expect("Mutex Lock poised").len());
 
         for athlete in &athletes {
             let athlete_key = AthleteID::from_athlete(&athlete);
