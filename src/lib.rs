@@ -2,7 +2,6 @@ use actix_web::web;
 use env_logger;
 use log::info;
 use std::error::Error;
-use std::sync::Mutex;
 
 mod api_server;
 mod certificate_generation;
@@ -16,7 +15,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     info!("Connecting to Database...");
     let db = Store::new();
-    let db_state = web::Data::new(Mutex::new(Box::new(db) as Box<dyn PersistantStorage + Send + Sync>));
+    let db_state = web::Data::new(Box::new(db) as Box<dyn PersistantStorage + Send + Sync>);
     info!("DB connection successfully!");
 
     info!("Starting Rust API server...");
