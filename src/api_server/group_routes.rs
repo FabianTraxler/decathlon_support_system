@@ -1,25 +1,23 @@
-use std::sync::Mutex;
 use crate::PersistantStorage;
-use actix_web::{get, web, HttpResponse, Responder, post};
-use actix_web::web::post;
-use futures::StreamExt;
-use log::info;
+use actix_web::{get, web, HttpResponse, Responder, post, put};
+use actix_web::web::{Query};
+use crate::api_server::parse_json_body;
 
 use crate::certificate_generation::{GroupID, GroupStore};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_group);
     cfg.service(post_group);
+    cfg.service(update_group);
 }
 
 #[get("/group")]
 async fn get_group(
-    data: web::Data<Mutex<Box<dyn PersistantStorage + Send + Sync>>>,
-    query: web::Query<GroupID>,
+    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    query: Query<GroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    info!("{:?}", group_id);
-    let group = data.lock().expect("Mutex Lock poised").get_group(&group_id);
+    let group = data.get_group(&group_id);
     match group {
         Some(group) => HttpResponse::Ok()
             .body(serde_json::to_string(&group)
@@ -30,27 +28,40 @@ async fn get_group(
 
 #[post("/group")]
 async fn post_group(
-    data: web::Data<Mutex<Box<dyn PersistantStorage + Send + Sync>>>,
-    mut body: web::Payload,
+    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    body: web::Payload,
 ) -> impl Responder {
-    // Read the request body as bytes
-    let mut bytes = web::BytesMut::new();
-    while let Some(item) = body.next().await {
-        let chunk = item.unwrap();
-        bytes.extend_from_slice(&chunk);
-    }
-    let json_string = String::from_utf8_lossy(&bytes).to_string();
+    let json_string = parse_json_body(body).await;
 
     let group_store = GroupStore::from_json(json_string.as_str());
     match group_store {
         Ok(group_store) => {
-            match data.lock().unwrap().write_group_store(GroupID::from_group_store(&group_store), group_store) {
+            match data.write_group_store(GroupID::from_group_store(&group_store), group_store) {
                 Ok(msg) => {
                     HttpResponse::Ok().body(msg)
                 }
-                Err(e) => HttpResponse::InternalServerError().body(format!("Error inserting Athlete: {}", e))
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error inserting Group: {}", e))
             }
         }
         Err(e) => HttpResponse::InternalServerError().body(format!("Error parsing Athlete JSON: {}", e))
+    }
+}
+
+
+#[put("/group")]
+async fn update_group(
+    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    body: web::Payload,
+    query: Query<GroupID>
+) -> impl Responder {
+    let json_string = parse_json_body(body).await;
+
+    let group_id = query.into_inner();
+
+    match data.update_group(group_id, json_string.as_str()) {
+        Ok(msg) => {
+            HttpResponse::Ok().body(msg)
+        }
+        Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Group: {}", e))
     }
 }
