@@ -12,6 +12,7 @@ pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
 pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
 pub use achievements::{Achievement, AchievementID};
+pub use pdf::PDF;
 
 pub trait PersistentStorage {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;

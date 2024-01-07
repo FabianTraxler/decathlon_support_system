@@ -5,13 +5,31 @@ use std::fs;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::Path;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+use actix_web::body::{BodySize, MessageBody};
+use actix_web::web::Bytes;
 use log::info;
 use crate::certificate_generation::{CompetitionType, Athlete, Group};
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
 
-struct PDF {
+pub struct PDFMessage {
+    body: Vec<u8>
+}
+impl MessageBody for PDFMessage {
+    type Error = printpdf::Error;
+    fn size(&self) -> BodySize {
+        BodySize::Sized(self.body.len() as u64)
+    }
+
+    fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, Self::Error>>> {
+        let bytes = Bytes::from(self.body.clone());
+        Poll::Ready(Some(Ok(bytes)))    }
+}
+
+pub struct PDF {
     content: PdfDocumentReference,
 }
 
@@ -41,8 +59,11 @@ impl PDF {
         Ok(())
     }
 
-    pub fn to_binary(self) -> Result<Vec<u8>, printpdf::Error> {
-        self.content.save_to_bytes()
+    pub fn to_http_message(self) -> Result<PDFMessage, printpdf::Error> {
+        let http_message = PDFMessage {
+            body: self.content.save_to_bytes()?
+        };
+        Ok(http_message)
     }
 }
 

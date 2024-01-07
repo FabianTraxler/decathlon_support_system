@@ -6,6 +6,7 @@ use crate::certificate_generation::PersistentStorage;
 mod athlete_routes;
 mod group_routes;
 mod achievement_routes;
+mod certificate_routes;
 
 #[actix_web::main]
 pub async fn start_server(db_handler: web::Data<Box<dyn PersistentStorage + Send + Sync>>) -> Result<()> {
@@ -15,6 +16,7 @@ pub async fn start_server(db_handler: web::Data<Box<dyn PersistentStorage + Send
                 .configure(athlete_routes::configure_routes)
                 .configure(group_routes::configure_routes)
                 .configure(achievement_routes::configure_routes)
+                .configure(certificate_routes::configure_routes)
                 .route("/status", web::get().to(status)),
         )
     })
