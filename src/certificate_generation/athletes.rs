@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use super::achievements::Achievement;
 use chrono::{DateTime, LocalResult, TimeZone, Utc};
 use chrono::serde::ts_seconds_option;
@@ -8,14 +9,14 @@ use super::{CompetitionType, preprocess_json};
 pub use super::Float;
 
 /// Athlete struct that contains all information for an athlete as well as all their achievements
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Athlete {
     name: String,
     surname: String,
     #[serde(with = "ts_seconds_option")]
     birth_date: Option<DateTime<Utc>>,
     gender: String,
-    achievements: Vec<Achievement>,
+    achievements: HashMap<String, Achievement>,
     competition_type: CompetitionType
 }
 
@@ -25,7 +26,7 @@ impl Athlete {
         surname: &str,
         birth_date: Option<DateTime<Utc>>,
         gender: &str,
-        achievements: Vec<Achievement>,
+        achievements: HashMap<String, Achievement>,
         competition_type: CompetitionType
     ) -> Self {
         Athlete {
@@ -97,6 +98,19 @@ impl Athlete {
 
 
         Ok(())
+    }
+
+    pub fn get_achievement(&self, query_name: &str) -> Option<&Achievement> {
+        self.achievements.get(&query_name.to_string())
+    }
+
+    pub fn add_achievement(&mut self, achievement: Achievement) -> Result<String, Box<dyn Error>> {
+        if self.achievements.contains_key(&achievement.name()) {
+            return Err(Box::from("Achievement exists. Please update existing one!"));
+        }
+
+        self.achievements.insert(achievement.name().clone(), achievement);
+        Ok(String::from("Achievement inserted"))
     }
 }
 

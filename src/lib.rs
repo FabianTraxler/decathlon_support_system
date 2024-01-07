@@ -7,7 +7,7 @@ mod api_server;
 mod certificate_generation;
 mod database;
 
-use certificate_generation::PersistantStorage;
+use certificate_generation::PersistentStorage;
 use database::Store;
 
 pub fn run() -> Result<(), Box<dyn Error>> {
@@ -15,7 +15,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     info!("Connecting to Database...");
     let db = Store::new();
-    let db_state = web::Data::new(Box::new(db) as Box<dyn PersistantStorage + Send + Sync>);
+    let db_state = web::Data::new(Box::new(db) as Box<dyn PersistentStorage + Send + Sync>);
     info!("DB connection successfully!");
 
     info!("Starting Rust API server...");

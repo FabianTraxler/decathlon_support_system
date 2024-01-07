@@ -1,4 +1,4 @@
-use crate::PersistantStorage;
+use crate::PersistentStorage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use actix_web::web::{Query};
 use crate::api_server::parse_json_body;
@@ -13,7 +13,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
 #[get("/group")]
 async fn get_group(
-    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
     query: Query<GroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
@@ -28,7 +28,7 @@ async fn get_group(
 
 #[post("/group")]
 async fn post_group(
-    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
     body: web::Payload,
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
@@ -50,7 +50,7 @@ async fn post_group(
 
 #[put("/group")]
 async fn update_group(
-    data: web::Data<Box<dyn PersistantStorage + Send + Sync>>,
+    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
     body: web::Payload,
     query: Query<GroupID>
 ) -> impl Responder {

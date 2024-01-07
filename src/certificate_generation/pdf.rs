@@ -48,14 +48,14 @@ impl PDF {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
+    use std::collections::HashMap;
     use chrono::{NaiveDateTime, TimeZone, Utc};
     use crate::certificate_generation::{Athlete, CompetitionType, Group};
     use super::PDF;
 
     #[test]
     fn write_group_resutt() {
-        let group = Group::new("Gruppe 1", HashSet::new());
+        let group = Group::new("Gruppe 1", Vec::new());
         let pdf = PDF::new_group_result(&group);
         let pdf_write_result = pdf.write_pdf("tests/output/write_group_result.pdf");
         match pdf_write_result {
@@ -79,7 +79,7 @@ mod tests {
             "Person",
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
-            Vec::new(),
+            HashMap::new(),
             CompetitionType::Decathlon
         );
         let pdf = PDF::new_certificate(&athlete);
@@ -105,7 +105,7 @@ mod tests {
             "Person",
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
-            Vec::new(),
+            HashMap::new(),
             CompetitionType::Triathlon
         );
         let pdf = PDF::new_certificate(&athlete);
@@ -131,7 +131,7 @@ mod tests {
             "Person",
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
-            Vec::new(),
+            HashMap::new(),
             CompetitionType::Pentathlon
         );
         let pdf = PDF::new_certificate(&athlete);

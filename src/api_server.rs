@@ -1,18 +1,20 @@
 use actix_web::{web, App, HttpServer, Responder};
 use std::io::Result;
 use futures::StreamExt;
-use crate::certificate_generation::PersistantStorage;
+use crate::certificate_generation::PersistentStorage;
 
 mod athlete_routes;
 mod group_routes;
+mod achievement_routes;
 
 #[actix_web::main]
-pub async fn start_server(db_handler: web::Data<Box<dyn PersistantStorage + Send + Sync>>) -> Result<()> {
+pub async fn start_server(db_handler: web::Data<Box<dyn PersistentStorage + Send + Sync>>) -> Result<()> {
     HttpServer::new(move || {
         App::new().app_data(db_handler.clone()).service(
             web::scope("/api")
                 .configure(athlete_routes::configure_routes)
                 .configure(group_routes::configure_routes)
+                .configure(achievement_routes::configure_routes)
                 .route("/status", web::get().to(status)),
         )
     })

@@ -11,8 +11,9 @@ use std::error::Error;
 pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
 pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
+pub use achievements::{Achievement, AchievementID};
 
-pub trait PersistantStorage {
+pub trait PersistentStorage {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
     fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
     fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
@@ -21,6 +22,9 @@ pub trait PersistantStorage {
     fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
     fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
     fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
+    fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;
+    fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>>;
+    fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -41,6 +45,16 @@ impl Float {
         Float {
             integral: i,
             fractional: f,
+        }
+    }
+
+    fn from_u32(value: u32) -> Self {
+        let integral = value as i64;
+        let fractional = value - integral as u32;
+
+        Float {
+            integral: integral as u32,
+            fractional
         }
     }
 }

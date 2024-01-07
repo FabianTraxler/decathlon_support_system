@@ -1,11 +1,68 @@
 use serde::{Deserialize, Serialize};
-use crate::certificate_generation::{Athlete, Float, preprocess_json};
+use std::error::Error;
+use serde_json::Value;
+use crate::certificate_generation::{Athlete, AthleteID, Float, preprocess_json};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Achievement {
     Height(HeightResult),
     Distance(DistanceResult),
     Time(TimeResult),
+}
+
+impl Achievement {
+    pub fn name(&self) -> String {
+        match self {
+            Achievement::Distance(r) => r.name.clone(),
+            Achievement::Height(r) => r.name.clone(),
+            Achievement::Time(r) => r.name.clone()
+        }
+    }
+
+    pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
+        match self {
+            Achievement::Distance(r) => r.update_values(json_string)?,
+            Achievement::Height(r) => r.update_values(json_string)?,
+            Achievement::Time(r) => r.update_values(json_string)?
+        }
+        Ok(())
+    }
+
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
+pub struct AchievementID {
+    pub athlete_id: Option<AthleteID>,
+    pub name: String,
+    athlete_name: Option<String>,
+}
+
+impl AchievementID {
+    pub fn build(athlete_id: AthleteID, achievement: &Achievement) -> AchievementID {
+        AchievementID {
+            athlete_id: Some(athlete_id),
+            name: achievement.name(),
+            athlete_name: None,
+        }
+    }
+
+
+    pub fn athlete_id(&self) -> Option<AthleteID> {
+        match &self.athlete_id {
+            Some(athlete_id) => Some(athlete_id.clone()),
+            None => {
+                let athlete_name = self.athlete_name.clone()?;
+                let name_parts: Vec<&str> = athlete_name.split("_").collect();
+                if name_parts.len() != 2 {
+                    None
+                } else {
+                    let name = name_parts[0];
+                    let surname = name_parts[1];
+                    Some(AthleteID::new(name, surname))
+                }
+            }
+        }
+    }
 }
 
 
@@ -21,7 +78,6 @@ pub struct HeightResult {
 
 impl HeightResult {
     pub fn build(json_string: &str) -> Result<Self, serde_json::error::Error> {
-
         let result: Result<Self, serde_json::error::Error> = serde_json::from_str(json_string);
 
         match result {
@@ -32,7 +88,7 @@ impl HeightResult {
 
     pub fn get_points(&self, athlete: Athlete) -> Float {
         // TODO: Implement point scheme
-        Float::new(0,0)
+        Float::new(0, 0)
     }
 
     pub fn final_result(&self) -> u32 {
@@ -53,10 +109,38 @@ impl HeightResult {
 
         jumped_height
     }
+
+    pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
+        let json_value: Value = serde_json::from_str(json_string)?;
+
+        if let Some(_) = json_value.get("start_height").and_then(Value::as_i64) {
+            return Err("Start height not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(_) = json_value.get("height_increase").and_then(Value::as_i64) {
+            return Err("Height increase not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(_) = json_value.get("unit").and_then(Value::as_i64) {
+            return Err("Unit not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(_) = json_value.get("name").and_then(Value::as_i64) {
+            return Err("Name not updated. Please create new achievement for that kind of change")?;
+        }
+
+        if let Some(tries) = json_value.get("tries").and_then(Value::as_str) {
+            self.tries = tries.to_string();
+            self.final_result = Some(self.compute_final_result());
+        }
+
+        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
+            self.final_result = Some(final_result as u32);
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
-pub struct DistanceResult{
+pub struct DistanceResult {
     name: String,
     first_try: Float,
     second_try: Float,
@@ -83,7 +167,7 @@ impl DistanceResult {
 
     pub fn get_points(&self, athlete: Athlete) -> Float {
         // TODO: Implement point scheme
-        Float::new(0,0)
+        Float::new(0, 0)
     }
 
     pub fn final_result(&self) -> Float {
@@ -95,9 +179,43 @@ impl DistanceResult {
             Some(result) => {
                 let result = *result;
                 result.clone()
-            },
-            None => Float::new(0,0)
+            }
+            None => Float::new(0, 0)
         }
+    }
+
+    pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
+        let json_value: Value = serde_json::from_str(json_string)?;
+
+        if let Some(_) = json_value.get("unit").and_then(Value::as_i64) {
+            return Err("Unit not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(_) = json_value.get("name").and_then(Value::as_i64) {
+            return Err("Name not updated. Please create new achievement for that kind of change")?;
+        }
+
+        let mut new_try = false;
+
+        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_u64) {
+            self.first_try = Float::from_u32(first_try as u32);
+            new_try = true;
+        }
+        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_u64) {
+            self.second_try = Float::from_u32(second_try as u32);
+            new_try = true;
+        }
+        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_u64) {
+            self.third_try = Float::from_u32(third_try as u32);
+            new_try = true;
+        }
+        if new_try {
+            self.final_result = Some(self.final_result());
+        }
+
+        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
+            self.final_result = Some(Float::from_u32(final_result as u32));
+        }
+        Ok(())
     }
 }
 
@@ -123,11 +241,26 @@ impl TimeResult {
 
     pub fn get_points(&self, athlete: Athlete) -> Float {
         // TODO: Implement point scheme
-        Float::new(0,0)
+        Float::new(0, 0)
     }
 
     pub fn final_result(&self) -> Float {
         self.final_result.clone()
+    }
+
+    pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
+        let json_value: Value = serde_json::from_str(json_string)?;
+
+        if let Some(_) = json_value.get("unit").and_then(Value::as_i64) {
+            return Err("Unit not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(_) = json_value.get("name").and_then(Value::as_i64) {
+            return Err("Name not updated. Please create new achievement for that kind of change")?;
+        }
+        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
+            self.final_result = Float::from_u32(final_result as u32);
+        }
+        Ok(())
     }
 }
 
@@ -149,7 +282,7 @@ mod tests {
         "#;
         let achievement = DistanceResult::build(achievement_json).expect("Achievement not loaded");
 
-        assert_eq!(achievement.final_result(), Float::new(1,30));
+        assert_eq!(achievement.final_result(), Float::new(1, 30));
     }
 
 
@@ -164,7 +297,7 @@ mod tests {
         "#;
         let achievement = TimeResult::build(achievement_json).expect("Achievement not loaded");
 
-        assert_eq!(achievement.final_result(), Float::new(9,20));
+        assert_eq!(achievement.final_result(), Float::new(9, 20));
     }
 
     #[test]

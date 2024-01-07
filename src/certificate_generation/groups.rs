@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 use std::error::Error;
-use std::fmt::format;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{Athlete, AthleteID, PersistantStorage};
+use super::{Athlete, AthleteID, PersistentStorage};
 
 /// Group representing the group and links to the athletes in the group
 /// Mainly used for separate storage of Groups and Athletes
@@ -25,11 +24,11 @@ impl GroupStore {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Group {
     name: String,
-    athletes: HashSet<Athlete>,
+    athletes: Vec<Athlete>,
 }
 
 impl Group {
-    pub fn new(groupname: &str, athletes: HashSet<Athlete>) -> Self {
+    pub fn new(groupname: &str, athletes: Vec<Athlete>) -> Self {
         Group {
             name: groupname.to_string(),
             athletes,
@@ -44,7 +43,7 @@ impl Group {
         self.athletes.iter().map(AthleteID::from_athlete).collect()
     }
 
-    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn PersistantStorage>) -> Result<(), Box<dyn Error>>{
+    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn PersistentStorage>) -> Result<(), Box<dyn Error>>{
         let json_value: Value = serde_json::from_str(json_str)?;
 
         // Update specific fields from JSON to struct
@@ -54,7 +53,7 @@ impl Group {
         if let Some(athletes) = json_value.get("athletes").and_then(Value::as_array) {
             for athlete_value in athletes {
                 match serde_json::from_value(athlete_value.clone()) {
-                    Ok(athlete) => {self.athletes.insert(athlete);},
+                    Ok(athlete) => {self.athletes.push(athlete);},
                     Err(e) => {return Err(Box::try_from(e).expect("Parsing Error should be convertible"));}
                 }
             }
@@ -64,7 +63,7 @@ impl Group {
                 match serde_json::from_value(athlete_id_value.clone()) {
                     Ok(athlete_id) => {
                         match db.get_athlete(&athlete_id){
-                            Some(athlete) => {self.athletes.insert(athlete);}
+                            Some(athlete) => {self.athletes.push(athlete);}
                             None => {return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id)));}
                         };
                     },
@@ -107,14 +106,18 @@ impl GroupID {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AgeGroup {
     age_identifier: String,
-    athletes: HashSet<Athlete>,
+    athletes: Vec<Athlete>,
 }
 impl AgeGroup {
-    pub fn new(age_identifier: &str, athletes: HashSet<Athlete>) -> Self {
+    pub fn new(age_identifier: &str, athletes: Vec<Athlete>) -> Self {
         AgeGroup {
             age_identifier: age_identifier.to_string(),
             athletes,
         }
+    }
+
+    pub fn athletes(&self) -> &Vec<Athlete> {
+        &self.athletes
     }
 }
 
