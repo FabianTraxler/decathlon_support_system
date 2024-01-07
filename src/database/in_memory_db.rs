@@ -143,15 +143,18 @@ impl PersistentStorage for InMemoryDB {
         let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
             .ok_or(ItemNotFound::new("Athlete not found", "404"))?;
         athlete.add_achievement(achievement)?;
-        self.write_athlete(AthleteID::from_athlete(&athlete), athlete)
+        self.write_athlete(AthleteID::from_athlete(&athlete), athlete)?;
+        Ok(String::from("Achievement added"))
     }
 
     fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>> {
         let mut achievement = self.get_achievement(&achievement_id).ok_or(ItemNotFound::new("Key not found", "404"))?;
         match achievement.update_values(json_string) {
             Ok(_) => {
-                self.write_achievement(achievement_id, achievement)?;
-                Ok(String::from("Group updated"))
+                let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
+                    .ok_or(ItemNotFound::new("Athlete not found", "404"))?;
+                athlete.update_achievement(achievement)?;
+                self.write_athlete(AthleteID::from_athlete(&athlete), athlete)?;                Ok(String::from("Achievement updated"))
             }
             Err(e) => Err(e)
         }    }

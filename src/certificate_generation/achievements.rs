@@ -28,7 +28,19 @@ impl Achievement {
         Ok(())
     }
 
-}
+    pub fn compute_final_result(&mut self) {
+        match self {
+            Achievement::Distance(r) => r.final_result = Some(r.final_result()),
+            Achievement::Height(r) => r.final_result = Some(r.final_result()),
+            Achievement::Time(r) => r.final_result = r.final_result(),
+        }
+    }
+
+    pub fn from_json(json_string: &str) -> Result<Self, serde_json::error::Error> {
+        let processed_content = preprocess_json(json_string);
+        let achievement: Achievement = serde_json::from_str(processed_content.as_str())?;
+        Ok(achievement)
+    }}
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AchievementID {

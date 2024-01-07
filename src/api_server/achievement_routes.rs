@@ -29,7 +29,8 @@ async fn post_achievement(
     query: web::Query<AthleteID>,
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
-    let achievement: serde_json::error::Result<Achievement> = serde_json::from_str(json_string.as_str());
+
+    let achievement = Achievement::from_json(json_string.as_str());
     let athlete_id = query.into_inner();
     match achievement {
         Ok(achievement) => {
@@ -40,7 +41,7 @@ async fn post_achievement(
                 Err(e) => HttpResponse::InternalServerError().body(format!("Error inserting Achievement: {}", e))
             }
         }
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error parsing Achievement JSON: {}", e))
+        Err(e) => HttpResponse::BadRequest().body(format!("Error parsing Achievement JSON: {}", e))
     }
 }
 

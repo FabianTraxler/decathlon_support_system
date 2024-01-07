@@ -104,10 +104,18 @@ impl Athlete {
         self.achievements.get(&query_name.to_string())
     }
 
-    pub fn add_achievement(&mut self, achievement: Achievement) -> Result<String, Box<dyn Error>> {
+    pub fn add_achievement(&mut self, mut achievement: Achievement) -> Result<String, Box<dyn Error>> {
         if self.achievements.contains_key(&achievement.name()) {
             return Err(Box::from("Achievement exists. Please update existing one!"));
         }
+        achievement.compute_final_result();
+
+        self.achievements.insert(achievement.name().clone(), achievement);
+        Ok(String::from("Achievement inserted"))
+    }
+
+    pub fn update_achievement(&mut self, mut achievement: Achievement) -> Result<String, Box<dyn Error>> {
+        achievement.compute_final_result();
 
         self.achievements.insert(achievement.name().clone(), achievement);
         Ok(String::from("Achievement inserted"))
