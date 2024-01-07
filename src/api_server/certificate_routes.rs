@@ -1,7 +1,5 @@
-use std::fmt::format;
-use actix_web::{get, web, HttpResponse, Responder, post, put};
-use super::parse_json_body;
-use crate::certificate_generation::{PDF, AchievementID, AthleteID, PersistentStorage};
+use actix_web::{get, web, HttpResponse, Responder};
+use crate::certificate_generation::{PDF, AthleteID, PersistentStorage};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_certificate);
