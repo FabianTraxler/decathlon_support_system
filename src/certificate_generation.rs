@@ -14,7 +14,7 @@ pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
 pub use achievements::{Achievement, AchievementID};
 pub use pdf::PDF;
 
-pub trait PersistentStorage {
+pub trait AchievementStorage {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
     fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
     fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;

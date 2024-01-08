@@ -1,6 +1,7 @@
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use super::parse_json_body;
-use crate::certificate_generation::{Athlete, AthleteID, PersistentStorage};
+use crate::certificate_generation::{Athlete, AthleteID};
+use crate::Storage;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_athlete);
@@ -10,7 +11,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
 #[get("/athlete")]
 async fn get_athlete(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: web::Query<AthleteID>,
 ) -> impl Responder {
     let athlete_id = query.into_inner();
@@ -24,7 +25,7 @@ async fn get_athlete(
 
 #[post("/athlete")]
 async fn post_athlete(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     body: web::Payload,
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
@@ -44,7 +45,7 @@ async fn post_athlete(
 
 #[put("/athlete")]
 async fn update_athlete(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     body: web::Payload,
     athlete_id: web::Query<AthleteID>,
 ) -> impl Responder {

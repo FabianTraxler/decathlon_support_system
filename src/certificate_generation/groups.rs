@@ -3,7 +3,7 @@ use std::error::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{Athlete, AthleteID, PersistentStorage};
+use super::{Athlete, AthleteID, AchievementStorage};
 
 /// Group representing the group and links to the athletes in the group
 /// Mainly used for separate storage of Groups and Athletes
@@ -47,7 +47,7 @@ impl Group {
         &self.athletes
     }
 
-    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn PersistentStorage>) -> Result<(), Box<dyn Error>>{
+    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn AchievementStorage>) -> Result<(), Box<dyn Error>>{
         let json_value: Value = serde_json::from_str(json_str)?;
 
         // Update specific fields from JSON to struct

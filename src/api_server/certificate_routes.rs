@@ -1,5 +1,6 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use crate::certificate_generation::{PDF, AthleteID, PersistentStorage, GroupID};
+use crate::certificate_generation::{PDF, AthleteID, GroupID};
+use crate::Storage;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_certificate);
@@ -8,7 +9,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
 #[get("/certificate")]
 async fn get_certificate(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: web::Query<AthleteID>,
 ) -> impl Responder {
     let achievement_id = query.into_inner();
@@ -32,7 +33,7 @@ async fn get_certificate(
 
 #[get("/group_results")]
 async fn get_group_results(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: web::Query<GroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();

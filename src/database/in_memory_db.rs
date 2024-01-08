@@ -4,8 +4,9 @@ use std::error::Error;
 use std::sync::Mutex;
 use log::warn;
 
-use crate::{PersistentStorage};
+use crate::{AchievementStorage, Storage};
 use crate::database::db_errors::ItemNotFound;
+use crate::time_planner::TimePlanStorage;
 
 
 pub struct InMemoryDB {
@@ -39,7 +40,7 @@ impl InMemoryDB {
     }
 }
 
-impl PersistentStorage for InMemoryDB {
+impl AchievementStorage for InMemoryDB {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete> {
         self.athlete_store.lock().expect("Mutex Lox poised").get(athlete_id).cloned()
     }
@@ -160,11 +161,16 @@ impl PersistentStorage for InMemoryDB {
         }    }
 }
 
+
+impl TimePlanStorage for InMemoryDB {}
+
+impl Storage for InMemoryDB {}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
-    use crate::certificate_generation::{AgeGroup, AgeGroupID, Athlete, AthleteID, CompetitionType, Group, GroupID, PersistentStorage};
+    use crate::certificate_generation::{AgeGroup, AgeGroupID, Athlete, AthleteID, CompetitionType, Group, GroupID, AchievementStorage};
 
     use super::InMemoryDB;
     use chrono::{Utc, NaiveDateTime, TimeZone};

@@ -1,6 +1,7 @@
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use super::parse_json_body;
-use crate::certificate_generation::{Achievement, AchievementID, AthleteID, PersistentStorage};
+use crate::certificate_generation::{Achievement, AchievementID, AthleteID};
+use crate::Storage;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_achievement);
@@ -10,7 +11,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 
 #[get("/achievement")]
 async fn get_achievement(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: web::Query<AchievementID>,
 ) -> impl Responder {
     let achievement_id = query.into_inner();
@@ -24,7 +25,7 @@ async fn get_achievement(
 
 #[post("/achievement")]
 async fn post_achievement(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     body: web::Payload,
     query: web::Query<AthleteID>,
 ) -> impl Responder {
@@ -47,7 +48,7 @@ async fn post_achievement(
 
 #[put("/achievement")]
 async fn update_achievement(
-    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
     body: web::Payload,
     achievement_id: web::Query<AchievementID>,
 ) -> impl Responder {
