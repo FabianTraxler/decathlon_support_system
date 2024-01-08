@@ -187,5 +187,20 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
     // Add Logo
     add_logo(pdf.get_page(page).get_layer(layer), true);
 
+    current_layer.begin_text_section();
+    let font_size = 14.0;
+    let line_height = font_size * 0.5;
+    let name_align = 20.0;
+    let start_height = 160.0;
+
+    current_layer.set_font(&font, font_size);
+
+    for (i, athlete) in group.athletes().iter().enumerate() {
+        let current_height = start_height - line_height * i as f32;
+        current_layer.use_text(athlete.full_name(), font_size, Mm(name_align), Mm(current_height), &font);
+    }
+    current_layer.end_text_section();
+
+
     pdf
 }

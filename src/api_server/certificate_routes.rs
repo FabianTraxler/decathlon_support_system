@@ -1,8 +1,9 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use crate::certificate_generation::{PDF, AthleteID, PersistentStorage};
+use crate::certificate_generation::{PDF, AthleteID, PersistentStorage, GroupID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_certificate);
+    cfg.service(get_group_results);
 }
 
 #[get("/certificate")]
@@ -26,5 +27,29 @@ async fn get_certificate(
 
         },
         None => HttpResponse::NotFound().body("Athlete not found")
+    }
+}
+
+#[get("/group_results")]
+async fn get_group_results(
+    data: web::Data<Box<dyn PersistentStorage + Send + Sync>>,
+    query: web::Query<GroupID>,
+) -> impl Responder {
+    let group_id = query.into_inner();
+    let group = data.get_group(&group_id);
+
+    match group {
+        Some(group) => {
+            let certificate = PDF::new_group_result(&group);
+            let pdf_message = certificate.to_http_message();
+            match pdf_message {
+                Ok(pdf_message) => HttpResponse::Ok()
+                    .content_type("application/pdf")
+                    .body(pdf_message),
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error generating PDF: {}", e))
+            }
+
+        },
+        None => HttpResponse::NotFound().body("Group not found")
     }
 }

@@ -43,6 +43,10 @@ impl Group {
         self.athletes.iter().map(AthleteID::from_athlete).collect()
     }
 
+    pub fn athletes(&self) -> &Vec<Athlete> {
+        &self.athletes
+    }
+
     pub fn update_values(&mut self, json_str: &str, db: Box<&dyn PersistentStorage>) -> Result<(), Box<dyn Error>>{
         let json_value: Value = serde_json::from_str(json_str)?;
 
