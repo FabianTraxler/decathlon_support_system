@@ -36,6 +36,22 @@ impl Achievement {
         }
     }
 
+    pub fn final_result(&self) -> String {
+        match self {
+            Achievement::Distance(r) => format!("{} {}",r.final_result(), r.unit),
+            Achievement::Height(r) => format!("{} {}",Float::from_u32(r.final_result()), r.unit),
+            Achievement::Time(r) => format!("{} {}",r.final_result(), r.unit)
+        }
+    }
+
+    pub fn points(&self, athlete: &Athlete) -> Float {
+        match self {
+            Achievement::Distance(r) => r.get_points(athlete),
+            Achievement::Height(r) => r.get_points(athlete),
+            Achievement::Time(r) => r.get_points(athlete),
+        }
+    }
+
     pub fn from_json(json_string: &str) -> Result<Self, serde_json::error::Error> {
         let processed_content = preprocess_json(json_string);
         let achievement: Achievement = serde_json::from_str(processed_content.as_str())?;
@@ -98,7 +114,7 @@ impl HeightResult {
         }
     }
 
-    pub fn get_points(&self, athlete: Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> Float {
         // TODO: Implement point scheme
         Float::new(0, 0)
     }
@@ -177,7 +193,7 @@ impl DistanceResult {
         }
     }
 
-    pub fn get_points(&self, athlete: Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> Float {
         // TODO: Implement point scheme
         Float::new(0, 0)
     }
@@ -251,7 +267,7 @@ impl TimeResult {
         }
     }
 
-    pub fn get_points(&self, athlete: Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> Float {
         // TODO: Implement point scheme
         Float::new(0, 0)
     }

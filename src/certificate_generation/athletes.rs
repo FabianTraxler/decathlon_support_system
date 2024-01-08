@@ -53,8 +53,8 @@ impl Athlete {
         self.birth_date
     }
 
-    pub fn name(&self) -> &str {
-        self.name.as_str()
+    pub fn full_name(&self) -> String {
+        format!("{} {}", self.name, self.surname)
     }
 
     pub fn competition_type(&self) -> &CompetitionType {
@@ -120,6 +120,7 @@ impl Athlete {
         self.achievements.insert(achievement.name().clone(), achievement);
         Ok(String::from("Achievement inserted"))
     }
+
 }
 
 /// AthelteID used as a unique identifier for each athlete

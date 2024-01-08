@@ -35,6 +35,15 @@ pub enum CompetitionType {
     Pentathlon
 }
 
+pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
+    match competition_type {
+        CompetitionType::Decathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoß", "Hochsprung", "400 Meter Lauf",
+                                           "110 Meter Hürden", "Diskus", "Stabhochsprung", "Speerwurf", "1500 Meter Lauf"],
+        CompetitionType::Pentathlon => vec![],
+        CompetitionType::Triathlon => vec![]
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Float {
     integral: u32,
