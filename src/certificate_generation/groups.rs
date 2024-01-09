@@ -35,6 +35,13 @@ impl Group {
         }
     }
 
+    pub fn from_age_group(age_group: &AgeGroup) -> Self {
+        Group {
+            name: age_group.age_identifier.clone(),
+            athletes: age_group.athletes.clone()
+        }
+    }
+
     pub fn name(&self) -> &str {
         self.name.as_str()
     }

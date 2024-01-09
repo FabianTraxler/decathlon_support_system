@@ -9,11 +9,9 @@ fn parse_age_group(age_identifier: &str) -> Result<i32, ()> {
         if let Ok(parsed) = rest.parse::<i32>() {
             Ok(parsed)
         } else {
-            error!("Could not parse remaining characters to an integer");
             Err(())
         }
     } else {
-        error!("String is empty or has only one character");
         Err(())
     }
 }
@@ -55,8 +53,8 @@ impl AgeGroupSelector {
                     start_year = end_year - 10;
                 }
                 Err(_) => {
-                    start_year = current_year - 16;
-                    end_year = current_year - 40;
+                    end_year = current_year - 16;
+                    start_year = current_year - 40;
                 }
             };
 

@@ -10,7 +10,7 @@ use std::task::{Context, Poll};
 use actix_web::body::{BodySize, MessageBody};
 use actix_web::web::Bytes;
 use log::info;
-use crate::certificate_generation::{CompetitionType, Athlete, Group};
+use crate::certificate_generation::{CompetitionType, Athlete, Group, AgeGroup};
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
@@ -46,6 +46,12 @@ impl PDF {
 
     pub fn new_group_result(group: &Group) -> Self {
         let doc = new_group_result(group);
+        PDF { content: doc }
+    }
+
+    pub fn new_age_group_result(age_group: &AgeGroup) -> Self {
+        let group = Group::from_age_group(age_group);
+        let doc = new_group_result(&group);
         PDF { content: doc }
     }
 
