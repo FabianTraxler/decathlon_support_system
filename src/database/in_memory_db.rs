@@ -1,15 +1,19 @@
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::sync::Mutex;
 use log::warn;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use bincode;
 
 use crate::{AchievementStorage, Storage};
 use crate::database::db_errors::ItemNotFound;
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 
-
+#[derive(Debug, Serialize, Deserialize)]
 pub struct InMemoryDB {
     athlete_store: Mutex<HashMap<AthleteID, Athlete>>,
     group_store: Mutex<HashMap<GroupID, GroupStore>>,
@@ -41,7 +45,6 @@ impl InMemoryDB {
         result
     }
 }
-
 impl AchievementStorage for InMemoryDB {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete> {
         self.athlete_store.lock().expect("Mutex Lox poised").get(athlete_id).cloned()
@@ -213,7 +216,33 @@ impl TimePlanStorage for InMemoryDB {
     }
 }
 
-impl Storage for InMemoryDB {}
+impl Storage for InMemoryDB {
+    fn serialize(&self) {
+        let mut f = File::options()
+            .read(true)
+            .write(true)
+            .open("tests/db_serialize.bin")
+            .unwrap();
+        let bytes = bincode::serialize(self).unwrap();
+        let _ = f.write_all(&bytes);
+    }
+
+    fn load(&self) {
+        let mut f = File::options()
+            .read(true)
+            .write(true)
+            .open("tests/db_serialize.bin")
+            .unwrap();
+        let mut buffer = Vec::new();
+        f.read_to_end(&mut buffer).expect("Failed to read file");
+
+        let db: Self = bincode::deserialize(&buffer).expect("Failed to deserialize");
+        *self.athlete_store.lock().unwrap() = db.athlete_store.lock().unwrap().clone();
+        *self.group_store.lock().unwrap() = db.group_store.lock().unwrap().clone();
+        *self.time_group_store.lock().unwrap() = db.time_group_store.lock().unwrap().clone();
+
+    }
+}
 
 #[cfg(test)]
 mod tests {

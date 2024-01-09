@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpServer, Responder};
+use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use std::io::Result;
 use futures::StreamExt;
 use crate::Storage;
@@ -19,7 +19,9 @@ pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>)
                 .configure(achievement_routes::configure_routes)
                 .configure(certificate_routes::configure_routes)
                 .configure(time_planner_routes::configure_routes)
-                .route("/status", web::get().to(status)),
+                .route("/status", web::get().to(status))
+                .route("/save_db", web::get().to(save_db)) // TODO: Remove in deployment
+                .route("/load_db", web::get().to(load_db)), // TODO: Remove in deployment
         )
     })
     .bind(("0.0.0.0", 8081))?
@@ -30,6 +32,20 @@ pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>)
 async fn status() -> impl Responder {
     "Ok"
 }
+
+async fn save_db(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+) -> impl Responder {
+    data.serialize();
+    HttpResponse::Ok().body("Saved")
+}
+async fn load_db(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+) -> impl Responder {
+    data.load();
+    HttpResponse::Ok().body("Loaded")
+}
+
 
 
 async fn parse_json_body(mut body: web::Payload) -> String {
