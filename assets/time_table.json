@@ -1,0 +1,344 @@
+{
+  "Groups": {
+    "Gruppe 1": {
+      "100m": {
+        "location": "",
+        "time": "08:30, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "09:00, Samstag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "10:00, Samstag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "11:00, Samstag"
+      },
+      "400m": {
+        "location": "",
+        "time": "13:15, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "08:30, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "09:00, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "10:15, Sonntag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "12:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "14:00, Sonntag"
+      }
+    },
+    "Gruppe 2": {
+      "100m": {
+        "location": "",
+        "time": "08:45, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "09:15, Samstag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "10:15, Sonntag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "11:15, Sonntag"
+      },
+      "400m": {
+        "location": "",
+        "time": "14:15, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "08:45, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "09:15, Samstag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "10:30, Samstag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "12:45, Samstag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "13:15, Sonntag"
+      }
+    },
+    "Gruppe 3": {
+      "100m": {
+        "location": "",
+        "time": "09:00, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "09:30, Samstag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "10:30, Samstag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "11:30, Samstag"
+      },
+      "400m": {
+        "location": "",
+        "time": "14:00, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "09:30, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "10:00, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "11:15, Sonntag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "13:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "15:00, Sonntag"
+      }
+    },
+    "Gruppe 4": {
+      "100m": {
+        "location": "",
+        "time": "10:00, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "10:15, Sonntag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "11:15, Sonntag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "12:15, Sonntag"
+      },
+      "400m": {
+        "location": "",
+        "time": "15:00, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "09:45, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "10:30, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "11:15, Sonntag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "13:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "14:30, Sonntag"
+      }
+    },
+    "Gruppe 5": {
+      "100m": {
+        "location": "",
+        "time": "10:15, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "10:45, Samstag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "11:45, Samstag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "12:45, Samstag"
+      },
+      "400m": {
+        "location": "",
+        "time": "15:15, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "10:30, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "11:00, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "12:15, Sonntag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "14:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "16:00, Sonntag"
+      }
+    },
+    "Gruppe 6": {
+      "100m": {
+        "location": "",
+        "time": "11:15, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "11:15, Sonntag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "12:15, Sonntag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "13:15, Sonntag"
+      },
+      "400m": {
+        "location": "",
+        "time": "16:15, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "10:45, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "11:45, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "13:00, Samstag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "15:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "15:30, Sonntag"
+      }
+    },
+    "Gruppe 7": {
+      "100m": {
+        "location": "",
+        "time": "11:30, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "12:00, Samstag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "13:00, Sonntag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "14:00, Samstag"
+      },
+      "400m": {
+        "location": "",
+        "time": "16:30, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "11:30, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "12:00, Sonntag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "13:15, Sonntag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "15:30, Sonntag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "17:00, Sonntag"
+      }
+    },
+    "Gruppe 8": {
+      "100m": {
+        "location": "",
+        "time": "12:15, Samstag"
+      },
+      "Weit": {
+        "location": "",
+        "time": "12:15, Sonntag"
+      },
+      "Kugel": {
+        "location": "",
+        "time": "13:15, Sonntag"
+      },
+      "Hoch": {
+        "location": "",
+        "time": "14:15, Sonntag"
+      },
+      "400m": {
+        "location": "",
+        "time": "17:15, Samstag"
+      },
+      "Hürden": {
+        "location": "",
+        "time": "11:45, Sonntag"
+      },
+      "Diskus": {
+        "location": "",
+        "time": "12:45, Samstag"
+      },
+      "Stab": {
+        "location": "",
+        "time": "14:00, Samstag"
+      },
+      "Speer": {
+        "location": "",
+        "time": "15:30, Samstag"
+      },
+      "1500m": {
+        "location": "",
+        "time": "16:30, Sonntag"
+      }
+    }
+  },
+  "Dates": {
+    "Samstag": "28.09.2024",
+    "Sonntag": "29.09.2024"
+  }
+}
