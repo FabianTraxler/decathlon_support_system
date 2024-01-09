@@ -12,8 +12,7 @@ use certificate_generation::AchievementStorage;
 use time_planner::TimePlanStorage;
 use database::Store;
 
-trait Storage: AchievementStorage + TimePlanStorage {}
-use crate::certificate_generation::Achievement::Time;
+pub trait Storage: AchievementStorage + TimePlanStorage {}
 
 pub fn run() -> Result<(), Box<dyn Error>> {
     env_logger::init();

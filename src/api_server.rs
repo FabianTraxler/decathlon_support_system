@@ -1,13 +1,13 @@
 use actix_web::{web, App, HttpServer, Responder};
 use std::io::Result;
 use futures::StreamExt;
-use crate::certificate_generation::AchievementStorage;
 use crate::Storage;
 
 mod athlete_routes;
 mod group_routes;
 mod achievement_routes;
 mod certificate_routes;
+mod time_planner_routes;
 
 #[actix_web::main]
 pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<()> {
@@ -18,6 +18,7 @@ pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>)
                 .configure(group_routes::configure_routes)
                 .configure(achievement_routes::configure_routes)
                 .configure(certificate_routes::configure_routes)
+                .configure(time_planner_routes::configure_routes)
                 .route("/status", web::get().to(status)),
         )
     })

@@ -3,15 +3,17 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::sync::Mutex;
 use log::warn;
+use serde_json::Value;
 
 use crate::{AchievementStorage, Storage};
 use crate::database::db_errors::ItemNotFound;
-use crate::time_planner::TimePlanStorage;
+use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 
 
 pub struct InMemoryDB {
     athlete_store: Mutex<HashMap<AthleteID, Athlete>>,
     group_store: Mutex<HashMap<GroupID, GroupStore>>,
+    time_group_store: Mutex<HashMap<TimeGroupID, TimeGroup>>,
 }
 
 unsafe impl Send for InMemoryDB {}
@@ -23,7 +25,7 @@ impl InMemoryDB {
         InMemoryDB {
             athlete_store: Mutex::new(HashMap::new()),
             group_store: Mutex::new(HashMap::new()),
-            // result_store: HashMap::new(),
+            time_group_store: Mutex::new(HashMap::new()),
         }
     }
 
@@ -140,7 +142,6 @@ impl AchievementStorage for InMemoryDB {
     }
 
     fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
-
         let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
             .ok_or(ItemNotFound::new("Athlete not found", "404"))?;
         athlete.add_achievement(achievement)?;
@@ -155,14 +156,62 @@ impl AchievementStorage for InMemoryDB {
                 let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
                     .ok_or(ItemNotFound::new("Athlete not found", "404"))?;
                 athlete.update_achievement(achievement)?;
-                self.write_athlete(AthleteID::from_athlete(&athlete), athlete)?;                Ok(String::from("Achievement updated"))
+                self.write_athlete(AthleteID::from_athlete(&athlete), athlete)?;
+                Ok(String::from("Achievement updated"))
             }
             Err(e) => Err(e)
-        }    }
+        }
+    }
 }
 
 
-impl TimePlanStorage for InMemoryDB {}
+impl TimePlanStorage for InMemoryDB {
+    fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup> {
+        self.time_group_store.lock().expect("Mutex Lox poised").get(group_id).cloned()
+    }
+
+    fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>> {
+        match time_table {
+            Value::Object(time_table_map) => {
+                let date_info = match time_table_map.get("Dates") {
+                    Some(date_value) => match date_value {
+                        Value::Object(date_info_value) => date_info_value
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.to_string()))
+                            .collect(),
+                        _ => return Err(Box::from("Dates information in invalid format"))
+                    },
+                    None => return Err(Box::from("Dates information not found"))
+                };
+
+                match time_table_map.get("Groups") {
+                    Some(group_value) => {
+                        if let Value::Object(group_map) = group_value {
+                            for (group_name, times) in group_map {
+                                let group_athletes = None; // TODO: Find if already athletes are registered to group
+                                let group = TimeGroup::build(group_name, times, &date_info, group_athletes)?;
+                                self.time_group_store.lock().expect("Mutex Lox poised")
+                                    .insert(TimeGroupID::from_time_group(&group), group);
+                            }
+                        } else {
+                            return Err(Box::from("Group information in invalid format"));
+                        }
+
+                    }
+                    None => return Err(Box::from("Group information not found"))
+                }
+
+                Ok(String::from("Time table stored"))
+            }
+            _ => Err(Box::from("Invalid format"))
+        }
+    }
+    fn update_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>> {
+        self.time_group_store.lock().expect("Mutex Lox poised")
+            .insert(TimeGroupID::from_time_group(&group), group);
+        Ok(String::from("New group stored"))
+    }
+}
 
 impl Storage for InMemoryDB {}
 
