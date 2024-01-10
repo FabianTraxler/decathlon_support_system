@@ -2,7 +2,6 @@ use crate::Storage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use actix_web::web::{Query};
 use crate::api_server::parse_json_body;
-
 use crate::certificate_generation::{GroupID, GroupStore};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -64,4 +63,5 @@ async fn update_group(
         }
         Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Group: {}", e))
     }
+
 }

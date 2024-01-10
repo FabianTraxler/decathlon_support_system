@@ -9,7 +9,7 @@ pub trait TimePlanStorage {
 
     fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>>;
 
-    fn update_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
+    fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -17,6 +17,16 @@ pub struct Athlete {
     name: Option<String>,
     surname: Option<String>,
     starting_number: Option<u16>,
+}
+
+impl Athlete {
+    pub fn new(name: String, surname: String, starting_number: Option<u16>) -> Athlete {
+        Athlete {
+            name: Some(name),
+            surname: Some(surname),
+            starting_number
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -64,22 +74,9 @@ pub struct TimeGroup {
 }
 
 impl TimeGroup {
-    pub fn build(group_name: &String, group_info: &Value, date_info: &HashMap<String, String>, athletes: Option<Vec<Athlete>>) -> Result<Self, Box<dyn Error>> {
-        let default_athlete_order = athletes.unwrap_or_else(|| vec![]);
-        let mut default_run_order: Vec<Run> = vec![];
-        let i = 0;
-        let num_tracks = 6;
-        while i * num_tracks < default_athlete_order.len() {
-            let mut j = (i + 1) * num_tracks;
-            if j >= default_athlete_order.len() {
-                j = default_athlete_order.len();
-            }
-            let run = Run{
-                name: format!("Lauf {}", i),
-                athletes: default_athlete_order[i * num_tracks..j].to_vec().clone()
-            };
-            default_run_order.push(run);
-        }
+    pub fn build(group_name: &String, group_info: &Value, date_info: &HashMap<String, String>,
+                 discipline_starting_order_type: &HashMap<String, String>, athletes: Option<Vec<Athlete>>) -> Result<Self, Box<dyn Error>> {
+        let (default_athlete_order,default_run_order) = create_default_athlete_order(athletes);
 
         let mut disciplines =vec![];
         match group_info {
@@ -100,8 +97,7 @@ impl TimeGroup {
                                     let time = time_infos[0];
                                     let day_name = time_infos[1].trim().to_string();
                                     let day = date_info.get(&day_name)
-                                        .ok_or(Box::from("Day not found in dates") as Box<dyn Error> )?
-                                        .replace(r#"""#, "");
+                                        .ok_or(Box::from("Day not found in dates") as Box<dyn Error> )?;
 
                                     let date_str = format!("{day} {time}:00 +0100");
 
@@ -126,14 +122,24 @@ impl TimeGroup {
                         None => return Err(Box::from("Location information not available"))
                     };
 
-                    // TODO: find correct StartingOrder type and use correct default
+                    let starting_order_type = match discipline_starting_order_type.get(discipline_name) {
+                        Some(starting_order_type) => starting_order_type,
+                        None => return Err(Box::from(format!("Starting order for discipline not found: {discipline_name}")))
+                    };
+
+                    let starting_order: StartingOrder = match starting_order_type.trim() {
+                            "Track" => StartingOrder::Track(default_run_order.clone()),
+                            "Default" => StartingOrder::Default(default_athlete_order.clone()),
+                            "None" => StartingOrder::NoOrder,
+                            x => return Err(Box::from(format!("Invalid Starting order given for {discipline_name}: {x}")))
+                    };
 
                     let discipline = Discipline {
                         name: discipline_name.clone(),
                         location,
                         start_time,
                         state: DisciplineState::BeforeStart,
-                        starting_order: StartingOrder::Default(default_athlete_order.clone()),
+                        starting_order
                     };
 
                     disciplines.push(discipline)
@@ -240,6 +246,47 @@ impl TimeGroup {
             }
         }
     }
+    pub fn update_athletes(&mut self, new_athletes: &Vec<Athlete>) -> Result<(), Box<dyn Error>>{
+        let all_athletes = &mut self.default_athlete_order;
+
+        let mut new_athletes = new_athletes.clone();
+        all_athletes.append(&mut new_athletes);
+
+        let (default_athlete_order,default_run_order) = create_default_athlete_order(Some(all_athletes.clone()));
+
+        self.default_athlete_order = default_athlete_order.clone();
+        self.default_run_order = default_run_order.clone();
+
+        for discipline in &mut self.disciplines {
+            discipline.starting_order = match discipline.starting_order {
+                StartingOrder::NoOrder => StartingOrder::NoOrder,
+                StartingOrder::Default(_) => StartingOrder::Default(default_athlete_order.clone()),
+                StartingOrder::Track(_) => StartingOrder::Track(default_run_order.clone())
+            }
+        }
+
+        Ok(())
+    }
+}
+
+fn create_default_athlete_order(athletes: Option<Vec<Athlete>>) -> (Vec<Athlete>, Vec<Run>) {
+    let default_athlete_order = athletes.unwrap_or_else(|| vec![]);
+    let mut default_run_order: Vec<Run> = vec![];
+    let mut i = 0;
+    let num_tracks = 6;
+    while i * num_tracks < default_athlete_order.len() {
+        let mut j = (i + 1) * num_tracks;
+        if j >= default_athlete_order.len() {
+            j = default_athlete_order.len();
+        }
+        let run = Run{
+            name: format!("Lauf {}", i),
+            athletes: default_athlete_order[i * num_tracks..j].to_vec().clone()
+        };
+        default_run_order.push(run);
+        i += 1;
+    }
+    (default_athlete_order, default_run_order)
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
@@ -251,6 +298,11 @@ impl TimeGroupID{
     pub fn from_time_group(time_group: &TimeGroup) -> Self {
         TimeGroupID {
             name: Some(time_group.name.clone())
+        }
+    }
+    pub fn new(name: String) -> Self {
+        TimeGroupID {
+            name: Some(name)
         }
     }
 }

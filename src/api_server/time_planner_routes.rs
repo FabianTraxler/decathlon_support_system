@@ -25,7 +25,7 @@ async fn get_discipline(
     match group {
         Some(mut group) => {
             let discipline = group.get_current_discipline().clone();
-            match data.update_time_group(group){
+            match data.store_time_group(group){
                 Ok(_) => HttpResponse::Ok()
                     .body(serde_json::to_string(&discipline)
                         .expect("Discipline should be serializable")),
@@ -69,7 +69,7 @@ async fn change_discipline_state(
         Some(mut group) => {
             match group.change_discipline_state(json_string.as_str()){
                 Ok(msg) => {
-                    match data.update_time_group(group){
+                    match data.store_time_group(group){
                         Ok(_) => HttpResponse::Ok().body(msg),
                         Err(e)=> HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
                     }

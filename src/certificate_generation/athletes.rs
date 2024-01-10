@@ -17,7 +17,8 @@ pub struct Athlete {
     birth_date: Option<DateTime<Utc>>,
     gender: String,
     achievements: HashMap<String, Achievement>,
-    competition_type: CompetitionType
+    competition_type: CompetitionType,
+    starting_number: Option<u16>
 }
 
 impl Athlete {
@@ -27,7 +28,8 @@ impl Athlete {
         birth_date: Option<DateTime<Utc>>,
         gender: &str,
         achievements: HashMap<String, Achievement>,
-        competition_type: CompetitionType
+        competition_type: CompetitionType,
+        starting_number: Option<u16>
     ) -> Self {
         Athlete {
             name: name.to_string(),
@@ -35,7 +37,8 @@ impl Athlete {
             birth_date,
             gender: gender.to_string(),
             achievements,
-            competition_type
+            competition_type,
+            starting_number
         }
     }
 
@@ -43,6 +46,16 @@ impl Athlete {
         let processed_content = preprocess_json(json_string);
         let athlete: Athlete = serde_json::from_str(processed_content.as_str())?;
         Ok(athlete)
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn surname(&self) -> &str {
+        &self.surname
+    }
+    pub fn starting_number(&self) -> &Option<u16> {
+        &self.starting_number
     }
 
     pub fn gender(&self) -> &String {

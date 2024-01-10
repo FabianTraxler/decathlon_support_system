@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use bincode;
 
-use crate::{AchievementStorage, Storage};
+use crate::{AchievementStorage, Storage, time_planner};
 use crate::database::db_errors::ItemNotFound;
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 
@@ -45,6 +45,7 @@ impl InMemoryDB {
         result
     }
 }
+
 impl AchievementStorage for InMemoryDB {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete> {
         self.athlete_store.lock().expect("Mutex Lox poised").get(athlete_id).cloned()
@@ -116,9 +117,36 @@ impl AchievementStorage for InMemoryDB {
         // TODO: Implement check if key is updated and then update key also
         let mut group = self.get_group(&group_id).ok_or(ItemNotFound::new("Key not found", "404"))?;
 
+        let old_athletes = group.athletes().clone();
         match group.update_values(json_string, Box::new(self)) {
             Ok(_) => {
+                let all_athletes = group.athletes().clone();
+                let group_name = group.name().to_string();
                 self.write_group(group_id, group)?;
+                let num_new_athletes = all_athletes.len() - old_athletes.len();
+                if num_new_athletes > 0 {
+                    match self.get_time_group(&TimeGroupID::new(group_name)) {
+                        Some(mut time_group) => {
+                            // Time group already available -> Update athletes
+                            let new_athletes = all_athletes[old_athletes.len()..].to_vec();
+                            let a = &new_athletes
+                                .iter()
+                                .map(|athlete| time_planner::Athlete::new(athlete.name().to_string(),
+                                                                          athlete.surname().to_string(),
+                                                                          athlete.starting_number().clone()))
+                                .collect();
+                            match time_group.update_athletes(a) {
+                                Ok(_) => {
+                                    self.store_time_group(time_group)
+                                },
+                                Err(e) => Err(e)
+                            }
+
+                        },
+                        None => Ok(String::from("")) // Do nothing
+                    }?;
+                }
+
                 Ok(String::from("Group updated"))
             }
             Err(e) => Err(e)
@@ -167,7 +195,6 @@ impl AchievementStorage for InMemoryDB {
     }
 }
 
-
 impl TimePlanStorage for InMemoryDB {
     fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup> {
         self.time_group_store.lock().expect("Mutex Lox poised").get(group_id).cloned()
@@ -180,26 +207,49 @@ impl TimePlanStorage for InMemoryDB {
                     Some(date_value) => match date_value {
                         Value::Object(date_info_value) => date_info_value
                             .into_iter()
-                            .map(|(k, v)| (k.clone(), v.to_string()))
+                            .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
                             .collect(),
                         _ => return Err(Box::from("Dates information in invalid format"))
                     },
                     None => return Err(Box::from("Dates information not found"))
                 };
 
+                let discipline_info = match time_table_map.get("DisciplineTypes") {
+                    Some(discipline_value) => match discipline_value {
+                        Value::Object(discipline_info_value) => discipline_info_value
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
+                            .collect(),
+                        _ => return Err(Box::from("Discipline information in invalid format"))
+                    },
+                    None => return Err(Box::from("Discipline information not found"))
+                };
+
                 match time_table_map.get("Groups") {
                     Some(group_value) => {
                         if let Value::Object(group_map) = group_value {
                             for (group_name, times) in group_map {
-                                let group_athletes = None; // TODO: Find if already athletes are registered to group
-                                let group = TimeGroup::build(group_name, times, &date_info, group_athletes)?;
+                                let mut group_athletes = None;
+                                if let Some(group) = self.get_group(&GroupID::new(group_name)) {
+                                    let athletes = group.athletes();
+                                    if athletes.len() > 0 {
+                                        let time_athletes = athletes.iter().map(|athlete|
+                                            time_planner::Athlete::new(
+                                                athlete.name().to_string(),
+                                                athlete.surname().to_string(),
+                                                athlete.starting_number().clone())
+                                        ).collect();
+                                        group_athletes = Some(time_athletes);
+                                    }
+                                }
+
+                                let group = TimeGroup::build(group_name, times, &date_info, &discipline_info, group_athletes)?;
                                 self.time_group_store.lock().expect("Mutex Lox poised")
                                     .insert(TimeGroupID::from_time_group(&group), group);
                             }
                         } else {
                             return Err(Box::from("Group information in invalid format"));
                         }
-
                     }
                     None => return Err(Box::from("Group information not found"))
                 }
@@ -209,7 +259,7 @@ impl TimePlanStorage for InMemoryDB {
             _ => Err(Box::from("Invalid format"))
         }
     }
-    fn update_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>> {
+    fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>> {
         self.time_group_store.lock().expect("Mutex Lox poised")
             .insert(TimeGroupID::from_time_group(&group), group);
         Ok(String::from("New group stored"))
@@ -240,7 +290,6 @@ impl Storage for InMemoryDB {
         *self.athlete_store.lock().unwrap() = db.athlete_store.lock().unwrap().clone();
         *self.group_store.lock().unwrap() = db.group_store.lock().unwrap().clone();
         *self.time_group_store.lock().unwrap() = db.time_group_store.lock().unwrap().clone();
-
     }
 }
 
@@ -262,6 +311,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -270,6 +320,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -278,6 +329,7 @@ mod tests {
                 "W",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -286,6 +338,7 @@ mod tests {
                 "W",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -294,6 +347,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -302,6 +356,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -310,6 +365,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -318,6 +374,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -326,6 +383,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -334,6 +392,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -342,6 +401,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -350,6 +410,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
         ];
 
@@ -365,6 +426,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -373,6 +435,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -381,6 +444,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
         ];
 
@@ -396,6 +460,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -404,6 +469,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
             Athlete::new(
                 "Person",
@@ -412,6 +478,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
             ),
         ];
 
@@ -421,7 +488,7 @@ mod tests {
     #[test]
     fn insert_and_access_athlete() {
         let db = InMemoryDB::new();
-        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon);
+        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon, None);
         let athlete_key = AthleteID::new("fabian_traxler", "Traxler");
 
         db.write_athlete(athlete_key.clone(), new_athlete.clone()).expect("Write should not fail in this test");

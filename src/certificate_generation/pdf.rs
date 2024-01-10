@@ -91,7 +91,7 @@ mod tests {
         }
 
         let pdf = PDF::new_group_result(&group);
-        match pdf.to_binary() {
+        match pdf.to_http_message() {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
         }
@@ -107,7 +107,8 @@ mod tests {
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
             HashMap::new(),
-            CompetitionType::Decathlon
+            CompetitionType::Decathlon,
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
         let pdf_write_result = pdf.write_pdf("tests/output/write_decathlon_certificate.pdf");
@@ -117,7 +118,7 @@ mod tests {
         }
 
         let pdf = PDF::new_certificate(&athlete);
-        match pdf.to_binary() {
+        match pdf.to_http_message() {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
         }
@@ -133,7 +134,8 @@ mod tests {
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
             HashMap::new(),
-            CompetitionType::Triathlon
+            CompetitionType::Triathlon,
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
         let pdf_write_result = pdf.write_pdf("tests/output/write_triathlon_certificate.pdf");
@@ -143,7 +145,7 @@ mod tests {
         }
 
         let pdf = PDF::new_certificate(&athlete);
-        match pdf.to_binary() {
+        match pdf.to_http_message() {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
         }
@@ -159,7 +161,8 @@ mod tests {
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
             HashMap::new(),
-            CompetitionType::Pentathlon
+            CompetitionType::Pentathlon,
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
         let pdf_write_result = pdf.write_pdf("tests/output/write_pentathlon_certificate.pdf");
@@ -169,7 +172,7 @@ mod tests {
         }
 
         let pdf = PDF::new_certificate(&athlete);
-        match pdf.to_binary() {
+        match pdf.to_http_message() {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
         }
