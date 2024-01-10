@@ -340,5 +340,17 @@
   "Dates": {
     "Samstag": "28.09.2024",
     "Sonntag": "29.09.2024"
+  },
+  "DisciplineTypes": {
+    "100m": "Track",
+    "Weit": "Default",
+    "Kugel": "Default",
+    "Hoch": "Default",
+    "400m": "Track",
+    "Hürden": "Track",
+    "Diskus": "Default",
+    "Stab": "Default",
+    "Speer": "Default",
+    "1500m": "None"
   }
 }
