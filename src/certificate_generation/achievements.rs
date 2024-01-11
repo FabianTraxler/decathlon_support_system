@@ -38,13 +38,21 @@ impl Achievement {
 
     pub fn final_result(&self) -> String {
         match self {
-            Achievement::Distance(r) => format!("{} {}",r.final_result(), r.unit),
-            Achievement::Height(r) => format!("{} {}",Float::from_u32(r.final_result()), r.unit),
-            Achievement::Time(r) => format!("{} {}",r.final_result(), r.unit)
+            Achievement::Distance(r) => format!("{}",r.final_result()),
+            Achievement::Height(r) => format!("{}",Float::from_u32(r.final_result())),
+            Achievement::Time(r) => format!("{}",r.final_result()) // TODO: Add Minutes if more than 3min (for 1500 M)
         }
     }
 
-    pub fn points(&self, athlete: &Athlete) -> Float {
+    pub fn unit(&self) -> String {
+        match self {
+            Achievement::Distance(r) => format!("{}", r.unit),
+            Achievement::Height(r) => format!("{}", r.unit),
+            Achievement::Time(r) => format!("{}", r.unit) // TODO Change to min if more than 3min
+        }
+    }
+
+    pub fn points(&self, athlete: &Athlete) -> u32 {
         match self {
             Achievement::Distance(r) => r.get_points(athlete),
             Achievement::Height(r) => r.get_points(athlete),
@@ -114,9 +122,9 @@ impl HeightResult {
         }
     }
 
-    pub fn get_points(&self, athlete: &Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> u32 {
         // TODO: Implement point scheme
-        Float::new(0, 0)
+        0
     }
 
     pub fn final_result(&self) -> u32 {
@@ -193,9 +201,9 @@ impl DistanceResult {
         }
     }
 
-    pub fn get_points(&self, athlete: &Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> u32 {
         // TODO: Implement point scheme
-        Float::new(0, 0)
+        0
     }
 
     pub fn final_result(&self) -> Float {
@@ -267,9 +275,9 @@ impl TimeResult {
         }
     }
 
-    pub fn get_points(&self, athlete: &Athlete) -> Float {
+    pub fn get_points(&self, athlete: &Athlete) -> u32 {
         // TODO: Implement point scheme
-        Float::new(0, 0)
+        123
     }
 
     pub fn final_result(&self) -> Float {

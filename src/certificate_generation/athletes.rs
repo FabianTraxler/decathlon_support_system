@@ -74,9 +74,12 @@ impl Athlete {
         &self.competition_type
     }
 
-    pub fn total_point(&self) -> Float {
-        // TODO: Sum all points of all achievements
-        Float::new(0,0)
+    pub fn total_point(&self) -> u32 {
+        let mut total_points = 0;
+        for achievement in self.achievements.values() {
+            total_points += achievement.points(self)
+        }
+        total_points
     }
 
     pub fn update_values(&mut self, json_str: &str) -> Result<(), Box<dyn Error>>{

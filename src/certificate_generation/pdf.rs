@@ -15,6 +15,8 @@ use crate::certificate_generation::{CompetitionType, Athlete, Group, AgeGroup};
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
+const COMPETITION_NUMBER: &'static str = "28";
+const DATE: &'static str = "28. / 29. September 2024";
 
 pub struct PDFMessage {
     body: Vec<u8>
@@ -79,12 +81,50 @@ impl PDF {
 mod tests {
     use std::collections::HashMap;
     use chrono::{NaiveDateTime, TimeZone, Utc};
-    use crate::certificate_generation::{Athlete, CompetitionType, Group};
+    use crate::certificate_generation::{Achievement, Athlete, CompetitionType, Group};
+    use crate::certificate_generation::achievements::{DistanceResult, TimeResult};
     use super::PDF;
 
+    fn get_athlete() -> Athlete {
+        let birthday = NaiveDateTime::parse_from_str("1997.03.22 0:0:0" , "%Y.%m.%d %H:%M:%S").unwrap();
+        let mut achievements = HashMap::new();
+        let achievement_json = r#"
+            {
+                "name": "Weitsprung",
+                "first_try": 1.20,
+                "second_try": 1.30,
+                "third_try": 1.20,
+                "unit": "m"
+            }
+        "#;
+        achievements.insert("Weitsprung".to_string(), Achievement::Distance(DistanceResult::build(achievement_json).expect("Achievement not loaded")));
+
+        let achievement_json = r#"
+            {
+                "name": "100 Meter Lauf",
+                "final_result": 9.20,
+                "unit": "s"
+            }
+        "#;
+        achievements.insert("100 Meter Lauf".to_string(), Achievement::Time(TimeResult::build(achievement_json).expect("Achievement not loaded")));
+        Athlete::new(
+            "Test",
+            "Person",
+            Some(Utc.from_utc_datetime(&birthday)),
+            "M",
+            achievements,
+            CompetitionType::Decathlon,
+            Some(12)
+        )
+    }
     #[test]
-    fn write_group_resutt() {
-        let group = Group::new("Gruppe 1", Vec::new());
+    fn write_group_results() {
+        let mut athletes = Vec::new();
+        athletes.push(get_athlete());
+        athletes.push(get_athlete());
+        athletes.push(get_athlete());
+        athletes.push(get_athlete());
+        let group = Group::new("Gruppe 1", athletes);
         let pdf = PDF::new_group_result(&group);
         let pdf_write_result = pdf.write_pdf("tests/output/write_group_result.pdf");
         match pdf_write_result {
@@ -110,7 +150,7 @@ mod tests {
             "M",
             HashMap::new(),
             CompetitionType::Decathlon,
-            None
+            Some(2)
         );
         let pdf = PDF::new_certificate(&athlete);
         let pdf_write_result = pdf.write_pdf("tests/output/write_decathlon_certificate.pdf");
