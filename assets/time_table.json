@@ -1,337 +1,337 @@
 {
   "Groups": {
     "Gruppe 1": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "08:30, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "09:00, Samstag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "10:00, Samstag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "11:00, Samstag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "13:15, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "08:30, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "09:00, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "10:15, Sonntag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "12:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "14:00, Sonntag"
       }
     },
     "Gruppe 2": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "08:45, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "09:15, Samstag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "10:15, Sonntag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "11:15, Sonntag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "14:15, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "08:45, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "09:15, Samstag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "10:30, Samstag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "12:45, Samstag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "13:15, Sonntag"
       }
     },
     "Gruppe 3": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "09:00, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "09:30, Samstag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "10:30, Samstag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "11:30, Samstag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "14:00, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "09:30, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "10:00, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "11:15, Sonntag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "13:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "15:00, Sonntag"
       }
     },
     "Gruppe 4": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "10:00, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "10:15, Sonntag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "11:15, Sonntag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "12:15, Sonntag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "15:00, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "09:45, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "10:30, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "11:15, Sonntag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "13:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "14:30, Sonntag"
       }
     },
     "Gruppe 5": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "10:15, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "10:45, Samstag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "11:45, Samstag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "12:45, Samstag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "15:15, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "10:30, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "11:00, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "12:15, Sonntag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "14:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "16:00, Sonntag"
       }
     },
     "Gruppe 6": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "11:15, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "11:15, Sonntag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "12:15, Sonntag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "13:15, Sonntag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "16:15, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "10:45, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "11:45, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "13:00, Samstag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "15:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "15:30, Sonntag"
       }
     },
     "Gruppe 7": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "11:30, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "12:00, Samstag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "13:00, Sonntag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "14:00, Samstag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "16:30, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "11:30, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "12:00, Sonntag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "13:15, Sonntag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "15:30, Sonntag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "17:00, Sonntag"
       }
     },
     "Gruppe 8": {
-      "100m": {
+      "100 Meter Lauf": {
         "location": "",
         "time": "12:15, Samstag"
       },
-      "Weit": {
+      "Weitsprung": {
         "location": "",
         "time": "12:15, Sonntag"
       },
-      "Kugel": {
+      "Kugelstoß": {
         "location": "",
         "time": "13:15, Sonntag"
       },
-      "Hoch": {
+      "Hochsprung": {
         "location": "",
         "time": "14:15, Sonntag"
       },
-      "400m": {
+      "400 Meter Lauf": {
         "location": "",
         "time": "17:15, Samstag"
       },
-      "Hürden": {
+      "110 Meter Hürden": {
         "location": "",
         "time": "11:45, Sonntag"
       },
-      "Diskus": {
+      "Diskuswurf": {
         "location": "",
         "time": "12:45, Samstag"
       },
-      "Stab": {
+      "Stabhochsprung": {
         "location": "",
         "time": "14:00, Samstag"
       },
-      "Speer": {
+      "Speerwurf": {
         "location": "",
         "time": "15:30, Samstag"
       },
-      "1500m": {
+      "1500 Meter Lauf": {
         "location": "",
         "time": "16:30, Sonntag"
       }
@@ -342,15 +342,15 @@
     "Sonntag": "29.09.2024"
   },
   "DisciplineTypes": {
-    "100m": "Track",
-    "Weit": "Default",
-    "Kugel": "Default",
-    "Hoch": "Default",
-    "400m": "Track",
-    "Hürden": "Track",
-    "Diskus": "Default",
-    "Stab": "Default",
-    "Speer": "Default",
-    "1500m": "None"
+    "100 Meter Lauf": "Track",
+    "Weitsprung": "Default",
+    "Kugelstoß": "Default",
+    "Hochsprung": "Default",
+    "400 Meter Lauf": "Track",
+    "110 Meter Hürden": "Track",
+    "Diskuswurf": "Default",
+    "Stabhochsprung": "Default",
+    "Speerwurf": "Default",
+    "1500 Meter Lauf": "None"
   }
 }
