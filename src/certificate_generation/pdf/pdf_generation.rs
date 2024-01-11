@@ -144,6 +144,28 @@ pub fn new_pentathlon_certificate(athlete: &Athlete) -> PdfDocumentReference {
     pdf
 }
 
+pub fn new_heptathlon_certificate(athlete: &Athlete) -> PdfDocumentReference {
+    let (pdf, page, layer) = setup_pdf(format!("Urkunde {}", athlete.full_name()).as_str(),
+                                       false);
+    let current_layer = pdf.get_page(page).get_layer(layer);
+
+    let font = pdf.add_builtin_font(TimesRoman)
+        .expect("Builtin Font should be available");
+
+    // Write Heading
+    current_layer.begin_text_section();
+    current_layer.set_font(&font, 42.0);
+    current_layer.set_text_cursor(Mm(80.0), Mm(267.0));
+    current_layer.write_text("Urkunde", &font);
+    current_layer.add_line_break();
+    current_layer.end_text_section();
+
+    add_logo(pdf.get_page(page).get_layer(layer), false);
+    add_name(&current_layer, &font, &athlete);
+
+    pdf
+}
+
 pub fn new_decathlon_certificate(athlete: &Athlete) -> PdfDocumentReference {
     let (pdf, page, layer) = setup_pdf(format!("Urkunde {}", athlete.full_name()).as_str(),
                                        false);

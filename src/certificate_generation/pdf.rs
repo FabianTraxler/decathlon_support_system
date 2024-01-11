@@ -1,5 +1,6 @@
 mod pdf_generation;
-use pdf_generation::{new_group_result, new_decathlon_certificate, new_pentathlon_certificate, new_triathlon_certificate, PdfDocumentReference};
+use pdf_generation::{new_group_result, new_decathlon_certificate, new_pentathlon_certificate, new_triathlon_certificate,
+                     new_heptathlon_certificate, PdfDocumentReference};
 use std::error::Error;
 use std::fs;
 use std::fs::File;
@@ -39,6 +40,7 @@ impl PDF {
             CompetitionType::Decathlon => new_decathlon_certificate(athlete),
             CompetitionType::Triathlon => new_triathlon_certificate(athlete),
             CompetitionType::Pentathlon => new_pentathlon_certificate(athlete),
+            CompetitionType::Heptathlon => new_heptathlon_certificate(athlete),
         };
 
         PDF { content: doc }

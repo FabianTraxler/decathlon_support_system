@@ -241,8 +241,13 @@ impl TimeGroup {
         }
 
         for discipline in &mut self.disciplines {
-            if std::mem::discriminant(&discipline.starting_order) == std::mem::discriminant(&new_order) {
-                discipline.starting_order = new_order.clone();
+            match discipline.state {
+                DisciplineState::Finished => continue,
+                _ => {
+                    if std::mem::discriminant(&discipline.starting_order) == std::mem::discriminant(&new_order) {
+                        discipline.starting_order = new_order.clone();
+                    }
+                }
             }
         }
     }

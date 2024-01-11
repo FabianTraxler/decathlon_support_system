@@ -32,15 +32,18 @@ pub trait AchievementStorage {
 pub enum CompetitionType {
     Decathlon,
     Triathlon,
-    Pentathlon
+    Pentathlon,
+    Heptathlon
 }
 
 pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
     match competition_type {
         CompetitionType::Decathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoß", "Hochsprung", "400 Meter Lauf",
-                                           "110 Meter Hürden", "Diskus", "Stabhochsprung", "Speerwurf", "1500 Meter Lauf"],
-        CompetitionType::Pentathlon => vec![],
-        CompetitionType::Triathlon => vec![]
+                                           "110 Meter Hürden", "Diskuswurf", "Stabhochsprung", "Speerwurf", "1500 Meter Lauf"],
+        CompetitionType::Pentathlon => vec!["60 Meter Hürdern", "Hochsprung", "60 Meter Lauf", "Vortexwurf", "1200 Meter Crosslauf"],
+        CompetitionType::Triathlon => vec!["60 Meter Lauf", "Weitsprung", "Schlagballwurf"],
+        CompetitionType::Heptathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoßen", "Hochsprung", "100m Hürdenlauf",
+                                            "Speerwurf", "1000 Meter Lauf"]
     }
 }
 

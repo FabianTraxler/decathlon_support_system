@@ -25,13 +25,12 @@ async fn get_discipline(
     match group {
         Some(mut group) => {
             let discipline = group.get_current_discipline().clone();
-            match data.store_time_group(group){
+            match data.store_time_group(group) {
                 Ok(_) => HttpResponse::Ok()
                     .body(serde_json::to_string(&discipline)
                         .expect("Discipline should be serializable")),
-                Err(e)=> HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
+                Err(e) => HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
             }
-
         }
         None => HttpResponse::NotFound().body("Group Not Found")
     }
@@ -67,17 +66,15 @@ async fn change_discipline_state(
 
     match group {
         Some(mut group) => {
-            match group.change_discipline_state(json_string.as_str()){
+            match group.change_discipline_state(json_string.as_str()) {
                 Ok(msg) => {
-                    match data.store_time_group(group){
+                    match data.store_time_group(group) {
                         Ok(_) => HttpResponse::Ok().body(msg),
-                        Err(e)=> HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
+                        Err(e) => HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
                     }
-
-                },
+                }
                 Err(e) => HttpResponse::BadRequest().body(format!("Error updating state: {e}"))
             }
-
         }
         None => HttpResponse::NotFound().body("Group Not Found")
     }
@@ -135,8 +132,11 @@ async fn change_starting_order(
             match starting_order {
                 Ok(starting_order) => {
                     group.change_starting_order(starting_order);
-                    HttpResponse::Ok()
-                        .body("Starting Order changed")
+                    match data.store_time_group(group) {
+                        Ok(_) => HttpResponse::Ok().body("Starting Order changed"),
+                        Err(e) => HttpResponse::InternalServerError()
+                            .body(format!("Could not store new starting order: {}", e))
+                    }
                 }
                 Err(e) => {
                     HttpResponse::BadRequest().body(format!("Could not parse starting order: {}", e))
