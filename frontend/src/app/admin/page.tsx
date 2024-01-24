@@ -1,10 +1,10 @@
 import Overview from "./group_overview/group_overview"
-import Sidebar from "./sidebar" 
+import Sidebar from "../lib/sidebar" 
 
 export default function Admin() {
   return (
     <main className="flex min-h-screen flex-col sm:flex-row">
-        <Sidebar></Sidebar>
+        <Sidebar showGroups={true} showAgeGroups={true}></Sidebar>
         <Overview></Overview>
     </main>
   )
