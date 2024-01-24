@@ -1,5 +1,5 @@
 import { FormEvent } from "react";
-import { HeightAchievement, AchievementValue } from "../athltetes";
+import { HeightAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 
 export function HeightResult({ achievement, athleteName, onSubmit }: { achievement?: HeightAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
 

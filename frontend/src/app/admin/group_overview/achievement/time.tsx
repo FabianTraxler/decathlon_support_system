@@ -1,5 +1,5 @@
 import { FormEvent } from "react";
-import { AchievementValue, TimeAchievement } from "../athltetes";
+import { AchievementValue, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { convert_to_integral_fractional } from "@/app/lib/parsing";
 
 

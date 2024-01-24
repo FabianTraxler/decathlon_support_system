@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { DistanceAchievement, AchievementValue } from "../athltetes";
+import { DistanceAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 import { convert_from_integral_fractional, convert_to_integral_fractional } from "@/app/lib/parsing";
 
 

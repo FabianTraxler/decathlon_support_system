@@ -1,14 +1,12 @@
 "use client";
 
 import { useSearchParams } from 'next/navigation';
-
 import PrintUtilities from './print_utilities';
 import Athletes from './athltetes';
-import Title from "./title";
+import Title from "../../lib/title";
 import { decathlon_age_groups, groups, youth_groups } from '@/app/lib/config';
 import { usePathname, useRouter } from 'next/navigation';
 import Disciplines from './disciplines/disciplines';
-import { useState } from 'react';
 
 export default function Overview() {
   let searchParams = useSearchParams();

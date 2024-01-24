@@ -1,4 +1,4 @@
-import { AchievementValue } from "../athltetes";
+import { AchievementValue } from "@/app/lib/athlete_fetching";
 import { useEffect, useState } from "react";
 
 import { TimeResult } from "./time";

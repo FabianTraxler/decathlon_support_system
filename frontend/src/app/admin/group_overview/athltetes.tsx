@@ -4,48 +4,9 @@ import { useEffect, useState } from 'react';
 import Achievement from './achievement/page';
 import { LoadingButton } from '@/app/lib/loading_button';
 import { decathlon_disciplines } from '@/app/lib/config';
+import { Athlete, fetch_age_group_athletes, fetch_group_athletes } from '@/app/lib/athlete_fetching';
 
-interface Athlete {
-  name: string,
-  surname: string,
-  starting_number: number,
-  birth_date: number,
-  achievements: Map<string, Map<string, AchievementValue>>,
-  total_points: number
-}
-
-export interface AchievementValue {
-  Time?: TimeAchievement,
-  Distance?: DistanceAchievement,
-  Height?: HeightAchievement,
-  athlete_name?: string
-}
-
-export interface TimeAchievement {
-  final_result?: { integral: number, fractional: number },
-  name: string,
-  unit: string
-}
-
-export interface DistanceAchievement {
-  final_result?: { integral: number, fractional: number },
-  first_try?: { integral: number, fractional: number },
-  second_try?: { integral: number, fractional: number },
-  third_try?: { integral: number, fractional: number },
-  name: string,
-  unit: string
-}
-
-export interface HeightAchievement {
-  final_result?: number,
-  start_height?: number,
-  height_increase?: number,
-  tries?: string,
-  name: string,
-  unit: string
-}
-
-export default function Athletes({group_name}: {group_name: string}) {
+export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(true);
 
   return (
@@ -125,45 +86,11 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "", ascending: false })
 
-  const get_data = function() {
+  const get_data = function () {
     if (group_name.startsWith("Gruppe")) {
-      let api_url = `/api/group?name=${group_name}`
-
-      fetch(api_url)
-        .then(res => {
-          if (res.ok) {
-            return res.json()
-          } else {
-            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-          }
-        })
-        .then(res => {
-          set_athletes(res["athletes"])
-        })
-        .catch((e) => {
-          console.error(e)
-          set_athletes([])
-        })
-
+      fetch_group_athletes(group_name, set_athletes)
     } else {
-      let age_identifier = group_name.replace("AK-", "");
-      let api_url = `/api/age_group?age_identifier=${age_identifier}`
-
-      fetch(api_url)
-        .then(res => {
-          if (res.ok) {
-            return res.json()
-          } else {
-            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-          }
-        })
-        .then(res => {
-          set_athletes(res["athletes"])
-        })
-        .catch((e) => {
-          console.error(e)
-          set_athletes([])
-        })
+      fetch_age_group_athletes(group_name, set_athletes)
     }
   }
 
@@ -211,7 +138,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
 
   const sortColumn = function (col_name: string) {
     if (sorted.name == col_name) {
-        setSorted({ name: col_name, ascending: !sorted.ascending })
+      setSorted({ name: col_name, ascending: !sorted.ascending })
     } else {
       setSorted({ name: col_name, ascending: false })
     }
@@ -247,7 +174,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
         break;
     }
 
-    return sorted.ascending ? return_value: -1 * return_value;
+    return sorted.ascending ? return_value : -1 * return_value;
 
   });
 
@@ -278,9 +205,9 @@ function GroupAthletes({ group_name }: { group_name: string }) {
           {decathlon_disciplines.map((info) => {
             return <th key={info[0]} onClick={(_) => {
               discipline_edit_mode(info[0])
-            }} 
-            className="border hover:cursor-pointer hover:bg-slate-400 border-slate-600 p-1 pl-2 pr-2">{info[2]}
-            <span className='pl-2 '>&#9998;</span></th>
+            }}
+              className="border hover:cursor-pointer hover:bg-slate-400 border-slate-600 p-1 pl-2 pr-2">{info[2]}
+              <span className='pl-2 '>&#9998;</span></th>
 
           })}
           <th className="border border-slate-600 p-1 pl-2 pr-2">Urkunde</th>
