@@ -1,0 +1,9 @@
+{
+    "name": "decathlon_support_system",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+      "dev": "cd frontend && npm run dev & cd backend/ && cargo run",
+      "build": "cd frontend && npm run build & cd backend/ && cargo build"
+    }
+}
