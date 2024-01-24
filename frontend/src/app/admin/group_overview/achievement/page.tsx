@@ -199,7 +199,7 @@ function InlineEdit({ index, name, achievement, achievement_type, athleteName, o
                     ...prevState,
                     isUploaded: true
                 }))
-            }, 1000)
+            }, 500)
             return () => {
                 clearTimeout(timer);
             };
