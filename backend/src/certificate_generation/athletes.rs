@@ -130,20 +130,31 @@ impl Athlete {
         }
 
         // Update specific fields from JSON to struct
-        if let Some(name) = json_value.get("name").and_then(Value::as_str) {
-            self.name = name.to_string();
+        if let Some(name) = json_value.get("name") {
+            let name_str = Value::as_str(name)
+                .ok_or("Invalid format for gender. Expected string")?;
+            self.name = name_str.to_string();
         }
-        if let Some(surname) = json_value.get("surname").and_then(Value::as_str) {
-            self.surname = surname.to_string();
+        if let Some(surname) = json_value.get("surname") {
+            let surname_str = Value::as_str(surname)
+                .ok_or("Invalid format for gender. Expected string")?;
+            self.surname = surname_str.to_string();
         }
-        if let Some(gender) = json_value.get("gender").and_then(Value::as_str) {
-            self.gender = gender.to_string();
+        if let Some(gender) = json_value.get("gender") {
+            let gender_str = Value::as_str(gender)
+                .ok_or("Invalid format for gender. Expected string")?;
+            self.gender = gender_str.to_string();
         }
-
-        if let Some(competition_type) = json_value.get("competition_type").and_then(Value::as_str) {
-            self.competition_type = serde_json::from_str(competition_type)?;
+        if let Some(competition_type) = json_value.get("competition_type") {
+            let competition_type_str = Value::as_str(competition_type)
+                .ok_or("Invalid format for competition_type.")?;
+            self.competition_type = serde_json::from_str(competition_type_str)?;
         }
-
+        if let Some(starting_number) = json_value.get("starting_number") {
+            let number = Value::as_i64(starting_number)
+                .ok_or("Invalid format for starting number. Expected u16 value")?;
+            self.starting_number = Some(number as u16);
+        }
 
         Ok(())
     }
