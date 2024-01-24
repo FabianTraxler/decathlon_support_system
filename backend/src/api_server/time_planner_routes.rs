@@ -7,6 +7,7 @@ use crate::time_planner::{TimeGroupID, StartingOrder};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_discipline);
+    cfg.service(get_disciplines);
     cfg.service(get_next_discipline);
     cfg.service(get_starting_order);
     cfg.service(get_track_starting_order);
@@ -79,6 +80,25 @@ async fn change_discipline_state(
         None => HttpResponse::NotFound().body("Group Not Found")
     }
 }
+
+#[get("/disciplines")]
+async fn get_disciplines(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: Query<TimeGroupID>,
+) -> impl Responder {
+    let group_id = query.into_inner();
+    let group = data.get_time_group(&group_id);
+    match group {
+        Some(group) => {
+            let disciplines = group.get_disciplines().clone();
+            HttpResponse::Ok()
+                .body(serde_json::to_string(&disciplines)
+                    .expect("Discipline should be serializable"))
+        }
+        None => HttpResponse::NotFound().body("Group Not Found")
+    }
+}
+
 
 #[get("/starting_order")]
 async fn get_starting_order(

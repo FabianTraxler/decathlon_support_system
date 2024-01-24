@@ -2,12 +2,13 @@ use crate::Storage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use actix_web::web::{Query};
 use crate::api_server::parse_json_body;
-use crate::certificate_generation::{GroupID, GroupStore};
+use crate::certificate_generation::{AgeGroupID, GroupID, GroupStore};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_group);
     cfg.service(post_group);
     cfg.service(update_group);
+    cfg.service(get_age_group);
 }
 
 #[get("/group")]
@@ -18,9 +19,14 @@ async fn get_group(
     let group_id = query.into_inner();
     let group = data.get_group(&group_id);
     match group {
-        Some(group) => HttpResponse::Ok()
-            .body(serde_json::to_string(&group)
-                .expect("Group should be serializable")),
+        Some(mut group) => {
+            for athlete in group.mut_athletes() {
+                athlete.compute_total_points()
+            }
+            HttpResponse::Ok()
+                .body(serde_json::to_string(&group)
+                    .expect("Group should be serializable"))
+        },
         None => HttpResponse::NotFound().body("Not found")
     }
 }
@@ -64,4 +70,20 @@ async fn update_group(
         Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Group: {}", e))
     }
 
+}
+
+#[get("/age_group")]
+async fn get_age_group(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: Query<AgeGroupID>,
+) -> impl Responder {
+    let group_id = query.into_inner();
+    let age_group = data.get_age_group(&group_id);
+
+    match age_group {
+        Some(group) => HttpResponse::Ok()
+            .body(serde_json::to_string(&group)
+                .expect("Group should be serializable")),
+        None => HttpResponse::NotFound().body("Not found")
+    }
 }

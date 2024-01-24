@@ -54,6 +54,10 @@ impl Group {
         &self.athletes
     }
 
+    pub fn mut_athletes(&mut self) -> &mut Vec<Athlete> {
+        &mut self.athletes
+    }
+
     pub fn update_values(&mut self, json_str: &str, db: Box<&dyn AchievementStorage>) -> Result<(), Box<dyn Error>>{
         let json_value: Value = serde_json::from_str(json_str)?;
 
@@ -114,7 +118,7 @@ impl GroupID {
 
 /// Age group representing all athletes that compete with each other for the total overall score
 /// Used to generate the final results for the competition
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct AgeGroup {
     age_identifier: String,
     athletes: Vec<Athlete>,

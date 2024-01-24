@@ -19,7 +19,16 @@ const COMPETITION_NUMBER: &'static str = "28";
 const DATE: &'static str = "28. / 29. September 2024";
 
 pub struct PDFMessage {
-    body: Vec<u8>
+    body: Vec<u8>,
+    sent: bool
+}
+impl PDFMessage {
+    pub fn new(body: Vec<u8>) -> Self {
+        PDFMessage {
+            body,
+            sent: false
+        }
+    }
 }
 impl MessageBody for PDFMessage {
     type Error = printpdf::Error;
@@ -27,9 +36,14 @@ impl MessageBody for PDFMessage {
         BodySize::Sized(self.body.len() as u64)
     }
 
-    fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, Self::Error>>> {
-        let bytes = Bytes::from(self.body.clone());
-        Poll::Ready(Some(Ok(bytes)))    }
+    fn poll_next(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Result<Bytes, Self::Error>>> {
+        if self.sent {
+            Poll::Ready(None)
+        } else {
+            self.sent = true;
+            let bytes = Bytes::from(self.body.clone());
+            Poll::Ready(Some(Ok(bytes))) }
+        }
 }
 
 pub struct PDF {
@@ -70,9 +84,7 @@ impl PDF {
     }
 
     pub fn to_http_message(self) -> Result<PDFMessage, printpdf::Error> {
-        let http_message = PDFMessage {
-            body: self.content.save_to_bytes()?
-        };
+        let http_message = PDFMessage::new(self.content.save_to_bytes()?);
         Ok(http_message)
     }
 }

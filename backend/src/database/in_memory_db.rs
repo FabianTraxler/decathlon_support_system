@@ -133,16 +133,16 @@ impl AchievementStorage for InMemoryDB {
                                 .iter()
                                 .map(|athlete| time_planner::Athlete::new(athlete.name().to_string(),
                                                                           athlete.surname().to_string(),
-                                                                          athlete.starting_number().clone()))
+                                                                          athlete.starting_number().clone(),
+                                                                          Some(athlete.age_group())))
                                 .collect();
                             match time_group.update_athletes(a) {
                                 Ok(_) => {
                                     self.store_time_group(time_group)
-                                },
+                                }
                                 Err(e) => Err(e)
                             }
-
-                        },
+                        }
                         None => Ok(String::from("")) // Do nothing
                     }?;
                 }
@@ -181,7 +181,8 @@ impl AchievementStorage for InMemoryDB {
     }
 
     fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>> {
-        let mut achievement = self.get_achievement(&achievement_id).ok_or(ItemNotFound::new("Key not found", "404"))?;
+        let mut achievement = self.get_achievement(&achievement_id)
+            .ok_or(ItemNotFound::new("Key not found", "404"))?;
         match achievement.update_values(json_string) {
             Ok(_) => {
                 let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
@@ -237,7 +238,8 @@ impl TimePlanStorage for InMemoryDB {
                                             time_planner::Athlete::new(
                                                 athlete.name().to_string(),
                                                 athlete.surname().to_string(),
-                                                athlete.starting_number().clone())
+                                                athlete.starting_number().clone(),
+                                                Some(athlete.age_group()))
                                         ).collect();
                                         group_athletes = Some(time_athletes);
                                     }

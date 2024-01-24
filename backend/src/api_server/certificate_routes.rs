@@ -21,9 +21,9 @@ async fn get_certificate(
             let certificate = PDF::new_certificate(&athlete);
             let pdf_message = certificate.to_http_message();
             match pdf_message {
-                Ok(pdf_message) => HttpResponse::Ok()
+                Ok(pdf) => HttpResponse::Ok()
                     .content_type("application/pdf")
-                    .body(pdf_message),
+                    .body(pdf),
                 Err(e) => HttpResponse::InternalServerError().body(format!("Error generating PDF: {}", e))
             }
 

@@ -17,14 +17,16 @@ pub struct Athlete {
     name: Option<String>,
     surname: Option<String>,
     starting_number: Option<u16>,
+    age_group: Option<String>
 }
 
 impl Athlete {
-    pub fn new(name: String, surname: String, starting_number: Option<u16>) -> Athlete {
+    pub fn new(name: String, surname: String, starting_number: Option<u16>, age_group: Option<String>) -> Athlete {
         Athlete {
             name: Some(name),
             surname: Some(surname),
-            starting_number
+            starting_number,
+            age_group
         }
     }
 }
@@ -159,6 +161,9 @@ impl TimeGroup {
         };
 
         Ok(group)
+    }
+    pub fn get_disciplines(&self) -> &Vec<Discipline> {
+        &self.disciplines
     }
     pub fn get_next_discipline(&self) -> &Discipline {
         &self.disciplines[self.current_discipline + 1]

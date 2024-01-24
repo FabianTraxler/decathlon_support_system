@@ -24,7 +24,7 @@ pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>)
                 .route("/load_db", web::get().to(load_db)), // TODO: Remove in deployment
         )
     })
-    .bind(("0.0.0.0", 8081))?
+    .bind(("0.0.0.0", 3001))?
     .run()
     .await
 }

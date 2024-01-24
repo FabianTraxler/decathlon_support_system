@@ -8,6 +8,8 @@ use std::cmp::Ordering;
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use std::str::FromStr;
+use serde_json::{Map, Value};
 pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
 pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
@@ -33,7 +35,7 @@ pub enum CompetitionType {
     Decathlon,
     Triathlon,
     Pentathlon,
-    Heptathlon
+    Heptathlon,
 }
 
 pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
@@ -49,28 +51,88 @@ pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Float {
-    integral: u32,
-    fractional: u32,
+    integral: i32,
+    fractional: i32,
 }
 
 impl Float {
-    fn new(i: u32, f: u32) -> Self {
+    fn new(i: i32, f: i32) -> Self {
         Float {
             integral: i,
             fractional: f,
         }
     }
 
-    fn from_u32(value: u32) -> Self {
-        let integral = value as i64;
-        let fractional = value - integral as u32;
+    fn from_i32(value: i32) -> Self {
+        let integral = value;
+        let fractional = value - integral;
 
         Float {
-            integral: integral as u32,
+            integral,
             fractional
         }
     }
+
+
+    fn from_str(value: &str) -> Result<Self, Box<dyn Error>> {
+        let integral: i32;
+        let fractional: i32;
+
+        if value.contains(".") {
+            let str_split: Vec<&str> = value.split(".").collect();
+            if str_split.len() != 2 {
+                return Err("Too many '.' in float")?;
+            }
+            integral = i32::from_str(str_split[0])?;
+            fractional = i32::from_str(str_split[1])?;
+        } else if value.contains(",") {
+            let str_split: Vec<&str> = value.split(",").collect();
+            if str_split.len() != 2 {
+                return Err("Too many ',' in float")?;
+            }
+            integral = i32::from_str(str_split[0])?;
+            fractional = i32::from_str(str_split[1])?;
+        } else {
+            return Err("Invalid format for Float")?;
+        }
+
+        Ok(Float {
+            integral,
+            fractional,
+        })
+    }
+
+    fn from_map(value: &Map<String, Value>) -> Result<Self, Box<dyn Error>> {
+        let integral: i32;
+        let fractional: i32;
+
+        match value.get("integral") {
+            Some(integral_val) => {
+                match integral_val.as_i64() {
+                    Some(integral_num) => integral = integral_num as i32,
+                    None => return Err("Invalid format for Float. Integral not an integer")?
+                }
+            }
+            None => return Err("Invalid format for Float. Integral not found in map")?
+        }
+
+        match value.get("fractional") {
+            Some(fractional_val) => {
+                match fractional_val.as_i64() {
+                    Some(fractional_num) => fractional = fractional_num as i32,
+                    None => return Err("Invalid format for Float. Fractional not an integer")?
+                }
+            }
+            None => return Err("Invalid format for Float. Fractional not found in map")?
+        }
+
+        Ok(Float {
+            integral,
+            fractional,
+        })
+    }
 }
+
 impl PartialOrd for Float {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self.integral > other.integral {
@@ -88,6 +150,7 @@ impl PartialOrd for Float {
         }
     }
 }
+
 impl Ord for Float {
     fn cmp(&self, other: &Self) -> Ordering {
         if self.integral > other.integral {
@@ -105,6 +168,7 @@ impl Ord for Float {
         }
     }
 }
+
 impl fmt::Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{},{}", self.integral, self.fractional)
@@ -126,12 +190,10 @@ fn preprocess_json(json_string: &str) -> String {
             let fractional = integral_fractional[1];
             let new_field = vec![key, ":", r#"{"integral":"#, integral, r#", "fractional":"#, fractional, "}"];
             new_json.push(new_field.join(" "));
-
         } else {
             new_json.push(field.to_string());
         }
     }
 
     new_json.join(",").to_string()
-
 }

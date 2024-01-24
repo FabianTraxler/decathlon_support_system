@@ -39,7 +39,7 @@ impl Achievement {
     pub fn final_result(&self) -> String {
         match self {
             Achievement::Distance(r) => format!("{}",r.final_result()),
-            Achievement::Height(r) => format!("{}",Float::from_u32(r.final_result())),
+            Achievement::Height(r) => format!("{}",Float::from_i32(r.final_result())),
             Achievement::Time(r) => format!("{}",r.final_result()) // TODO: Add Minutes if more than 3min (for 1500 M)
         }
     }
@@ -105,11 +105,11 @@ impl AchievementID {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HeightResult {
     name: String,
-    start_height: u32,
-    height_increase: u32,
+    start_height: i32,
+    height_increase: i32,
     tries: String,
     unit: String,
-    final_result: Option<u32>,
+    final_result: Option<i32>,
 }
 
 impl HeightResult {
@@ -127,19 +127,19 @@ impl HeightResult {
         0
     }
 
-    pub fn final_result(&self) -> u32 {
+    pub fn final_result(&self) -> i32 {
         match &self.final_result {
             Some(value) => *value,
             None => self.compute_final_result()
         }
     }
 
-    fn compute_final_result(&self) -> u32 {
+    fn compute_final_result(&self) -> i32 {
         let mut jumped_height = 0;
 
         for (i, height) in self.tries.split("-").enumerate() {
             if height.contains("O") {
-                jumped_height = self.start_height + u32::try_from(i).expect("Enumeration should be convertible") * self.height_increase;
+                jumped_height = self.start_height + i32::try_from(i).expect("Enumeration should be convertible") * self.height_increase;
             }
         }
 
@@ -167,8 +167,8 @@ impl HeightResult {
             self.final_result = Some(self.compute_final_result());
         }
 
-        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
-            self.final_result = Some(final_result as u32);
+        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_i64) {
+            self.final_result = Some(final_result as i32);
         }
 
         Ok(())
@@ -207,17 +207,22 @@ impl DistanceResult {
     }
 
     pub fn final_result(&self) -> Float {
-        let all_results = vec![&self.first_try, &self.second_try, &self.third_try];
+        self.final_result.clone().unwrap_or_else(|| {
+            let all_results = vec![&self.first_try, &self.second_try, &self.third_try];
 
-        let best_result = all_results.iter().max();
+            let best_result = all_results.iter().max();
 
-        match best_result {
-            Some(result) => {
-                let result = *result;
-                result.clone()
+            match best_result {
+                Some(result) => {
+                    if result.integral == -1 {
+                        return self.final_result.clone().unwrap_or_else(|| Float::new(0, 0));
+                    }
+                    let result = *result;
+                    result.clone()
+                }
+                None => Float::new(0, 0)
             }
-            None => Float::new(0, 0)
-        }
+        })
     }
 
     pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
@@ -232,16 +237,16 @@ impl DistanceResult {
 
         let mut new_try = false;
 
-        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_u64) {
-            self.first_try = Float::from_u32(first_try as u32);
+        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_i64) {
+            self.first_try = Float::from_i32(first_try as i32);
             new_try = true;
         }
-        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_u64) {
-            self.second_try = Float::from_u32(second_try as u32);
+        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_i64) {
+            self.second_try = Float::from_i32(second_try as i32);
             new_try = true;
         }
-        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_u64) {
-            self.third_try = Float::from_u32(third_try as u32);
+        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_i64) {
+            self.third_try = Float::from_i32(third_try as i32);
             new_try = true;
         }
         if new_try {
@@ -249,7 +254,7 @@ impl DistanceResult {
         }
 
         if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
-            self.final_result = Some(Float::from_u32(final_result as u32));
+            self.final_result = Some(Float::from_i32(final_result as i32));
         }
         Ok(())
     }
@@ -287,15 +292,24 @@ impl TimeResult {
     pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
         let json_value: Value = serde_json::from_str(json_string)?;
 
-        if let Some(_) = json_value.get("unit").and_then(Value::as_i64) {
+        if let Some(_) = json_value.get("unit") {
             return Err("Unit not updated. Please create new achievement for that kind of change")?;
         }
-        if let Some(_) = json_value.get("name").and_then(Value::as_i64) {
+        if let Some(_) = json_value.get("name") {
             return Err("Name not updated. Please create new achievement for that kind of change")?;
         }
-        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
-            self.final_result = Float::from_u32(final_result as u32);
+        if let Some(final_result) = json_value.get("final_result") {
+            match final_result {
+                Value::String(str_value) => {
+                    self.final_result = Float::from_str(str_value)?;
+                },
+                Value::Object(map) => {
+                    self.final_result = Float::from_map(map)?;
+                },
+                _ => return Err("Final result not updated. Could not convert final result to string or map")?
+            }
         }
+
         Ok(())
     }
 }

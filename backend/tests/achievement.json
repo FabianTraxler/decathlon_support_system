@@ -1,0 +1,8 @@
+{
+  "name": "Weitsprung",
+  "first_try": {"integral": 1, "fractional":20},
+  "second_try": {"integral": 1, "fractional":30},
+  "third_try": {"integral": 1, "fractional":10},
+  "final_result": {"integral": 0, "fractional":0},
+  "unit": "m"
+}

@@ -18,7 +18,8 @@ pub struct Athlete {
     gender: String,
     achievements: HashMap<String, Achievement>,
     competition_type: CompetitionType,
-    starting_number: Option<u16>
+    starting_number: Option<u16>,
+    total_points: Option<u32>
 }
 
 impl Athlete {
@@ -29,7 +30,8 @@ impl Athlete {
         gender: &str,
         achievements: HashMap<String, Achievement>,
         competition_type: CompetitionType,
-        starting_number: Option<u16>
+        starting_number: Option<u16>,
+        total_points: Option<u32>
     ) -> Self {
         Athlete {
             name: name.to_string(),
@@ -38,7 +40,8 @@ impl Athlete {
             gender: gender.to_string(),
             achievements,
             competition_type,
-            starting_number
+            starting_number,
+            total_points
         }
     }
 
@@ -74,12 +77,41 @@ impl Athlete {
         &self.competition_type
     }
 
+    pub fn age_group(&self) -> String {
+        match self.competition_type {
+            CompetitionType::Decathlon => {
+                let mut age_group = self.gender.clone();
+                if let Some(birth_date) = self.birth_date() {
+                    let years = Utc::now().years_since(birth_date).unwrap_or(0);
+                    match years {
+                        age if age < 40 => age_group += "",
+                        age if age < 50 => age_group += "40",
+                        age if age < 60 => age_group += "50",
+                        _ => age_group += "60"
+                    }
+                }
+                age_group
+            },
+            _ => {
+                self.gender.clone()
+            }
+        }
+    }
+
     pub fn total_point(&self) -> u32 {
         let mut total_points = 0;
         for achievement in self.achievements.values() {
             total_points += achievement.points(self)
         }
         total_points
+    }
+
+    pub fn compute_total_points(&mut self) {
+        let mut total_points = 0;
+        for achievement in self.achievements.values() {
+            total_points += achievement.points(self)
+        }
+        self.total_points = Some(total_points);
     }
 
     pub fn update_values(&mut self, json_str: &str) -> Result<(), Box<dyn Error>>{

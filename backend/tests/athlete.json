@@ -1,0 +1,25 @@
+{
+  "name": "Test",
+  "surname": "Person",
+  "birth_date": 859033208,
+  "gender": "M",
+  "achievements": {
+    "Weitsprung": {
+      "Distance": {
+        "name": "Weitsprung",
+        "first_try": 1.20,
+        "second_try": 1.30,
+        "third_try": 1.10,
+        "unit": "m"
+      }
+    },
+    "100 Meter Lauf": {
+      "Time": {
+        "name": "100 Meter Lauf",
+        "final_result": 13.24,
+        "unit": "m"
+      }
+    }
+  },
+  "competition_type": "Decathlon"
+}

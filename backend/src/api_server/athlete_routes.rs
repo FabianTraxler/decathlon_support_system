@@ -18,7 +18,10 @@ async fn get_athlete(
     let athlete = data.get_athlete(&athlete_id);
 
     match athlete {
-        Some(athlete) => HttpResponse::Ok().body(serde_json::to_string(&athlete).expect("Athlete should be serializable")),
+        Some(mut athlete) => {
+            athlete.compute_total_points();
+            HttpResponse::Ok().body(serde_json::to_string(&athlete).expect("Athlete should be serializable"))
+        },
         None => HttpResponse::NotFound().body("Not found")
     }
 }

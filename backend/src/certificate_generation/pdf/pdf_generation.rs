@@ -194,25 +194,20 @@ pub fn new_decathlon_certificate(athlete: &Athlete) -> PdfDocumentReference {
 
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
-    current_layer.begin_text_section();
-        let font_size = 36.0;
-        current_layer.use_text(format!("{COMPETITION_NUMBER}. Favoritner"), font_size, Mm(60.0), Mm(230.0), &font_bold);
-        current_layer.use_text("Jedermann Zehnkampf", font_size, Mm(40.0), Mm(215.0), &font_bold);
-        current_layer.use_text(format!("{DATE}"), 20.0, Mm(65.0), Mm(205.0), &font);
-    current_layer.end_text_section();
+    let font_size = 36.0;
+    current_layer.use_text(format!("{COMPETITION_NUMBER}. Favoritner"), font_size, Mm(60.0), Mm(230.0), &font_bold);
+    current_layer.use_text("Jedermann Zehnkampf", font_size, Mm(40.0), Mm(215.0), &font_bold);
+    current_layer.use_text(format!("{DATE}"), 20.0, Mm(65.0), Mm(205.0), &font);
 
     add_logo(pdf.get_page(page).get_layer(layer), false);
     add_name(&current_layer, &font_bold, &athlete);
     add_achievements(&current_layer, &font, &athlete);
 
     // Write JZK Footer
-    current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
-    current_layer.begin_text_section();
     let font_size = 12.0;
     current_layer.use_text("Veranstalter: STW Favoriten", font_size, Mm(75.0), Mm(25.0), &font);
     current_layer.use_text("www.jedermannzehnkampf.at", font_size, Mm(75.0), Mm(20.0), &font);
     current_layer.use_text("office@jedermannzehnkampf.at", font_size, Mm(75.0), Mm(15.0), &font);
-    current_layer.end_text_section();
 
     pdf
 }

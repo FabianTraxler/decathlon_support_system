@@ -57,7 +57,7 @@ async fn update_achievement(
     match data.update_achievement(achievement_id.into_inner(), json_string.as_str()) {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
-        }
-        Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Achievement: {}", e))
+        },
+        Err(e) => HttpResponse::BadRequest().body(format!("Error updating Achievement: {}", e))
     }
 }
