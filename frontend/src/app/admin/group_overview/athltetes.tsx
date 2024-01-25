@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Achievement from './achievement/page';
 import { LoadingButton } from '@/app/lib/loading_button';
 import { decathlon_disciplines } from '@/app/lib/config';
-import { Athlete, fetch_age_group_athletes, fetch_group_athletes } from '@/app/lib/athlete_fetching';
+import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 
 export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(true);
@@ -35,7 +35,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
 function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
   const achievements = new Map(Object.entries(athlete.achievements));
-  const birthdate = new Date(athlete.birth_date);
+  const birthdate = new Date(athlete.birth_date * 1000);
   const full_name = athlete.name + "_" + athlete.surname;
   const athlete_certificate_print = function (onStop: () => void) {
     fetch(`/api/certificate?name=${athlete.name}&surname=${athlete.surname}`)
@@ -144,39 +144,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     }
   }
 
-  athletes.sort(function (a, b) {
-    var return_value = 0;
-    switch (sorted.name) {
-      case "#":
-        if (a.starting_number < b.starting_number) return_value = -1
-        else if (a.starting_number > b.starting_number) return_value = 1
-        else return_value = 0
-        break
-      case "Name":
-        if (a.surname < b.surname) return_value = -1
-        else if (a.surname > b.surname) return_value = 1
-        else return_value = 0
-        break
-      case "JG":
-        let keyA = new Date(a.birth_date).getFullYear()
-        let keyB = new Date(b.birth_date).getFullYear()
-        if (keyA < keyB) return_value = -1
-        else if (keyA > keyB) return_value = 1
-        else return_value = 0
-        break;
-      case "Summe":
-        if (a.total_points < b.total_points) return_value = -1
-        else if (a.total_points > b.total_points) return_value = 1
-        else return_value = 0
-        break;
-      default:
-        return_value = 0
-        break;
-    }
-
-    return sorted.ascending ? return_value : -1 * return_value;
-
-  });
+  athletes.sort((a,b) => sort_athletes(a,b,sorted));
 
   return (
     <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
