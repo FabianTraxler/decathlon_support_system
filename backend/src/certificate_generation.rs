@@ -5,6 +5,7 @@ mod groups;
 mod pdf;
 
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -18,6 +19,7 @@ pub use pdf::PDF;
 
 pub trait AchievementStorage {
     fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
+    fn get_athletes(&self) -> HashMap<String, Vec<Athlete>>;
     fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
     fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
     fn get_group(&self, group_id: &GroupID) -> Option<Group>;

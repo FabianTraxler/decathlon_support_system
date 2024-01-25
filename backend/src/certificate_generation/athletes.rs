@@ -13,6 +13,7 @@ pub use super::Float;
 pub struct Athlete {
     name: String,
     surname: String,
+    #[serde(default)]
     #[serde(with = "ts_seconds_option")]
     birth_date: Option<DateTime<Utc>>,
     gender: String,

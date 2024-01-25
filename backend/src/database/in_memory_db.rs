@@ -51,6 +51,23 @@ impl AchievementStorage for InMemoryDB {
         self.athlete_store.lock().expect("Mutex Lox poised").get(athlete_id).cloned()
     }
 
+    fn get_athletes(&self) -> HashMap<String, Vec<Athlete>> {
+        let group_ids: Vec<GroupID> = self.group_store.lock().expect("Mutex Lox poised").keys().cloned().collect();
+
+        let mut groups = HashMap::new();
+
+        for group_id in group_ids {
+            match self.get_group(&group_id) {
+                Some(group) => {
+                    groups.insert(group.name().to_string(), group.athletes().clone());
+                },
+                None => {}
+            }
+
+        }
+        groups
+    }
+
     fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>> {
         match self.athlete_store.lock().expect("Mutex Lox poised").insert(athlete_id, athlete) {
             Some(_) => Ok(String::from("Old athlete overwritten")),
