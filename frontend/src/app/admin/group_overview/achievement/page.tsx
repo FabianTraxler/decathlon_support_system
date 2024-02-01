@@ -31,26 +31,7 @@ export default function Achievement({ index, name, achievement, achievement_type
     }
 
     if (current_achievement) {
-        if (achievement_type == "Time") {
-            let achievement_value = current_achievement.Time;
-            if (achievement_value) {
-                achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
-                achievement_unit = achievement_value.unit
-            }
-
-        } else if (achievement_type == "Distance") {
-            let achievement_value = current_achievement.Distance
-            if (achievement_value) {
-                achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
-                achievement_unit = achievement_value.unit
-            }
-        } else if (achievement_type == "Height") {
-            let achievement_value = current_achievement.Height;
-            if (achievement_value) {
-                achievement_string = achievement_value.final_result ? achievement_value.final_result.toString() : ""
-                achievement_unit = achievement_value.unit
-            }
-        }
+        [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
     }
 
     const handleOpenPopup = () => {
@@ -88,31 +69,52 @@ export default function Achievement({ index, name, achievement, achievement_type
     }
 }
 
-function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit }:
-    { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+function convert_achievement_to_string(achievement: AchievementValue, achievement_type: string): [string, string] {
     let achievement_string = "";
     let achievement_unit = "";
     if (achievement_type == "Time") {
         let achievement_value = achievement.Time;
-        if (achievement_value?.final_result) {
-            achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional || ""
+        if (achievement_value) {
+            if (achievement_value.name == "1500 Meter Lauf") {
+                let full_seconds = achievement_value.final_result?.integral || -1;
+                if (full_seconds == -1){
+                    achievement_string = full_seconds.toString()
+                }else {
+                    let minutes = Math.floor(full_seconds / 60)
+                    let seconds = full_seconds % 60 
+                    achievement_string = minutes + ":" + seconds + "," + achievement_value.final_result?.fractional
+                }
+            } else {
+                achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
+            }
+            achievement_unit = achievement_value.unit
         }
-        achievement_unit = achievement_value?.unit || ""
 
     } else if (achievement_type == "Distance") {
         let achievement_value = achievement.Distance
-        if (achievement_value?.final_result) {
-            achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional || ""
+        if (achievement_value) {
+            achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
+            achievement_unit = achievement_value.unit
         }
-        achievement_unit = achievement_value?.unit || ""
     } else if (achievement_type == "Height") {
         let achievement_value = achievement.Height;
-        if (achievement_value?.final_result) {
+        if (achievement_value) {
             achievement_string = achievement_value.final_result ? achievement_value.final_result.toString() : ""
+            achievement_unit = achievement_value.unit
         }
-        achievement_unit = achievement_value?.unit || ""
     }
-    const [currentState, set_currentState] = useState({ achievement_string: achievement_string, isUploaded: achievement_string != "" })
+    if (achievement_string  == "-1" || achievement_string  == "-1,0"){
+        achievement_string = "-"
+    }  
+
+    return [achievement_string, achievement_unit]
+}
+
+function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit }:
+    { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+    let [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
+
+    const [currentState, set_currentState] = useState({ achievement_string: achievement_string, isUploaded: (achievement_string != "" && achievement_string != "-" )})
 
     useEffect(() => {
         if (currentState.achievement_string != achievement_string && !currentState.isUploaded) {
@@ -219,7 +221,7 @@ function InlineEdit({ index, name, achievement, achievement_type, athleteName, o
         <td className={'group flex-col border border-slate-800 text-right group-active:bg-slate-400 ' + (currentState.isUploaded ? "bg-green-200" : "bg-yellow-200")}>
             <input onChange={handleOnChange}
                 id={index.toString()}
-                className='p-1 w-12 h-full text-right rounded-md shadow-xl group'
+                className='p-1 w-12 2xl:w-14 h-full text-right rounded-md shadow-xl group'
                 defaultValue={achievement_string}>
             </input>{achievement_unit}
         </td>

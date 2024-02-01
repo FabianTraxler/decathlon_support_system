@@ -36,7 +36,7 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
     return (
         <AthleteContext.Provider value={{ "update_athlete": updateAthlete, "reload_athletes": load_athlete }}>
             <div className="flex flex-col sm:flex-row justify-center items-center">
-                <div className="flex flex-row sm:flex-col justify-between items-center w-full p-2 sm:w-fit ">
+                <div className="flex flex-row sm:flex-col justify-between items-center p-2 w-screen sm:w-fit">
                     <div className="h-fit border border-black p-2 xl:p-5 xl:m-5 shadow-md rounded-md">
                         <Search updateQuery={setSearchQuery}></Search>
                     </div>
@@ -45,7 +45,7 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
                     </div>
                 </div>
 
-                <div className="border border-black p-2 mt-2 xl:p-5 xl:m-5 xl:pl-10 xl:pr-10 shadow-md rounded-md">
+                <div className="w-screen sm:w-fit x-overflow-scroll border border-black p-2 mt-2 xl:p-5 xl:m-5 xl:pl-10 xl:pr-10 shadow-md rounded-md">
                     <AthleteTable athletes={athletes} searchQuery={searchQuery}></AthleteTable>
                 </div>
 
