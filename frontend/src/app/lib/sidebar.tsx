@@ -3,6 +3,7 @@ import React, { useState, createContext, ReactNode, useContext } from "react";
 import { usePathname, useRouter } from 'next/navigation';
 
 import { decathlon_age_groups, groups, youth_groups } from "../lib/config";
+import { signOut } from "@/auth";
 
 export const NavContext = createContext((x: boolean) => { });
 
@@ -16,6 +17,10 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
         setshowNav(false)
         replace(`${pathname}`);
 
+    }
+
+    const logout = function () {
+        signOut()
     }
 
     return (
@@ -40,6 +45,21 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                             className="flex text-gray-500 mt-2 p-1 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <svg className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
+                            </svg>
+                        </button>
+
+                    }
+                    {showNav &&
+
+                        <button onClick={logout} data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button"
+                            className="flex text-gray-500 mt-2 p-1 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                            <svg className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                                <g id="SVGRepo_iconCarrier">
+                                    <g>
+                                        <path d="M20.034,2.357v3.824c3.482,1.798,5.869,5.427,5.869,9.619c0,5.98-4.848,10.83-10.828,10.83 c-5.982,0-10.832-4.85-10.832-10.83c0-3.844,2.012-7.215,5.029-9.136V2.689C4.245,4.918,0.731,9.945,0.731,15.801 c0,7.921,6.42,14.342,14.34,14.342c7.924,0,14.342-6.421,14.342-14.342C29.412,9.624,25.501,4.379,20.034,2.357z"></path>
+                                        <path d="M14.795,17.652c1.576,0,1.736-0.931,1.736-2.076V2.08c0-1.148-0.16-2.08-1.736-2.08 c-1.57,0-1.732,0.932-1.732,2.08v13.496C13.062,16.722,13.225,17.652,14.795,17.652z"></path>
+                                    </g>
+                                </g>
                             </svg>
                         </button>
                     }
