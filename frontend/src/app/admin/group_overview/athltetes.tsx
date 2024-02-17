@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import Achievement from './achievement/page';
+import Achievement from './achievement';
 import { LoadingButton } from '@/app/lib/loading_button';
 import { decathlon_disciplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
