@@ -3,7 +3,7 @@ export interface Athlete {
   surname: string,
   starting_number: number,
   birth_date: number,
-  achievements: Map<string, Map<string, AchievementValue>>,
+  achievements: Map<string, AchievementValue>,
   total_points: number,
   gender: string,
   group_name?: string

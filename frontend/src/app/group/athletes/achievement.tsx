@@ -1,20 +1,23 @@
 import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 import { AchievementValue } from "@/app/lib/athlete_fetching";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { AchievementContext } from "./athletes";
 
 
-export default function AchievementDisplay({ name, achievement, athlete_name }: { name: string, achievement: AchievementValue, athlete_name: string }) {
-    const [showEditOverlay, setShowEditoverlay] = useState(false)
-    const [current_achievement, setAchievement] = useState(achievement)
+export default function AchievementDisplay({ athlete_number, name, achievement, athlete_name }: { athlete_number: number, name: string, achievement?: AchievementValue, athlete_name: string }) {
+    const [current_achievement, setAchievement] = useState<{ showEdit: boolean, value?: AchievementValue }>({ showEdit: false, value: achievement })
+    let { updateAchievement } = useContext(AchievementContext);
 
     let achievement_type = ""
 
-    if (achievement.Distance) {
-        achievement_type = "Distance"
-    } else if (achievement.Height) {
-        achievement_type = "Height"
-    } else if (achievement.Time) {
-        achievement_type = "Time"
+    if (achievement) {
+        if (achievement.Distance) {
+            achievement_type = "Distance"
+        } else if (achievement.Height) {
+            achievement_type = "Height"
+        } else if (achievement.Time) {
+            achievement_type = "Time"
+        }
     }
 
     let achievement_string = "";
@@ -35,30 +38,35 @@ export default function AchievementDisplay({ name, achievement, athlete_name }: 
         },
     }
 
-    if (current_achievement) {
-        [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
+    if (current_achievement.value) {
+        [achievement_string, achievement_unit] = convert_achievement_to_string(current_achievement.value, achievement_type);
     }
 
-    const saveChanges = function (new_achievement?: AchievementValue) {
+    var saveChanges = function (new_achievement?: AchievementValue) {
         if (new_achievement) {
-            setAchievement(new_achievement)
+            updateAchievement(athlete_number, name, new_achievement)
+            setAchievement({ showEdit: false, value: new_achievement })
+        } else {
+            setAchievement({ ...current_achievement, showEdit: false })
         }
-        setShowEditoverlay(false);
     }
 
     return (
-        <div key={athlete_name} className="grid grid-cols-8 grid-col border text-lg pt-1 p-1 odd:bg-slate-200 even:bg-slate-300"
-            onClick={() => setShowEditoverlay(true)}>
-            <div className="col-span-4">{name}</div>
-            <div className="grid col-span-3 grid-cols-2">
-                <div className="text-right">{achievement_string}</div>
-                <div className="text-left pl-1">{achievement_unit}</div>
+        <div key={athlete_name} className="h-fit odd:bg-slate-200 even:bg-slate-300 border border-slate-100 border-collapse">
+            <div className="grid grid-cols-12 grid-col text-lg pt-1 p-1 "
+                onClick={() => setAchievement({ showEdit: true, value: current_achievement.value })}>
+                <div className="col-span-6">{name}</div>
+                <div className="grid col-span-5 grid-cols-2">
+                    <div className="text-right">{achievement_string}</div>
+                    <div className="text-left pl-1">{achievement_unit}</div>
+                </div>
+                <div className="text-center">&#x270E;</div>
             </div>
-            <div className="text-center">&#x270E;</div>
+
 
             {
-                showEditOverlay &&
-                <EditPopup key={name} achievement={current_achievement || default_achievement} achievementType={achievement_type}
+                current_achievement.showEdit &&
+                <EditPopup key={name} achievement={current_achievement.value || default_achievement} achievementType={achievement_type}
                     athleteName={athlete_name} onClose={saveChanges}></EditPopup>
             }
         </div>

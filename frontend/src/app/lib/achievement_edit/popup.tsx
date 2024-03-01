@@ -72,6 +72,8 @@ export default function EditPopup({ achievement, achievementType, athleteName, o
     return (
         <div
             className="fixed left-0 top-0 z-[1055] h-full w-full overflow-y-auto overflow-x-hidden outline-none bg-slate-500 bg-opacity-45">
+                <div className="flex w-full h-full items-center justify-center">
+
             <div
                 className="pointer-events-none relative w-auto transition-all duration-300 ease-in-out min-[576px]:mx-auto min-[576px]:mt-7 min-[576px]:max-w-[300px]">
                 <div
@@ -92,7 +94,7 @@ export default function EditPopup({ achievement, achievementType, athleteName, o
                                 viewBox="0 0 24 24"
                                 strokeWidth="1.5"
                                 stroke="currentColor"
-                                className="h-6 w-6">
+                                className="h-8 sm:h-6 w-8 sm:w-6">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -114,6 +116,7 @@ export default function EditPopup({ achievement, achievementType, athleteName, o
                     </div>
 
                 </div>
+            </div>
             </div>
         </div>
     )

@@ -3,14 +3,19 @@ import Title from "./title";
 
 export default function Field() {
     return (
-        <div>
+        <div className="h-full">
             <Title title="Platzübersicht"></Title>
-            <Image
-                src="/images/Platz_klein.jpg"
-                width={200}
-                height={800}
-                alt="Sportplatz Übersicht"
-            ></Image>
+            <div className="flex mt-12 w-screen items-center justify-center">
+                <Image
+                    src="/images/Platz_klein.jpg"
+                    width={200}
+                    height={800}
+                    alt="Sportplatz Übersicht"
+                    objectFit="contain"
+                    className="w-full h-fit"
+                ></Image>
+            </div>
+
         </div>
-    ) 
+    )
 }
