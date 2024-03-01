@@ -24,7 +24,8 @@ export const viewport: Viewport = {
   minimumScale: 1,
   initialScale: 1,
   width: "device-with",
-  viewportFit: "cover"
+  viewportFit: "cover",
+  userScalable: false
 }
 
 export default function RootLayout({
