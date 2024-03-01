@@ -26,7 +26,7 @@ async fn get_group(
             HttpResponse::Ok()
                 .body(serde_json::to_string(&group)
                     .expect("Group should be serializable"))
-        },
+        }
         None => HttpResponse::NotFound().body("Not found")
     }
 }
@@ -57,7 +57,7 @@ async fn post_group(
 async fn update_group(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
     body: web::Payload,
-    query: Query<GroupID>
+    query: Query<GroupID>,
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
 
@@ -69,7 +69,6 @@ async fn update_group(
         }
         Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Group: {}", e))
     }
-
 }
 
 #[get("/age_group")]
@@ -81,9 +80,14 @@ async fn get_age_group(
     let age_group = data.get_age_group(&group_id);
 
     match age_group {
-        Some(group) => HttpResponse::Ok()
-            .body(serde_json::to_string(&group)
-                .expect("Group should be serializable")),
+        Some(mut group) => {
+            for athlete in group.mut_athletes() {
+                athlete.compute_total_points()
+            }
+            HttpResponse::Ok()
+                .body(serde_json::to_string(&group)
+                    .expect("Group should be serializable"))
+        }
         None => HttpResponse::NotFound().body("Not found")
     }
 }

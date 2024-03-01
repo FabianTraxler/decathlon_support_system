@@ -133,6 +133,10 @@ impl Float {
             fractional,
         })
     }
+
+    fn to_f32(&self) -> f32 {
+        self.integral as f32 + (self.fractional as f32 / 100.)
+    }
 }
 
 impl PartialOrd for Float {
@@ -188,9 +192,16 @@ fn preprocess_json(json_string: &str) -> String {
             let key = key_value[0];
             let value = key_value[1];
             let integral_fractional: Vec<&str> = value.split(".").collect();
-            let integral = integral_fractional[0];
-            let fractional = integral_fractional[1];
-            let new_field = vec![key, ":", r#"{"integral":"#, integral, r#", "fractional":"#, fractional, "}"];
+            let integral = integral_fractional[0].trim_start_matches('0');
+            let mut fractional = integral_fractional[1].to_string();
+            if fractional.len() == 1 && fractional != "0"{
+                fractional = format!("{fractional}0");
+            } else if fractional.len() >= 2 {
+                fractional = fractional.trim_start_matches('0').to_string()
+            } else {
+                fractional = String::from("0");
+            }
+            let new_field = vec![key, ":", r#"{"integral":"#, integral, r#", "fractional":"#, fractional.as_str(), "}"];
             new_json.push(new_field.join(" "));
         } else {
             new_json.push(field.to_string());

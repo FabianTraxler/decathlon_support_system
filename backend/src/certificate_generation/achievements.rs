@@ -38,9 +38,9 @@ impl Achievement {
 
     pub fn final_result(&self) -> String {
         match self {
-            Achievement::Distance(r) => format!("{}",r.final_result()),
-            Achievement::Height(r) => format!("{}",Float::from_i32(r.final_result())),
-            Achievement::Time(r) => format!("{}",r.final_result()) // TODO: Add Minutes if more than 3min (for 1500 M)
+            Achievement::Distance(r) => format!("{}", r.final_result()),
+            Achievement::Height(r) => format!("{}", Float::from_i32(r.final_result())),
+            Achievement::Time(r) => format!("{}", r.final_result()) // TODO: Add Minutes if more than 3min (for 1500 M)
         }
     }
 
@@ -64,7 +64,8 @@ impl Achievement {
         let processed_content = preprocess_json(json_string);
         let achievement: Achievement = serde_json::from_str(processed_content.as_str())?;
         Ok(achievement)
-    }}
+    }
+}
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct AchievementID {
@@ -123,8 +124,51 @@ impl HeightResult {
     }
 
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
-        // TODO: Implement point scheme
-        0
+        if self.final_result() < 0 {
+            0
+        } else {
+            let a: f32;
+            let b: f32;
+            let c: f32;
+            let mut m: f32 = self.final_result() as f32;
+            match self.name.as_str() {
+                "Hochsprung" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 1.84523;
+                            b = 75.;
+                            c = 1.348;
+                        }
+                        _ => {
+                            a = 0.8465;
+                            b = 75.;
+                            c = 1.42;
+                        }
+                    }
+                }
+                "Stabhochsprung" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 0.44125;
+                            b = 100.;
+                            c = 1.35;
+                        }
+                        _ => {
+                            a = 0.2797;
+                            b = 100.;
+                            c = 1.35;
+                        }
+                    }
+                }
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * (m - b).powf(c)) as u32
+        }
     }
 
     pub fn final_result(&self) -> i32 {
@@ -202,8 +246,83 @@ impl DistanceResult {
     }
 
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
-        // TODO: Implement point scheme
-        0
+        if self.final_result().to_f32() < 0. {
+            0
+        } else {
+            let a: f32;
+            let b: f32;
+            let c: f32;
+            let m: f32;
+            match self.name.as_str() {
+                "Weitsprung" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 0.188807;
+                            b = 210.;
+                            c = 1.41;
+                        }
+                        _ => {
+                            a = 0.14354;
+                            b = 220.;
+                            c = 1.4;
+                        }
+                    }
+                }
+                "Kugelstoß" => {
+                    m = self.final_result().to_f32();
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 56.0211;
+                            b = 1.5;
+                            c = 1.05;
+                        }
+                        _ => {
+                            a = 51.39;
+                            b = 1.5;
+                            c = 1.05;
+                        }
+                    }
+                }
+                "Diskuswurf" => {
+                    m = self.final_result().to_f32();
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 12.3311;
+                            b = 3.;
+                            c = 1.1;
+                        }
+                        _ => {
+                            a = 12.91;
+                            b = 4.;
+                            c = 1.1;
+                        }
+                    }
+                }
+                "Speerwurf" => {
+                    m = self.final_result().to_f32();
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 15.9803;
+                            b = 3.8;
+                            c = 1.04;
+                        }
+                        _ => {
+                            a = 10.14;
+                            b = 7.;
+                            c = 1.08;
+                        }
+                    }
+                }
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * (m - b).powf(c)) as u32
+        }
     }
 
     pub fn final_result(&self) -> Float {
@@ -281,8 +400,79 @@ impl TimeResult {
     }
 
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
-        // TODO: Implement point scheme
-        123
+        if self.final_result().to_f32() < 0. {
+            0
+        } else {
+            let a: f32;
+            let b: f32;
+            let c: f32;
+            let mut m: f32 = self.final_result().to_f32();
+            match self.name.as_str() {
+                "100 Meter Lauf" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 17.857;
+                            b = 21.;
+                            c = 1.81;
+                        }
+                        _ => {
+                            a = 25.4347;
+                            b = 18.;
+                            c = 1.81;
+                        }
+                    }
+                }
+                "400 Meter Lauf" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 1.34285;
+                            b = 91.7;
+                            c = 1.81;
+                        }
+                        _ => {
+                            a = 1.53775;
+                            b = 82.;
+                            c = 1.81;
+                        }
+                    }
+                }
+                "110 Meter Hürden" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 5.5;
+                            b = 31.5;
+                            c = 1.85;
+                        }
+                        _ => {
+                            a = 5.74352;
+                            b = 28.5;
+                            c = 1.92;
+                        }
+                    }
+                }
+                "1500 Meter Lauf" => {
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 0.02883;
+                            b = 535.;
+                            c = 1.88;
+                        }
+                        _ => {
+                            a = 0.03768;
+                            b = 480.;
+                            c = 1.85;
+                        }
+                    }
+                }
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * (b - m).powf(c)) as u32
+        }
     }
 
     pub fn final_result(&self) -> Float {
@@ -302,10 +492,10 @@ impl TimeResult {
             match final_result {
                 Value::String(str_value) => {
                     self.final_result = Float::from_str(str_value)?;
-                },
+                }
                 Value::Object(map) => {
                     self.final_result = Float::from_map(map)?;
-                },
+                }
                 _ => return Err("Final result not updated. Could not convert final result to string or map")?
             }
         }

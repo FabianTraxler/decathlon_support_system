@@ -134,6 +134,11 @@ impl AgeGroup {
     pub fn athletes(&self) -> &Vec<Athlete> {
         &self.athletes
     }
+
+    pub fn mut_athletes(&mut self) -> &mut Vec<Athlete> {
+        &mut self.athletes
+    }
+
 }
 
 /// AgeGroupID to access the persitent storage and get all results for an age/gender group
