@@ -6,6 +6,8 @@ import Header from "./header";
 import { useState } from "react";
 import Athletes from "./athletes/athletes";
 import Field from "./field";
+import Timetable from "./timetable";
+import Title from "./title";
 
 export default function Group() {
   const [TabHistory, setTabHistory] = useState(["overview"])
@@ -43,7 +45,7 @@ export default function Group() {
         <Field></Field>
       }
       {currentTab == "Zeitplan" &&
-        <Timetable></Timetable>
+        <Timetable group_name={groupName}></Timetable>
       }
       {currentTab == "Disziplinen & Regelwerk" &&
         <Rules></Rules>
@@ -56,19 +58,13 @@ export default function Group() {
 }
 
 
-
-function Timetable() {
-  return (
-    <div>feld</div>
-  )
-}
 function Rules() {
   return (
-    <div>regeln</div>
+    <div><Title title="Regelwerk"></Title></div>
   )
 }
 function Disciplines() {
   return (
-    <div>disciplinen</div>
+    <div><Title title="Aktuelle Disziplin"></Title></div>
   )
 }

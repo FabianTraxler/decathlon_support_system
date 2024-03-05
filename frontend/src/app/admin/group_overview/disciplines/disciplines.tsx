@@ -6,42 +6,8 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { StartingOrderEditButton } from './discipline_edit';
-
-export interface Discipline {
-  name: string,
-  location: string,
-  start_time: string,
-  state: string,
-  starting_order: StartingOrder | string
-}
-
-export interface StartingOrder {
-  Track?: {
-    name: string,
-    athletes: AthleteID[]
-  }[],
-  Default?: AthleteID[]
-}
-
-export interface AthleteID {
-  name: string,
-  surname: string,
-  starting_number: number,
-  age_group: string
-}
-
-function convert_date(date_str: string): string {
-  let date = new Date(date_str)
-  let day = new Intl.DateTimeFormat("de-DE", { weekday: "long" }).format(date)
-  let hour = date.getHours()
-  let minute = date.getMinutes().toString()
-
-  if (minute.length < 2) {
-    minute = minute.padEnd(2, "0")
-  }
-
-  return day + ", " + hour + ":" + minute
-}
+import { StartingOrder, Discipline } from '@/app/lib/interfaces';
+import { convert_date } from '@/app/lib/parsing';
 
 export default function Disciplines() {
   const [showDisciplines, set_showDisciplines] = useState(false);
@@ -131,7 +97,10 @@ export default function Disciplines() {
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date(discipline.start_time)}</td>
-                  <StartingOrderEditButton group_name={group_name} discipline={discipline} updateStartingOrder={(order) => update_starting_order(i, order)}></StartingOrderEditButton>
+                  <StartingOrderEditButton group_name={group_name} discipline={discipline} updateStartingOrder={(order) => update_starting_order(i, order)}>
+                    <span className='flex'>Ändern</span>
+                    <span className='pl-2 hidden group-hover:flex'>&#9998;</span>
+                  </StartingOrderEditButton>
                   <td className='border border-slate-800 group hover:bg-slate-600'>
                     <LoadingButton size="1.5" onclick={(stop_load) => print_protocol(discipline.name, stop_load)}>
                       <svg className="text-slate-600 fill-current group-hover:text-slate-50" xmlns="http://www.w3.org/2000/svg" height="25" width="25" viewBox="0 0 512 512">

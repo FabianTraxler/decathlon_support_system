@@ -7,6 +7,9 @@ const nextConfig = {
             destination: 'http://localhost:3001/api/:path*' // Proxy to Backend
           }
         ]
+      },
+      env: {
+        START_DATE: "2024-09-28"
       }
 }
 
