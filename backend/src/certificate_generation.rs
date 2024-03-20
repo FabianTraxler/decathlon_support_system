@@ -75,6 +75,16 @@ impl Float {
         }
     }
 
+    fn from_f64(value: f64) -> Self {
+        let integral = value as i32;
+        let fractional = ((value - integral as f64) * 100.) as i32;
+
+        Float {
+            integral,
+            fractional
+        }
+    }
+
 
     fn from_str(value: &str) -> Result<Self, Box<dyn Error>> {
         let integral: i32;

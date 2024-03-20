@@ -222,9 +222,9 @@ impl HeightResult {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DistanceResult {
     name: String,
-    first_try: Float,
-    second_try: Float,
-    third_try: Float,
+    first_try: Option<Float>,
+    second_try: Option<Float>,
+    third_try: Option<Float>,
     final_result: Option<Float>,
     unit: String,
 }
@@ -327,21 +327,29 @@ impl DistanceResult {
 
     pub fn final_result(&self) -> Float {
         self.final_result.clone().unwrap_or_else(|| {
-            let all_results = vec![&self.first_try, &self.second_try, &self.third_try];
-
-            let best_result = all_results.iter().max();
-
-            match best_result {
-                Some(result) => {
-                    if result.integral == -1 {
-                        return self.final_result.clone().unwrap_or_else(|| Float::new(0, 0));
-                    }
-                    let result = *result;
-                    result.clone()
-                }
-                None => Float::new(0, 0)
-            }
+            self.compute_best_result()
         })
+    }
+
+    pub fn compute_best_result(&self) -> Float {
+        let all_results = vec![&self.first_try, &self.second_try, &self.third_try];
+
+        let best_result = all_results.iter().max();
+
+        match best_result {
+            Some(result) => {
+                match result {
+                    Some(result) => {
+                        if result.integral == -1 {
+                            return self.final_result.clone().unwrap_or_else(|| Float::new(0, 0));
+                        }
+                        result.clone()
+                    }
+                    None => Float::new(0, 0)
+                }
+            }
+            None => Float::new(0, 0)
+        }
     }
 
     pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
@@ -356,24 +364,37 @@ impl DistanceResult {
 
         let mut new_try = false;
 
-        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_i64) {
-            self.first_try = Float::from_i32(first_try as i32);
+        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_str) {
+            self.first_try = Float::from_str(first_try).ok();
             new_try = true;
         }
-        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_i64) {
-            self.second_try = Float::from_i32(second_try as i32);
+        if let Some(first_try) = json_value.get("first_try").and_then(Value::as_f64) {
+            self.first_try = Some(Float::from_f64(first_try));
             new_try = true;
         }
-        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_i64) {
-            self.third_try = Float::from_i32(third_try as i32);
+        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_str) {
+            self.second_try = Float::from_str(second_try).ok();
             new_try = true;
         }
-        if new_try {
-            self.final_result = Some(self.final_result());
+        if let Some(second_try) = json_value.get("second_try").and_then(Value::as_f64) {
+            self.second_try = Some(Float::from_f64(second_try));
+            new_try = true;
+        }
+        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_str) {
+            self.third_try = Float::from_str(third_try).ok();
+            new_try = true;
+        }
+        if let Some(third_try) = json_value.get("third_try").and_then(Value::as_f64) {
+            self.third_try = Some(Float::from_f64(third_try));
+            new_try = true;
         }
 
-        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_u64) {
-            self.final_result = Some(Float::from_i32(final_result as i32));
+        if new_try {
+            self.final_result = Some(self.compute_best_result());
+        }
+
+        if let Some(final_result) = json_value.get("final_result").and_then(Value::as_str) {
+            self.final_result = Float::from_str(final_result).ok();
         }
         Ok(())
     }
