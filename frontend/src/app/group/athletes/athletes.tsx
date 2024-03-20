@@ -1,16 +1,15 @@
 import { useEffect, useState } from "react";
-import Title from "../title";
 import { AchievementValue, Athlete, fetch_group_athletes } from "@/app/lib/athlete_fetching";
-import Footer from "../footer";
 import AchievementDisplay from "./achievement";
 import { createContext } from 'react';
 import { decathlon_disciplines } from "@/app/lib/config";
+import Title_Footer_Layout from "../subpage_layout";
 
 interface OverviewAthlete extends Athlete {
     searched: boolean
 }
 
-export const AchievementContext = createContext({updateAchievement: (athlete_id: number, achievement_name: string, achievement: AchievementValue) => {}});
+export const AchievementContext = createContext({ updateAchievement: (athlete_id: number, achievement_name: string, achievement: AchievementValue) => { } });
 
 export default function Athletes({ group_name }: { group_name: string }) {
     const [athletes, setAthletes] = useState<OverviewAthlete[]>([])
@@ -29,7 +28,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
         fetch_group_athletes(group_name, setOverviewAthletes)
     }, [group_name])
 
-    const updateAchievement = function(athlete_id: number, achievement_name: string, achievement: AchievementValue) {
+    const updateAchievement = function (athlete_id: number, achievement_name: string, achievement: AchievementValue) {
         athletes[athlete_id].achievements.set(achievement_name, achievement)
     }
 
@@ -49,10 +48,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
     }
 
     return (
-        <div className="grid grid-rows-10 h-[99%]">
-            <div className="flex items-center">
-                <Title title="Athleten:innen"></Title>
-            </div>
+        <Title_Footer_Layout title="Athleten:innen">
             <div className="row-span-1 flex items-center justify-center">
                 <input
                     id="groupAthletesearchForm"
@@ -83,29 +79,25 @@ export default function Athletes({ group_name }: { group_name: string }) {
                 </div>
             </div>
 
-            <AchievementContext.Provider value={{updateAchievement}}>
+            <AchievementContext.Provider value={{ updateAchievement }}>
 
-            <div className="grid row-span-6 items-top overflow-scroll overscroll-contain m-1 mt-3 border rounded-md">
-                <div>
-                    {
-                        athletes.map((athlete, index) => {
-                            return athlete.searched
-                                ? (
-                                    <AthleteOverview key={athlete.starting_number} athlete={athlete} athlete_number={index}></AthleteOverview>
-                                )
-                                : null
-                        })
-                    }
+                <div className="grid row-span-6 items-top overflow-scroll overscroll-contain m-1 mt-3 border rounded-md">
+                    <div>
+                        {
+                            athletes.map((athlete, index) => {
+                                return athlete.searched
+                                    ? (
+                                        <AthleteOverview key={athlete.starting_number} athlete={athlete} athlete_number={index}></AthleteOverview>
+                                    )
+                                    : null
+                            })
+                        }
+                    </div>
+
                 </div>
 
-            </div>
-
             </AchievementContext.Provider>
-
-            <div className="flex items-center">
-                <Footer></Footer>
-            </div>
-        </div>
+        </Title_Footer_Layout>
     )
 }
 

@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import Footer from "./footer";
-import Title from "./title";
 import { Discipline, StartingOrder } from "../lib/interfaces";
 import { convert_date_to_time } from "../lib/parsing";
 import { StartingOrderEditButton } from "../admin/group_overview/disciplines/discipline_edit";
+import Title_Footer_Layout from "./subpage_layout";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
@@ -52,11 +51,11 @@ export default function Timetable({ group_name }: { group_name: string }) {
     }, [group_name])
 
     const update_starting_order = function (day_id: string, discipline_index: number, order: StartingOrder) {
-        
-        let day_disciplines = disciplines.get(day_id);
-        if(day_disciplines) {
 
-            let new_discipline =day_disciplines[discipline_index];        
+        let day_disciplines = disciplines.get(day_id);
+        if (day_disciplines) {
+
+            let new_discipline = day_disciplines[discipline_index];
             new_discipline.starting_order = order
             day_disciplines[discipline_index] = new_discipline
             disciplines.set(day_id, day_disciplines);
@@ -65,24 +64,33 @@ export default function Timetable({ group_name }: { group_name: string }) {
             console.error("Error updating discipline starting order")
         }
 
-      }
+    }
+
+    const change_selected_date = function(day_id: string) {
+        if (day_id == selectedDay) {
+            setSelectedDay("")
+        } else {
+            setSelectedDay(day_id)
+        }
+    }
 
 
     if (disciplines.size == 0) {
-        return (<div>Loading...</div>)
+        return (
+            <Title_Footer_Layout title="Aktuelle Disciplin">
+                <div>Loading ...</div>
+            </Title_Footer_Layout>
+        )
     } else {
         return (
-            <div className="grid grid-rows-10 h-[99%]">
-                <div className="flex items-center">
-                    <Title title="Zeitplan"></Title>
-                </div>
-                <div className="row-span-7 flex flex-col items-top justify-top">
+            <Title_Footer_Layout title="Zeitplan">
+                <div>
                     {
                         days.map(([day_id, name]) => {
                             return (
-                                <div className="border p-1" >
+                                <div className="border p-1 mt-4 sm:mt-8" >
                                     <div className={"flex justify-between text-2xl items-center m-2 hover:cursor-pointer" + (selectedDay == day_id && " font-bold")}
-                                        onClick={() => setSelectedDay(day_id)}
+                                        onClick={() => change_selected_date(day_id)}
                                     >
                                         <span>{name}</span>
                                         {
@@ -102,33 +110,31 @@ export default function Timetable({ group_name }: { group_name: string }) {
                                         }
                                         {
                                             (disciplines.has(day_id) && selectedDay != day_id) &&
-
                                             <div className="text-center">&gt;</div>
-
                                         }
 
                                     </div>
                                     {(disciplines.has(day_id) && selectedDay == day_id) &&
                                         <div>
-                                            <table className="table-auto border-collapse">
+                                            <table className="table-auto border-collapse w-full">
                                                 <thead>
                                                     <tr>
                                                         <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
                                                         <th className="border border-slate-600 p-1 pl-2 pr-2">Name</th>
                                                         <th className="border border-slate-600 p-1 pl-2 pr-2">Ort</th>
-                                                        <th className="border border-slate-600 p-1 pl-2 pr-2">Startzeit</th>
+                                                        <th className="border border-slate-600 p-1 pl-2 pr-2">Zeit</th>
                                                         <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {disciplines.get(day_id)?.map((discipline, i) => {
                                                         return <tr key={discipline.name}>
-                                                            <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{i + 1}.</td>
-                                                            <td className='border border-slate-800 p-1 pl-2 pr-2 text-center font-bold'>{discipline.name}</td>
-                                                            <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
-                                                            <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date_to_time(discipline.start_time)}</td>
+                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{i + 1}.</td>
+                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center font-bold'>{discipline.name}</td>
+                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{discipline.location}</td>
+                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{convert_date_to_time(discipline.start_time)}</td>
                                                             <StartingOrderEditButton group_name={group_name} discipline={discipline} updateStartingOrder={(order) => update_starting_order(day_id, i, order)}>
-                                                                <span className='bg-transparent'>&#9998;</span>
+                                                                <span className='bg-transparent w-full text-center'>&#9998;</span>
                                                             </StartingOrderEditButton>
                                                         </tr>
                                                     })}
@@ -141,10 +147,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
                         })
                     }
                 </div>
-                <div className="flex items-center">
-                    <Footer></Footer>
-                </div>
-            </div>
+            </Title_Footer_Layout>
         )
     }
 }

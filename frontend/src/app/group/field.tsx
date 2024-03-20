@@ -1,10 +1,9 @@
 import Image from "next/image";
-import Title from "./title";
+import Title_Footer_Layout from "./subpage_layout";
 
 export default function Field() {
     return (
-        <div className="h-full">
-            <Title title="Platzübersicht"></Title>
+        <Title_Footer_Layout title="Platzübersicht">
             <div className="flex mt-12 w-screen items-center justify-center">
                 <Image
                     src="/images/Platz_klein.jpg"
@@ -15,7 +14,6 @@ export default function Field() {
                     className="w-full h-fit"
                 ></Image>
             </div>
-
-        </div>
+        </Title_Footer_Layout>
     )
 }

@@ -8,6 +8,7 @@ import Athletes from "./athletes/athletes";
 import Field from "./field";
 import Timetable from "./timetable";
 import Title from "./title";
+import Disciplines from "./discipline/discipline";
 
 export default function Group() {
   const [TabHistory, setTabHistory] = useState(["overview"])
@@ -51,7 +52,7 @@ export default function Group() {
         <Rules></Rules>
       }
       {currentTab == "Aktuelle Disziplin" &&
-        <Disciplines></Disciplines>
+        <Disciplines group_name={groupName}></Disciplines>
       }
     </div>
   );
@@ -61,10 +62,5 @@ export default function Group() {
 function Rules() {
   return (
     <div><Title title="Regelwerk"></Title></div>
-  )
-}
-function Disciplines() {
-  return (
-    <div><Title title="Aktuelle Disziplin"></Title></div>
   )
 }

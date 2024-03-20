@@ -1,5 +1,6 @@
+import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { StartingOrder, Discipline, AthleteID } from "@/app/lib/interfaces";
-import { Children, useState } from 'react';
+import { useState } from 'react';
 
 
 export function StartingOrderEditButton({ discipline, group_name, updateStartingOrder, children }: { discipline: Discipline, group_name: string, updateStartingOrder: (order: StartingOrder) => void, children: React.ReactNode }) {
@@ -40,25 +41,9 @@ export function StartingOrderEditButton({ discipline, group_name, updateStarting
 }
 
 function EditPopup({ group_name, disciplineName, startingOrder, onClose }: { group_name: string, disciplineName: string, startingOrder: StartingOrder, onClose: (order: StartingOrder) => void }) {
-
-  const saveStartingOrder = function (order: StartingOrder) {
-    fetch(`/api/change_starting_order?name=${group_name}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(order)
-    }).then(res => {
-      if (res.ok) {
-        onClose(order)
-      } else {
-        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-      }
-    }).catch(e => {
-      alert(`Not updated: ${e}`)
-    }
-    )
-  }
+const saveNewStartingOrder = function(new_order: StartingOrder) {
+  saveStartingOrder(new_order, group_name, onClose)
+}
 
   return (
     <div
@@ -91,8 +76,8 @@ function EditPopup({ group_name, disciplineName, startingOrder, onClose }: { gro
               </svg>
             </button>
           </div>
-          {startingOrder.Default && <DefaultStartingOrder StartingOrder={startingOrder.Default} saveStartingOrder={saveStartingOrder}></DefaultStartingOrder>}
-          {startingOrder.Track && <TrackStartingOrder StartingOrder={startingOrder.Track} saveStartingOrder={saveStartingOrder}></TrackStartingOrder>}
+          {startingOrder.Default && <DefaultStartingOrder StartingOrder={startingOrder.Default} saveStartingOrder={saveNewStartingOrder}></DefaultStartingOrder>}
+          {startingOrder.Track && <TrackStartingOrder StartingOrder={startingOrder.Track} saveStartingOrder={saveNewStartingOrder}></TrackStartingOrder>}
         </div>
       </div>
     </div>

@@ -21,3 +21,12 @@ export interface AthleteID {
     starting_number: number,
     age_group: string
 }
+
+export interface AthleteDistanceResults extends AthleteID {
+    discipline_name: string,
+    discipline_unit: string,
+    first_try?: number,
+    second_try?: number,
+    third_try?: number,
+    best_try?: number
+}

@@ -16,6 +16,19 @@ export const default_discipline_values = {
     },
 }
 
+export const discipline_types: Map<string, string> = new Map([
+    ["100 Meter Lauf", "Time"],
+    ["Weitsprung", "Distance"],
+    ["Kugelstoß", "Distance"],
+    ["Hochsprung", "Height"],
+    ["400 Meter Lauf", "Time"],
+    ["110 Meter Hürden", "Time"],
+    ["Diskuswurf", "Distance"],
+    ["Stabhochsprung", "Height"],
+    ["Speerwurf", "Distance"],
+    ["1500 Meter Lauf", "Time"]
+])
+
 export const decathlon_disciplines: [string, string, string][] = [
     ["100 Meter Lauf", "Time", "100m"],
     ["Weitsprung", "Distance", "Weit"],
@@ -29,4 +42,7 @@ export const decathlon_disciplines: [string, string, string][] = [
     ["1500 Meter Lauf", "Time", "1500m"]
 ]
 
-export const german_discipline_states: Map<string, string> =  new Map([["BeforeStart", "Ausstehend"], ["Active", "Aktiv"], ["Finished", "Abgeschlossen"]])
+export const german_discipline_states: Map<string, string> =  new Map([
+    ["BeforeStart", "Ausstehend"], 
+    ["Active", "Aktiv"], 
+    ["Finished", "Abgeschlossen"]])
