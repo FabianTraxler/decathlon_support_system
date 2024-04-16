@@ -5,6 +5,7 @@ import { discipline_types, german_discipline_states } from "@/app/lib/config";
 import TimeDiscipline from "./time_discipline";
 import { convert_date } from "@/app/lib/parsing";
 import DistanceDiscipline from "./distance_discipline";
+import HeightDiscipline from "./height/height_discipline";
 
 export default function Disciplines({ group_name }: { group_name: string }) {
     const [discipline, setDiscipline] = useState<Discipline>();
@@ -43,9 +44,13 @@ export default function Disciplines({ group_name }: { group_name: string }) {
                     discipline_types.get(discipline.name) == "Time" &&
                     <TimeDiscipline discipline={discipline} group_name={group_name}></TimeDiscipline>
                 }
-                                {
+                {
                     discipline_types.get(discipline.name) == "Distance" &&
                     <DistanceDiscipline discipline={discipline} group_name={group_name}></DistanceDiscipline>
+                }
+                {
+                    discipline_types.get(discipline.name) == "Height" &&
+                    <HeightDiscipline discipline={discipline} group_name={group_name}></HeightDiscipline>
                 }
             </Title_Footer_Layout>
         )
@@ -53,7 +58,7 @@ export default function Disciplines({ group_name }: { group_name: string }) {
 }
 
 
-export function BeforeStartInfoBox({ discipline, start_discipline }: { discipline: Discipline, start_discipline: () => void }) {
+export function BeforeStartInfoBox({ discipline, start_discipline, children }: { discipline: Discipline, start_discipline: () => void, children?: React.ReactNode }) {
     return (
         <div className="w-full border rounded-md p-4 sm:p-8">
             <div className="font-bold text-center text-2xl sm:text-4xl">Info</div>
@@ -90,6 +95,7 @@ export function BeforeStartInfoBox({ discipline, start_discipline }: { disciplin
                     Disiplin starten
                 </div>
             </div>
+            {children && children}
         </div>
     )
 }

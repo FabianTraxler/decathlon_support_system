@@ -4,6 +4,7 @@ import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./disci
 import { get_group_achievements, save_distance_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { setTimeout } from "timers";
+import { NavigationContext } from "../page";
 
 // TODO: Add "revert" functionality and back-arrow only get one level back to current disciline and not to HOME if in input mode
 
@@ -172,8 +173,53 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
 function StartingOrderOverview({ finish_discipline }: { finish_discipline: () => void }) {
     const [selectedAthlete, setSelectedAthlete] = useState<AthleteDistanceResults | undefined>()
     const { state, update_state } = useContext(AthleteResults)
+    const navigation = useContext(NavigationContext)
 
-    const try_completed = function () {
+    const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string) {
+        let selected_athlete = state.current_order[0]
+        navigation.history.push({
+            name: "Save Achievement",
+            reset_function: () => {
+                setSelectedAthlete(selected_athlete)
+                update_state({...state})
+            }
+        })
+        let athlete_result = state.results.get(athlete.starting_number)
+        if (typeof new_value == "string") {
+            new_value = parseFloat(new_value)
+        }
+        if (athlete_result){
+            if (try_number == 1) {
+                athlete_result.first_try = new_value
+            } else if (try_number == 2) {
+                athlete_result.second_try = new_value
+    
+            } else if (try_number == 3) {
+                athlete_result.third_try = new_value
+            }
+            if (!athlete_result.best_try || new_value > athlete_result.best_try) {
+                athlete_result.best_try = new_value
+            }
+            
+            let update_result = {...athlete_result}
+            // Reset all tries to only update the new one
+            update_result.first_try = undefined
+            update_result.second_try = undefined
+            update_result.third_try = undefined
+            save_distance_achievement(update_result, () => {
+                let new_results = state.results
+                if(athlete_result){
+                    new_results.set(athlete.starting_number, athlete_result)
+                }
+                setTimeout(() => try_completed(new_results), 200)
+            })
+        } else{
+            alert("Error while saving achievement")
+        }
+
+    }
+
+    const try_completed = function(new_results: Map<number, AthleteDistanceResults>) {
         if (state.current_order.length <= 1) {
             if (state.current_try >= 3) {
                 // Finish discipline
@@ -183,14 +229,16 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 update_state({
                     ...state,
                     current_try: state.current_try + 1,
-                    current_order: state.default_order
+                    current_order: state.default_order,
+                    results: new_results
                 })
                 setSelectedAthlete(undefined)
             }
         } else {
             update_state({
                 ...state,
-                current_order: state.current_order.slice(1)
+                current_order: state.current_order.slice(1),
+                results: new_results
             })
             setSelectedAthlete(undefined)
         }
@@ -198,9 +246,18 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
     }
 
 
+    const select_athlete = function () {
+        setSelectedAthlete(state.current_order[0])
+        navigation.history.push({
+            name: "Select Athlete",
+            reset_function: () => setSelectedAthlete(undefined)
+        })
+    }
+
+
     if (selectedAthlete) {
         return (
-            <DistanceInput athlete={selectedAthlete} try_completed={try_completed}></DistanceInput>
+            <DistanceInput athlete={selectedAthlete} try_completed={save_athlete_try}></DistanceInput>
         )
     } else {
         return (
@@ -213,7 +270,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                         <div className="flex items-center justify-center border"><span></span></div>
                     </div>
                     <div className="row-span-3 grid grid-cols-5 text-xl font-bold h-full"
-                        onClick={() => setSelectedAthlete(state.current_order[0])}
+                        onClick={select_athlete}
                     >
                         <div className="flex items-center justify-center border bg-green-200"><span>{state.current_order[0].starting_number}</span></div>
                         <div className="col-span-3 flex items-center justify-center border bg-green-200"><span>{state.current_order[0].name} {state.current_order[0].surname}</span></div>
@@ -261,7 +318,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 
 }
 
-function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: () => void }) {
+function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: (athlete: AthleteID, try_number: number, new_value: number | string) => void }) {
     const { state, update_state } = useContext(AthleteResults)
     const athlete_result = state.results.get(athlete.starting_number)
     let try_value: number | string = ""
@@ -276,40 +333,6 @@ function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_com
         }
     }
     const [selectedTry, setSelectedTry] = useState({ try_number: state.current_try, try_value: try_value })
-
-    const udpate_athlete_try = function (try_number: number, new_value: number | string) {
-        if (athlete_result) {
-            if (typeof new_value == "string") {
-                new_value = parseFloat(new_value)
-            }
-            if (try_number == 1) {
-                athlete_result.first_try = new_value
-            } else if (try_number == 2) {
-                athlete_result.second_try = new_value
-
-            } else if (try_number == 3) {
-                athlete_result.third_try = new_value
-            }
-            if (!athlete_result.best_try || new_value > athlete_result.best_try) {
-                athlete_result.best_try = new_value
-            }
-            // TODO: Only update current try and not all tries!
-            save_distance_achievement(athlete_result, () => {
-                let new_results = state.results
-                new_results.set(athlete.starting_number, athlete_result)
-                update_state({
-                    ...state,
-                    results: new_results
-                })
-                setTimeout(try_completed, 200)
-            })
-
-        } else {
-            alert("Error while updating achievement")
-        }
-
-
-    }
 
     return (
         <div className="grid grid-rows-8 h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md">
@@ -338,7 +361,7 @@ function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_com
                         try_value={try_value}
                         current_try={selectedTry.try_number == try_number}
                         setSelectedTry={setSelectedTry}
-                        save_value={udpate_athlete_try}>
+                        save_value={(try_number: number, new_value: number | string) => try_completed(athlete, try_number, new_value)}>
                     </Try>
                 )
             })}

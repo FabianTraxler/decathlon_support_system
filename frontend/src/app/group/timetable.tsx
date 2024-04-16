@@ -88,7 +88,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
                     {
                         days.map(([day_id, name]) => {
                             return (
-                                <div className="border p-1 mt-4 sm:mt-8" >
+                                <div key={day_id} className="border p-1 mt-4 sm:mt-8" >
                                     <div className={"flex justify-between text-2xl items-center m-2 hover:cursor-pointer" + (selectedDay == day_id && " font-bold")}
                                         onClick={() => change_selected_date(day_id)}
                                     >
