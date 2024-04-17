@@ -59,6 +59,9 @@ export function save_distance_achievement(athlete: AthleteDistanceResults, callb
     if (athlete.third_try) {
       achievement["Distance"]["third_try"] = convert_to_integral_fractional(athlete.third_try?.toString())
     }
+    if (athlete.best_try) {
+      achievement["Distance"]["final_result"] = convert_to_integral_fractional(athlete.best_try?.toString())
+    }
   }
 
 

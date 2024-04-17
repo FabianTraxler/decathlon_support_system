@@ -189,23 +189,27 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             new_value = parseFloat(new_value)
         }
         if (athlete_result){
-            if (try_number == 1) {
-                athlete_result.first_try = new_value
-            } else if (try_number == 2) {
-                athlete_result.second_try = new_value
-    
-            } else if (try_number == 3) {
-                athlete_result.third_try = new_value
-            }
-            if (!athlete_result.best_try || new_value > athlete_result.best_try) {
-                athlete_result.best_try = new_value
-            }
-            
             let update_result = {...athlete_result}
             // Reset all tries to only update the new one
             update_result.first_try = undefined
             update_result.second_try = undefined
             update_result.third_try = undefined
+
+            if (try_number == 1) {
+                athlete_result.first_try = new_value
+                update_result.first_try = new_value
+            } else if (try_number == 2) {
+                athlete_result.second_try = new_value
+                update_result.first_try = new_value    
+            } else if (try_number == 3) {
+                athlete_result.third_try = new_value
+                update_result.first_try = new_value
+            }
+            if (!athlete_result.best_try || new_value > athlete_result.best_try) {
+                athlete_result.best_try = new_value
+                update_result.best_try = new_value
+            }
+            
             save_distance_achievement(update_result, () => {
                 let new_results = state.results
                 if(athlete_result){
