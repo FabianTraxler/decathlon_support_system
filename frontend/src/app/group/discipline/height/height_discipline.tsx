@@ -16,6 +16,7 @@ interface HeightDisciplineState {
     current_order: AthleteID[]
     default_order: AthleteID[]
     athletes_in_next_try: AthleteID[]
+    athletes_in_next_next_try: AthleteID[]
     athletes_in_next_height: number[]
     new_athletes_for_new_height: AthleteID[]
     discipline_progress_state: string // "new_height", "jumping",
@@ -32,6 +33,7 @@ const empty_state = {
     current_order: [],
     default_order: [],
     athletes_in_next_try: [],
+    athletes_in_next_next_try: [],
     athletes_in_next_height: [],
     new_athletes_for_new_height: [],
     discipline_progress_state: "new_height",
