@@ -126,7 +126,8 @@ mod tests {
             "M",
             achievements,
             CompetitionType::Decathlon,
-            Some(12)
+            Some(12),
+            Some(123)
         )
     }
     #[test]
@@ -162,7 +163,8 @@ mod tests {
             "M",
             HashMap::new(),
             CompetitionType::Decathlon,
-            Some(2)
+            Some(2),
+            Some(123)
         );
         let pdf = PDF::new_certificate(&athlete);
         let pdf_write_result = pdf.write_pdf("tests/output/write_decathlon_certificate.pdf");
@@ -189,6 +191,7 @@ mod tests {
             "M",
             HashMap::new(),
             CompetitionType::Triathlon,
+            None,
             None
         );
         let pdf = PDF::new_certificate(&athlete);
@@ -216,6 +219,7 @@ mod tests {
             "M",
             HashMap::new(),
             CompetitionType::Pentathlon,
+            None,
             None
         );
         let pdf = PDF::new_certificate(&athlete);

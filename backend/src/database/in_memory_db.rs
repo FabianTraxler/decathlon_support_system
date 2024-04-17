@@ -189,6 +189,13 @@ impl AchievementStorage for InMemoryDB {
         athlete.get_achievement(achievement_id.name.as_str()).cloned()
     }
 
+    fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>> {
+        let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available.")).ok_or("Athlete not found")?;
+        athlete.delete_achievement(achievement_id.name.as_str());
+        self.write_athlete(AthleteID::from_athlete(&athlete), athlete)?;
+        Ok(String::from("Achievement deleted"))
+    }
+
     fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
         let mut athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available."))
             .ok_or(ItemNotFound::new("Athlete not found", "404"))?;
@@ -331,6 +338,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -340,6 +348,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -349,6 +358,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -358,6 +368,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -367,6 +378,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -376,6 +388,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -385,6 +398,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -394,6 +408,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -403,6 +418,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -412,6 +428,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -421,6 +438,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -430,6 +448,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
         ];
 
@@ -446,6 +465,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -455,6 +475,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -464,6 +485,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
         ];
 
@@ -480,6 +502,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -489,6 +512,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -498,6 +522,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None
             ),
         ];
 
@@ -507,7 +532,7 @@ mod tests {
     #[test]
     fn insert_and_access_athlete() {
         let db = InMemoryDB::new();
-        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon, None);
+        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon, None, None);
         let athlete_key = AthleteID::new("fabian_traxler", "Traxler");
 
         db.write_athlete(athlete_key.clone(), new_athlete.clone()).expect("Write should not fail in this test");

@@ -164,6 +164,10 @@ impl Athlete {
         self.achievements.get(&query_name.to_string())
     }
 
+    pub fn delete_achievement(&mut self, query_name: &str) -> Option<Achievement> {
+        self.achievements.remove(&query_name.to_string())
+    }
+
     pub fn add_achievement(&mut self, mut achievement: Achievement) -> Result<String, Box<dyn Error>> {
         if self.achievements.contains_key(&achievement.name()) {
             return Err(Box::from("Achievement exists. Please update existing one!"));

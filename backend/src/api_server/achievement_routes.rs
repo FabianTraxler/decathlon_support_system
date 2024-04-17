@@ -1,4 +1,4 @@
-use actix_web::{get, web, HttpResponse, Responder, post, put};
+use actix_web::{get, web, HttpResponse, Responder, post, put, delete};
 use super::parse_json_body;
 use crate::certificate_generation::{Achievement, AchievementID, AthleteID};
 use crate::Storage;
@@ -7,6 +7,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_achievement);
     cfg.service(post_achievement);
     cfg.service(update_achievement);
+    cfg.service(delete_achievement);
 }
 
 #[get("/achievement")]
@@ -55,6 +56,20 @@ async fn update_achievement(
     let json_string = parse_json_body(body).await;
 
     match data.update_achievement(achievement_id.into_inner(), json_string.as_str()) {
+        Ok(msg) => {
+            HttpResponse::Ok().body(msg)
+        },
+        Err(e) => HttpResponse::BadRequest().body(format!("Error updating Achievement: {}", e))
+    }
+}
+
+#[delete("/achievement")]
+async fn delete_achievement(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: web::Query<AchievementID>,
+) -> impl Responder {
+    let achievement_id = query.into_inner();
+    match data.delete_achievement(&achievement_id) {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         },

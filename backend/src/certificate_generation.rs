@@ -28,6 +28,7 @@ pub trait AchievementStorage {
     fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
     fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
     fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;
+    fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>>;
     fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>>;
     fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>>;
 }
