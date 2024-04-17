@@ -1,7 +1,7 @@
 """Script to upload old results into DB for testing Purposes"""
 import pandas as pd
-from argparse import Namespace, ArgumentParser
-from typing import Dict, Union, List
+from argparse import Namespace, ArgumentParser, BooleanOptionalAction
+from typing import Dict, Union, List, Tuple
 import requests
 from datetime import datetime
 import numpy as np
@@ -11,11 +11,18 @@ def parse_args() -> Namespace:
     parser = ArgumentParser(
         prog="Insertion Tool for old result in Excel"
     )
-    parser.add_argument("filename")
-    
+    parser.add_argument("-f", "--filename", default="Adressen.xls")
+    parser.add_argument("-d", "--decathlon", action=BooleanOptionalAction, default=True)
+    parser.add_argument("-k", "--kids", action=BooleanOptionalAction, default=False)
+
+    parser.add_argument("-a", "--achievements", action=BooleanOptionalAction, default=False)
+    parser.add_argument("-s", "--starting_number", action=BooleanOptionalAction, default=False)
+    parser.add_argument("-t", "--timetable", action=BooleanOptionalAction, default=True)
+    parser.add_argument("--timetable_file", default="timetable.json")
+
+    parser.add_argument("-p", "--in_progress", action=BooleanOptionalAction, default=False)
 
     return parser.parse_args()
-
 
 def read_excel_file(filename: str) -> Dict[str, pd.DataFrame]:
     decathlon_sheet = pd.read_excel(filename, sheet_name="Adressen")
@@ -23,8 +30,7 @@ def read_excel_file(filename: str) -> Dict[str, pd.DataFrame]:
 
     return {"decathlon": decathlon_sheet }
 
-
-def upload_decathlon_results(results: pd.DataFrame, config: Dict): 
+def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_disciplines: Dict = {}): 
     groups = results["GRP"].unique()
     for group in groups:
         if group is None: continue
@@ -44,9 +50,16 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict):
                     (('1500m', '1500sec'), "1500 Meter Lauf", "Time" )]
 
     for _, row in results.iterrows():
+        if isinstance(row["GRP"], int):
+            group_name = f"Gruppe {row['GRP']}"
+        else:
+            group_name = row["GRP"]
+        group_skipped_disciplines = skipped_disciplines.get(group_name, [])
+        
         if not isinstance(row["NAME"], str) and np.isnan(row["NAME"]): continue
         achievements = []
         for (short_name, long_name, discipline_type) in disciplines:
+            if long_name in group_skipped_disciplines: continue # skip achievement
             discipline = {}
             if isinstance(short_name, str):
                 final_result = row[short_name]
@@ -127,7 +140,6 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict):
             print(f"Athlete: {row['VORNAME']} not uploaded")
     pass
 
-
 def upload_athlete(name: str, surname: str, 
                    starting_number: int, birth_day: int, gender: str,
                    achievements: List[Dict[str, Dict[str, Union[str, float]]]],
@@ -204,24 +216,79 @@ def upload_timetable(timetable: Dict) -> bool:
                              json=post_body)
     return response.ok 
 
+def simulate_in_progress(timetable: Dict, selected_time: Dict) -> Tuple[Dict, bool]: 
+    skipped_disciplines = {}
+    all_ok = True
+    for group, disciplines in timetable["Groups"].items():
+        skipped_disciplines[group] = []
+        for name, info in disciplines.items():
+            time, day = info["time"].split(",")
+            hour, min = time.split(":")
+            hour = int(hour.strip())
+            min = int(min.strip())
+            day = day.strip()
+            
+            if day == selected_time["day"]:
+                # check for selected time
+                if hour < selected_time["h"]:
+                    all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Finished")
+                elif hour == selected_time["h"]:
+                    if min < selected_time["min"]:
+                        all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Finished")
+                    elif min == selected_time["min"]:
+                        all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Active")
+                else:
+                    # not finished because selected is time is before start time
+                    skipped_disciplines[group].append(name)
+
+            elif day == "Samstag":
+                # finished because selected is sonntag
+                all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Finished")
+            else:
+                # not finished because selected is Samstag and day is Sonntag
+                skipped_disciplines[group].append(name)
+            
+    return skipped_disciplines, all_ok
+
+def update_discipline_state(group_name: str, name: str, state: str):
+    url = f"http://127.0.0.1:3001/api/discipline_state?name={group_name}"
+    post_body = {
+        "name": name,
+        "state": state
+    }
+    response = requests.put(url, json=post_body)
+    return response.ok 
+
 def main(args: Namespace):
+    print("Uploading Data")
     old_results = read_excel_file(args.filename)
 
     config = {
-        "decathlon": True,
-        "starting_number": True,
-        "achievements": False,
-        "timetable": True
+        "decathlon": args.decathlon,
+        "starting_number": args.starting_number,
+        "achievements": args.achievements,
+        "timetable": args.timetable,
+        "simulate_in_progress": args.in_progress,
+        "selected_time": {
+            "day": "Samstag",
+            "h": 9,
+            "min": 30
+        }
     }
     
-    if config["decathlon"]:
-        upload_decathlon_results(old_results["decathlon"], config)
-        
     if config["timetable"]:
-        with open("timetable.json") as f:
+        with open(args.timetable_file) as f:
             timetable = json.load(f)
         upload_timetable(timetable)
         
+    skipped_disciplines = {}        
+    if config["simulate_in_progress"]:
+        skipped_disciplines, _ = simulate_in_progress(timetable, config["selected_time"])
+    
+    if config["decathlon"]:
+        upload_decathlon_results(old_results["decathlon"], config, skipped_disciplines=skipped_disciplines)
+
+    print("Data uploaded")
 
 if __name__ == "__main__":
     args = parse_args()
