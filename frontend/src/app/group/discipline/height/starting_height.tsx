@@ -4,7 +4,7 @@ import { AthleteHeightResults } from "@/app/lib/interfaces";
 import { save_height_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { PopUp } from "@/app/lib/achievement_edit/popup";
 
-export function StartHeightInput({ close, min_height, max_height, step_size }: { close: () => void, min_height: number, max_height: number, step_size: number }) {
+export function StartHeightInput({ close, min_height, max_height, step_size}: { close: () => void, min_height: number, max_height: number, step_size: number }) {
     const { state, update_state } = useContext(AthleteResults)
 
     const start_height_values = Array.from({ length: (max_height - min_height) / step_size }, (x, i) => min_height + i * step_size);
@@ -22,9 +22,16 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
 
             save_height_achievement(athlete_result, () => {
                 state.results.set(athlete_result.starting_number, athlete_result)
+                let all_athletes_set = true;
+                state.results.forEach(athlete => {
+                    if(athlete.starting_number != undefined && !athlete.start_height_set){
+                        all_athletes_set = false
+                    }
+                })
                 update_state({
                     ...state,
-                    results: state.results
+                    results: state.results,
+                    all_athletes_start_height_set: all_athletes_set
                 })
             })
         } else {
@@ -39,9 +46,16 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
 
             save_height_achievement(athlete_result, () => {
                 state.results.set(athlete_result.starting_number, athlete_result)
+                let all_athletes_set = true;
+                state.results.forEach(athlete => {
+                    if(athlete.starting_number != undefined && !athlete.start_height_set){
+                        all_athletes_set = false
+                    }
+                })
                 update_state({
                     ...state,
-                    results: state.results
+                    results: state.results,
+                    all_athletes_start_height_set: all_athletes_set
                 })
             })
         } else {
@@ -86,7 +100,7 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
                 </div>
 
                 <div className="flex justify-end p-2">
-                    <div className="rounded border p-2 w-fit"
+                    <div className={"rounded border p-2 w-fit " + (state.all_athletes_start_height_set ? "bg-green-300" : "bg-red-300")}
                         onClick={close}
                     >
                         Save
