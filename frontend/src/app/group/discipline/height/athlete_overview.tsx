@@ -129,16 +129,20 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             } else {
                 // increase try
                 if (athletes_in_next_try.length == 0){
-                    update_state({
-                        ...state,
-                        current_try: state.current_try + 2,
-                        current_order: state.athletes_in_next_next_try,
-                        athletes_in_next_height: athletes_in_next_height,
-                        athletes_in_next_try: [],
-                        athletes_in_next_next_try: [],
-                        results: new_results
-                    })
-                } else {
+                    if(state.athletes_in_next_next_try.length == 0){ // No athletes in this height
+                        increase_height(state.current_height, [])
+                    }else { // athletes only for last try
+                        update_state({
+                            ...state,
+                            current_try: state.current_try + 2,
+                            current_order: state.athletes_in_next_next_try,
+                            athletes_in_next_height: athletes_in_next_height,
+                            athletes_in_next_try: [],
+                            athletes_in_next_next_try: [],
+                            results: new_results
+                        })
+                    }
+                } else { // athletes in next try
                     update_state({
                         ...state,
                         current_try: state.current_try + 1,

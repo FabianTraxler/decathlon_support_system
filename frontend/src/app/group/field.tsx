@@ -1,18 +1,17 @@
-import Image from "next/image";
 import Title_Footer_Layout from "./subpage_layout";
+import InnerImageZoom from 'react-inner-image-zoom';
+import 'react-inner-image-zoom/lib/InnerImageZoom/styles.css'
 
 export default function Field() {
     return (
         <Title_Footer_Layout title="Platzübersicht">
             <div className="flex mt-12 w-screen items-center justify-center">
-                <Image
+                <InnerImageZoom
                     src="/images/Platz_klein.jpg"
-                    width={200}
+                    width={800}
                     height={800}
-                    alt="Sportplatz Übersicht"
-                    objectFit="contain"
                     className="w-full h-fit"
-                ></Image>
+                ></InnerImageZoom>
             </div>
         </Title_Footer_Layout>
     )

@@ -125,8 +125,8 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
       <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
         <thead>
           <tr>
+            <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
             <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
-            <th className="border border-slate-600 p-1 pl-2 pr-2">Startnummer</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
@@ -141,7 +141,7 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
                 onDragStart={(e) => handleDragStart(e, i)}
                 onDragOver={(e) => handleDragOver(e, i)}
                 key={i}>
-                <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{i + 1}.</td>
+                <td className="bg-white border border-slate-600 p-1 pl-2 pr-2 text-center">{i + 1}.</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.starting_number}</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>

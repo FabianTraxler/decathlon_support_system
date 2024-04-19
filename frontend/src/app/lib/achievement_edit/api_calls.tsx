@@ -141,7 +141,7 @@ export function save_height_achievement(athlete_height_result: AthleteHeightResu
   )
 }
 
-function delete_and_create_new_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void) {
+export function delete_and_create_new_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void) {
   let athlete_name = `${athlete_height_result.name}_${athlete_height_result.surname}`
   fetch(`/api/achievement?name=${athlete_height_result.discipline_name}&athlete_name=${athlete_name}`, {
     method: "DELETE",
