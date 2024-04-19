@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     { name: "Fabian Traxler" },
   ],
   icons: [
-    { rel: "apple-touch-icon", url: "/logo_stw.svg" },
-    { rel: "icon", url: "/logo_stw.svg" },
+    { rel: "apple-touch-icon", url: "/logo_icon.jpg" },
+    { rel: "icon", url: "/logo_icon.jpg" },
   ]
 }
 
