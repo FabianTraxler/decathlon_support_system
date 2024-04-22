@@ -561,7 +561,7 @@ mod tests {
             }
         }
 
-        let new_group = Group::new("Gruppe 1", athletes);
+        let new_group = Group::new("Gruppe 1", athletes, CompetitionType::Decathlon);
         let group_key = GroupID::new("Gruppe 1");
 
         db.write_group(group_key.clone(), new_group.clone()).expect("Write should not fail in this test");
