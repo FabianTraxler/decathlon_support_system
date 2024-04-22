@@ -35,7 +35,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
     for group in groups:
         if group is None: continue
         group_name = f"Gruppe {group}"
-        if not upload_group(group_name):
+        if not upload_group(group_name, "Decathlon"):
             print(f"{group_name} not uploaded")
 
     disciplines = [ ('100m', "100 Meter Lauf", "Time"), 
@@ -199,11 +199,12 @@ def upload_athlete(name: str, surname: str,
     else: 
         return False
 
-def upload_group(name: str) -> bool:
+def upload_group(name: str, competition_type: str) -> bool:
     url = "http://127.0.0.1:3001/api/group"
     post_body = {
         "name": name,
-        "athlete_ids": []
+        "athlete_ids": [],
+        "competition_type": competition_type
     }
     response = requests.post(url,
                              json=post_body)

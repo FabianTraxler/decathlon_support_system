@@ -3,15 +3,17 @@ use std::error::Error;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::{Athlete, AthleteID, AchievementStorage};
+use super::{Athlete, AthleteID, AchievementStorage, CompetitionType};
 
 /// Group representing the group and links to the athletes in the group
 /// Mainly used for separate storage of Groups and Athletes
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct GroupStore {
     pub name: String,
-    pub athlete_ids: HashSet<AthleteID>
+    pub athlete_ids: HashSet<AthleteID>,
+    pub competition_type: CompetitionType,
 }
+
 impl GroupStore {
     pub fn from_json(json_string: &str) -> Result<GroupStore, serde_json::error::Error> {
         let group_store: GroupStore = serde_json::from_str(json_string)?;
@@ -25,21 +27,28 @@ impl GroupStore {
 pub struct Group {
     name: String,
     athletes: Vec<Athlete>,
+    competition_type: CompetitionType,
 }
 
 impl Group {
-    pub fn new(groupname: &str, athletes: Vec<Athlete>) -> Self {
+    pub fn new(groupname: &str, athletes: Vec<Athlete>, competition_type: CompetitionType) -> Self {
         Group {
             name: groupname.to_string(),
             athletes,
+            competition_type,
         }
     }
 
-    pub fn from_age_group(age_group: &AgeGroup) -> Self {
+    pub fn from_age_group(age_group: &AgeGroup, competition_type: CompetitionType) -> Self {
         Group {
             name: age_group.age_identifier.clone(),
-            athletes: age_group.athletes.clone()
+            athletes: age_group.athletes.clone(),
+            competition_type,
         }
+    }
+
+    pub fn competition_type(&self) -> CompetitionType {
+        self.competition_type.clone()
     }
 
     pub fn name(&self) -> &str {
@@ -58,7 +67,7 @@ impl Group {
         &mut self.athletes
     }
 
-    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn AchievementStorage>) -> Result<(), Box<dyn Error>>{
+    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn AchievementStorage>) -> Result<(), Box<dyn Error>> {
         let json_value: Value = serde_json::from_str(json_str)?;
 
         // Update specific fields from JSON to struct
@@ -68,8 +77,8 @@ impl Group {
         if let Some(athletes) = json_value.get("athletes").and_then(Value::as_array) {
             for athlete_value in athletes {
                 match serde_json::from_value(athlete_value.clone()) {
-                    Ok(athlete) => {self.athletes.push(athlete);},
-                    Err(e) => {return Err(Box::try_from(e).expect("Parsing Error should be convertible"));}
+                    Ok(athlete) => { self.athletes.push(athlete); }
+                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
                 }
             }
         }
@@ -77,12 +86,12 @@ impl Group {
             for athlete_id_value in athlete_ids {
                 match serde_json::from_value(athlete_id_value.clone()) {
                     Ok(athlete_id) => {
-                        match db.get_athlete(&athlete_id){
-                            Some(athlete) => {self.athletes.push(athlete);}
-                            None => {return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id)));}
+                        match db.get_athlete(&athlete_id) {
+                            Some(athlete) => { self.athletes.push(athlete); }
+                            None => { return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id))); }
                         };
-                    },
-                    Err(e) => {return Err(Box::try_from(e).expect("Parsing Error should be convertible"));}
+                    }
+                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
                 }
             }
         }
@@ -123,6 +132,7 @@ pub struct AgeGroup {
     age_identifier: String,
     athletes: Vec<Athlete>,
 }
+
 impl AgeGroup {
     pub fn new(age_identifier: &str, athletes: Vec<Athlete>) -> Self {
         AgeGroup {
@@ -138,7 +148,6 @@ impl AgeGroup {
     pub fn mut_athletes(&mut self) -> &mut Vec<Athlete> {
         &mut self.athletes
     }
-
 }
 
 /// AgeGroupID to access the persitent storage and get all results for an age/gender group

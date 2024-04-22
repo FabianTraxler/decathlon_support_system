@@ -96,11 +96,14 @@ impl AchievementStorage for InMemoryDB {
                 for athlete_id in group_store.athlete_ids {
                     let athlete = self.get_athlete(&athlete_id);
                     match athlete {
-                        Some(athlete) => { athletes.push(athlete); }
+                        Some(athlete) => {
+                            athletes.push(athlete);
+                        }
                         None => warn!("Athlete in Group not in athlete store")
                     }
                 }
-                Some(Group::new(group_store.name.as_str(), athletes))
+
+                Some(Group::new(group_store.name.as_str(), athletes, group_store.competition_type))
             }
             None => None
         }
@@ -125,6 +128,7 @@ impl AchievementStorage for InMemoryDB {
         let group_store = GroupStore {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
+            competition_type: group.competition_type()
         };
 
         self.write_group_store(group_id, group_store)

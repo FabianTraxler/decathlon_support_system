@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use std::fmt;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::str::FromStr;
 use serde_json::{Map, Value};
 pub use age_group_utils::AgeGroupSelector;
@@ -39,6 +40,17 @@ pub enum CompetitionType {
     Triathlon,
     Pentathlon,
     Heptathlon,
+}
+
+impl Display for CompetitionType{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            CompetitionType::Decathlon => write!(f, "{}", "Decathlon"),
+            CompetitionType::Triathlon => write!(f, "{}", "Triathlon"),
+            CompetitionType::Heptathlon => write!(f, "{}", "Heptathlon"),
+            CompetitionType::Pentathlon => write!(f, "{}", "Pentathlon"),
+        }
+    }
 }
 
 pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
@@ -186,7 +198,7 @@ impl Ord for Float {
     }
 }
 
-impl fmt::Display for Float {
+impl Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{},{}", self.integral, self.fractional)
     }

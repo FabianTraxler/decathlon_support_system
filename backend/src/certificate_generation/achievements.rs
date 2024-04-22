@@ -40,7 +40,15 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => format!("{}", r.final_result()),
             Achievement::Height(r) => format!("{}", Float::from_i32(r.final_result())),
-            Achievement::Time(r) => format!("{}", r.final_result()) // TODO: Add Minutes if more than 3min (for 1500 M)
+            Achievement::Time(r) => format!("{}", r.final_result())
+        }
+    }
+
+    pub fn fmt_final_result(&self) -> String {
+        match self {
+            Achievement::Distance(r) => format!("{}", r.fmt_final_result()),
+            Achievement::Height(r) => format!("{}", r.fmt_final_result()),
+            Achievement::Time(r) => format!("{}", r.fmt_final_result())
         }
     }
 
@@ -176,6 +184,17 @@ impl HeightResult {
             Some(value) => *value,
             None => self.compute_final_result()
         }
+    }
+
+    pub fn fmt_final_result(&self) -> String {
+        let result = match &self.final_result {
+            Some(value) => *value,
+            None => self.compute_final_result()
+        };
+
+        let m_result = result as f64 / 100.; // convert from cm to m
+
+        format!("{}", Float::from_f64(m_result))
     }
 
     fn compute_final_result(&self) -> i32 {
@@ -329,6 +348,14 @@ impl DistanceResult {
         self.final_result.clone().unwrap_or_else(|| {
             self.compute_best_result()
         })
+    }
+
+    pub fn fmt_final_result(&self) -> String {
+        let mut result = self.final_result();
+        if result.fractional < 10 {
+            result.fractional *= 10;
+        }
+        format!("{}", result)
     }
 
     pub fn compute_best_result(&self) -> Float {
@@ -498,6 +525,19 @@ impl TimeResult {
 
     pub fn final_result(&self) -> Float {
         self.final_result.clone()
+    }
+
+    pub fn fmt_final_result(&self) -> String {
+        let final_result = self.final_result();
+
+        if ["100 Meter Lauf", "110 Meter Hürden", "400 Meter Lauf", "60 Meter Lauf", "100 Meter Hürden"].contains(&self.name.as_str()) {
+            format!("{}", final_result.to_f32())
+        } else {
+            // convert to min:ss
+            let minutes = final_result.integral / 60;
+            let seconds = (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
+            format!("{}:{}", minutes, Float::from_f64(seconds))
+        }
     }
 
     pub fn update_values(&mut self, json_string: &str) -> Result<(), Box<dyn Error>> {
