@@ -19,5 +19,7 @@ Cargo.lock
 /target
 /tests
 .idea/
+*/.idea/
 *.pdf
 *.bin
+.vscode/
