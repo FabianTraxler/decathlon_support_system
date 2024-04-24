@@ -44,11 +44,11 @@ impl Achievement {
         }
     }
 
-    pub fn fmt_final_result(&self) -> String {
+    pub fn fmt_final_result(&self) -> (String, String) {
         match self {
-            Achievement::Distance(r) => format!("{}", r.fmt_final_result()),
-            Achievement::Height(r) => format!("{}", r.fmt_final_result()),
-            Achievement::Time(r) => format!("{}", r.fmt_final_result())
+            Achievement::Distance(r) => r.fmt_final_result(),
+            Achievement::Height(r) => r.fmt_final_result(),
+            Achievement::Time(r) => r.fmt_final_result()
         }
     }
 
@@ -131,6 +131,13 @@ impl HeightResult {
         }
     }
 
+    pub fn start_height(&self) -> i32 {
+        self.start_height
+    }
+    pub fn tries(&self) -> String {
+        self.tries.clone()
+    }
+
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
         if self.final_result() < 0 {
             0
@@ -186,7 +193,7 @@ impl HeightResult {
         }
     }
 
-    pub fn fmt_final_result(&self) -> String {
+    pub fn fmt_final_result(&self) -> (String, String) {
         let result = match &self.final_result {
             Some(value) => *value,
             None => self.compute_final_result()
@@ -194,7 +201,7 @@ impl HeightResult {
 
         let m_result = result as f64 / 100.; // convert from cm to m
 
-        format!("{}", Float::from_f64(m_result))
+        (format!("{}", Float::from_f64(m_result)), "m".to_string())
     }
 
     fn compute_final_result(&self) -> i32 {
@@ -350,12 +357,16 @@ impl DistanceResult {
         })
     }
 
-    pub fn fmt_final_result(&self) -> String {
+    pub fn tries(&self) -> Vec<&Option<Float>> {
+        vec![&self.first_try, &self.second_try, &self.third_try]
+    }
+
+    pub fn fmt_final_result(&self) -> (String, String) {
         let mut result = self.final_result();
         if result.fractional < 10 {
             result.fractional *= 10;
         }
-        format!("{}", result)
+        (format!("{}", result), "m".to_string())
     }
 
     pub fn compute_best_result(&self) -> Float {
@@ -527,16 +538,16 @@ impl TimeResult {
         self.final_result.clone()
     }
 
-    pub fn fmt_final_result(&self) -> String {
+    pub fn fmt_final_result(&self) -> (String, String) {
         let final_result = self.final_result();
 
-        if ["100 Meter Lauf", "110 Meter Hürden", "400 Meter Lauf", "60 Meter Lauf", "100 Meter Hürden"].contains(&self.name.as_str()) {
-            format!("{}", final_result.to_f32())
+        if ["100 Meter Lauf", "110 Meter Hürden", "400 Meter Lauf", "60 Meter Lauf", "60 Meter Hürden", "100 Meter Hürden"].contains(&self.name.as_str()) {
+            (format!("{}", final_result), "s".to_string())
         } else {
             // convert to min:ss
             let minutes = final_result.integral / 60;
             let seconds = (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
-            format!("{}:{}", minutes, Float::from_f64(seconds))
+            (format!("{}:{}", minutes, Float::from_f64(seconds)), "min".to_string())
         }
     }
 

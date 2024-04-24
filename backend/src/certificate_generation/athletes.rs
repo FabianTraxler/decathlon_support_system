@@ -94,7 +94,21 @@ impl Athlete {
                 age_group
             },
             _ => {
-                self.gender.clone()
+                let mut age_group = self.gender.clone();
+                if let Some(birth_date) = self.birth_date() {
+                    let years = Utc::now().years_since(birth_date).unwrap_or(0);
+                    match years {
+                        age if age < 4 => age_group += "-U4",
+                        age if age < 6 => age_group += "-U6",
+                        age if age < 8 => age_group += "-U8",
+                        age if age < 10 => age_group += "-U10",
+                        age if age < 12 => age_group += "-U12",
+                        age if age < 14 => age_group += "-U14",
+                        age if age < 16 => age_group += "-U16",
+                        _ => age_group += ""
+                    }
+                }
+                age_group
             }
         }
     }

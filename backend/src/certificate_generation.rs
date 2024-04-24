@@ -57,9 +57,9 @@ pub fn competition_order(competition_type: &CompetitionType) -> Vec<&str> {
     match competition_type {
         CompetitionType::Decathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoß", "Hochsprung", "400 Meter Lauf",
                                            "110 Meter Hürden", "Diskuswurf", "Stabhochsprung", "Speerwurf", "1500 Meter Lauf"],
-        CompetitionType::Pentathlon => vec!["60 Meter Hürdern", "Hochsprung", "60 Meter Lauf", "Vortexwurf", "1200 Meter Crosslauf"],
-        CompetitionType::Triathlon => vec!["60 Meter Lauf", "Weitsprung", "Schlagballwurf"],
-        CompetitionType::Heptathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoßen", "Hochsprung", "100m Hürdenlauf",
+        CompetitionType::Pentathlon => vec!["60 Meter Hürden", "Hochsprung", "60 Meter Lauf", "Vortex", "1200 Meter Cross Lauf"],
+        CompetitionType::Triathlon => vec!["60 Meter Lauf", "Weitsprung", "Schlagball"],
+        CompetitionType::Heptathlon => vec!["100 Meter Lauf", "Weitsprung", "Kugelstoßen", "Hochsprung", "100 Meter Hürden",
                                             "Speerwurf", "1000 Meter Lauf"]
     }
 }
@@ -90,7 +90,7 @@ impl Float {
 
     fn from_f64(value: f64) -> Self {
         let integral = value as i32;
-        let fractional = ((value - integral as f64) * 100.) as i32;
+        let fractional = ((value - integral as f64) * 100.).round() as i32;
 
         Float {
             integral,
@@ -200,7 +200,11 @@ impl Ord for Float {
 
 impl Display for Float {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{},{}", self.integral, self.fractional)
+        if self.integral == -1 {
+            write!(f, "")
+        }else{
+            write!(f, "{},{:0<2}", self.integral, self.fractional)
+        }
     }
 }
 

@@ -3,12 +3,14 @@ use actix_web::{get, web, HttpResponse, Responder, post, put};
 use actix_web::web::{Query};
 use serde_json::Value;
 use crate::api_server::parse_json_body;
-use crate::time_planner::{TimeGroupID, StartingOrder};
+use crate::certificate_generation::{GroupID, PDF};
+use crate::time_planner::{TimeGroupID, StartingOrder, ProtocolID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_discipline);
     cfg.service(get_disciplines);
     cfg.service(get_next_discipline);
+    cfg.service(get_discipline_protocol);
     cfg.service(get_starting_order);
     cfg.service(get_track_starting_order);
     cfg.service(change_starting_order);
@@ -96,6 +98,44 @@ async fn get_disciplines(
                     .expect("Discipline should be serializable"))
         }
         None => HttpResponse::NotFound().body("Group Not Found")
+    }
+}
+
+#[get("/discipline_protocol")]
+async fn get_discipline_protocol(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: Query<ProtocolID>,
+) -> impl Responder {
+    let discipline_id = query.into_inner();
+    let time_group_id = TimeGroupID::new(discipline_id.group_name());
+    let time_group = data.get_time_group(&time_group_id);
+    match time_group {
+        Some(mut time_group) => {
+            let discipline = match discipline_id.discipline_name() {
+                Some(discipline_name) => {
+                    match time_group.get_discipline(&discipline_name){
+                        Some(discipline) => discipline,
+                        None => return HttpResponse::NotFound().body(format!("Unable to find discipline {} in group", discipline_name))
+                    }
+                }
+                None => {
+                    time_group.get_current_discipline()
+                }
+            };
+            let group = match data.get_group(&GroupID::new(&discipline_id.group_name())) {
+                Some(group) => group,
+                None => return HttpResponse::NotFound().body(format!("Unable to find group {}", discipline_id.group_name()))
+            };
+            let certificate = PDF::new_discipline_protocol(&group, &discipline);
+            let pdf_message = certificate.to_http_message();
+            match pdf_message {
+                Ok(pdf_message) => HttpResponse::Ok()
+                    .content_type("application/pdf")
+                    .body(pdf_message),
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error generating PDF: {}", e))
+            }
+        }
+        None => HttpResponse::NotFound().body("Time-Group Not Found")
     }
 }
 

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use printpdf::{IndirectFontRef, Line, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference, PdfPageIndex, Point, TextRenderingMode};
 use printpdf::BuiltinFont::HelveticaBold;
-use crate::certificate_generation::{competition_order, CompetitionType, Group};
+use crate::certificate_generation::{competition_order, Group};
 use crate::certificate_generation::pdf::pdf_generation::{add_logo, LEFT_PAGE_EDGE, setup_pdf};
 use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
 use chrono::Datelike;
@@ -34,15 +34,15 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
     alignments.insert("Decathlon: Diskuswurf", 14.);
     alignments.insert("Decathlon: 1500 Meter Lauf", 17.);
 
-    alignments.insert("Pentathlon: 60 Meter Hürdern", 76.);
-    alignments.insert("Pentathlon: Hochsprung", 76.);
-    alignments.insert("Pentathlon: 60 Meter Lauf", 76.);
-    alignments.insert("Pentathlon: Vortexwurf", 76.);
-    alignments.insert("Pentathlon: 1200 Meter Crosslauf", 76.);
+    alignments.insert("Pentathlon: 60 Meter Hürden", 30.);
+    alignments.insert("Pentathlon: 60 Meter Lauf", 20.);
+    alignments.insert("Pentathlon: Vortex", 20.);
+    alignments.insert("Pentathlon: Hochsprung", 20.);
+    alignments.insert("Pentathlon: 1200 Meter Cross Lauf", 35.);
 
-    alignments.insert("Triathlon: 60 Meter Lauf", 76.);
-    alignments.insert("Triathlon: Weitsprung", 76.);
-    alignments.insert("Triathlon: Schlagballwurf", 76.);
+    alignments.insert("Triathlon: 60 Meter Lauf", 40.);
+    alignments.insert("Triathlon: Weitsprung", 40.);
+    alignments.insert("Triathlon: Schlagball", 40.);
 
     alignments.insert("Hepathlon: 100 Meter Lauf", 76.);
     alignments.insert("Hepathlon: Weitsprung", 76.);
@@ -89,6 +89,10 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
     let font_size = 10.0;
     let y_coord = 175.;
     let mut x_coord = LEFT_PAGE_EDGE;
+
+    let competition_type = group.competition_type();
+    let competition_disciplines = competition_order(&competition_type);
+
     pdf_layer.use_text("#", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("place").expect("Value defined before");
 
@@ -97,6 +101,10 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
 
     pdf_layer.use_text("Name", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("name").expect("Value defined before");
+    if competition_disciplines.len() <  6{
+        // Use double space for names if we have less than 6 disciplines
+        x_coord += *alignments.get("name").expect("Value defined before");
+    }
 
     pdf_layer.use_text("JG", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("birthyear").expect("Value defined before");
@@ -104,10 +112,11 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
     pdf_layer.use_text("Summe", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("total_points").expect("Value defined before");
 
-    for discipline_name in competition_order(&CompetitionType::Decathlon) {
+    for discipline_name in competition_disciplines {
         let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
         let short_name = discipline_name
             .replace(" Meter Lauf", "m")
+            .replace(" Meter", "m")
             .replace("sprung", "")
             .replace("wurf", "")
             .replace("hoch", "")
@@ -122,14 +131,14 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
 
     pdf_layer.add_line(Line {
         points: vec![
-            (Point::new(Mm(crate::certificate_generation::pdf::pdf_generation::LEFT_PAGE_EDGE - 1.), Mm(174.)), false),
+            (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(174.)), false),
             (Point::new(Mm(x_coord - 1.), Mm(174.)), false),
         ],
         is_closed: true,
     });
     pdf_layer.add_line(Line {
         points: vec![
-            (Point::new(Mm(crate::certificate_generation::pdf::pdf_generation::LEFT_PAGE_EDGE - 1.), Mm(179.)), false),
+            (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(179.)), false),
             (Point::new(Mm(x_coord - 1.), Mm(179.)), false),
         ],
         is_closed: true,
@@ -141,6 +150,13 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
     let font_size = 10.0;
     let line_height = font_size * 0.5;
     let initial_y_coord = 170.;
+
+    let competition_type = group.competition_type();
+    let competition_disciplines = competition_order(&competition_type);
+    let mut max_name_char_len = 20;
+    if competition_disciplines.len() < 6{
+        max_name_char_len = 40;
+    }
 
     let mut athletes = group.athletes().clone();
     athletes.sort_by_key(|a| Reverse(a.total_point()));
@@ -160,15 +176,19 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
         let athlete_name = athlete.full_name();
         // Split in multiple lines if text larger than 20 chars
         let mut athlete_part = athlete_name.as_str();
-        while athlete_part.len() > 20 {
-            let name_line = &athlete_part[..20];
+        while athlete_part.len() > max_name_char_len {
+            let name_line = &athlete_part[..max_name_char_len];
             pdf_layer.use_text(name_line, font_size, Mm(x_coord), Mm(y_coord - line_height * (num_lines - 1.)), &font);
 
-            athlete_part = &athlete_part[20..];
+            athlete_part = &athlete_part[max_name_char_len..];
             num_lines += 1.;
         }
         pdf_layer.use_text(athlete_part, font_size, Mm(x_coord), Mm(y_coord - line_height * (num_lines - 1.)), &font);
         x_coord += *alignments.get("name").expect("Value defined before");
+        if competition_disciplines.len() <  6{
+            // Use double space for names if we have less than 6 disciplines
+            x_coord += *alignments.get("name").expect("Value defined before");
+        }
 
         let birthyear = match athlete.birth_date() {
             Some(date) => date.year().to_string()[2..4].to_string(),
@@ -180,14 +200,15 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
         pdf_layer.use_text(athlete.total_point().to_string(), font_size, Mm(x_coord), Mm(y_coord), font_bold);
         x_coord += *alignments.get("total_points").expect("Value defined before");
 
-        for discipline_name in competition_order(&group.competition_type()) {
+        for discipline_name in &competition_disciplines {
             let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
             let (achievement_string, points_string) = match athlete.get_achievement(discipline_name) {
                 Some(achievement) => {
                     if achievement.final_result() == "-1,0" {
                         ("".to_string(), achievement.points(&athlete).to_string())
                     } else {
-                        (achievement.fmt_final_result(), achievement.points(&athlete).to_string())
+                        let (fmt_final_result, _) = achievement.fmt_final_result();
+                        (fmt_final_result, achievement.points(&athlete).to_string())
                     }
                 }
                 None => ("".to_string(), "".to_string())
@@ -201,7 +222,7 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
         pdf_layer.set_outline_thickness(0.5);
         pdf_layer.add_line(Line {
             points: vec![
-                (Point::new(Mm(crate::certificate_generation::pdf::pdf_generation::LEFT_PAGE_EDGE - 1.), Mm(y_coord - 1.  - line_height * (num_lines - 1.))), false),
+                (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(y_coord - 1.  - line_height * (num_lines - 1.))), false),
                 (Point::new(Mm(x_coord - 1.), Mm(y_coord - 1.  - line_height * (num_lines - 1.))), false),
             ],
             is_closed: true,
@@ -226,7 +247,10 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
 fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, f32>, group: &Group,
                       bottom_y_coord: f32) {
     // Add Vertical lines and closing line to current page
-    let mut x_coord = crate::certificate_generation::pdf::pdf_generation::LEFT_PAGE_EDGE;
+    let mut x_coord = LEFT_PAGE_EDGE;
+
+    let competition_type = group.competition_type();
+    let competition_disciplines = competition_order(&competition_type);
 
     for col_key in vec!["place", "sex", "name", "birthyear", "total_points"] {
         if let Some(alignment_width) = alignments.get(col_key) {
@@ -238,6 +262,11 @@ fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, 
                 is_closed: true,
             });
             x_coord += alignment_width;
+
+            if col_key == "name" && competition_disciplines.len() <  6{
+                // Use double space for names if we have less than 6 disciplines
+                x_coord += *alignments.get("name").expect("Value defined before");
+            }
         }
     }
 
@@ -271,7 +300,7 @@ fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, 
     // Add horizontal closing line
     pdf_layer.add_line(Line {
         points: vec![
-            (Point::new(Mm(crate::certificate_generation::pdf::pdf_generation::LEFT_PAGE_EDGE - 1.), Mm(bottom_y_coord)), false),
+            (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(bottom_y_coord)), false),
             (Point::new(Mm(x_coord - 1.), Mm(bottom_y_coord)), false),
         ],
         is_closed: true,

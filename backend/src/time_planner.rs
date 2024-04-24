@@ -17,7 +17,7 @@ pub struct Athlete {
     name: Option<String>,
     surname: Option<String>,
     starting_number: Option<u16>,
-    age_group: Option<String>
+    age_group: Option<String>,
 }
 
 impl Athlete {
@@ -26,9 +26,20 @@ impl Athlete {
             name: Some(name),
             surname: Some(surname),
             starting_number,
-            age_group
+            age_group,
         }
     }
+    pub fn starting_number(&self) -> &Option<u16> {
+        &self.starting_number
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum DisciplineType {
+    Height,
+    Distance,
+    Track,
+    Time
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -38,11 +49,24 @@ pub struct Discipline {
     start_time: DateTime<Utc>,
     state: DisciplineState,
     starting_order: StartingOrder,
+    discipline_type: DisciplineType
 }
 
 impl Discipline {
     fn change_state(&mut self, new_state: DisciplineState) {
         self.state = new_state;
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn discipline_type(&self) -> &DisciplineType{
+        &self.discipline_type
+    }
+
+    pub fn starting_order(&self) -> &StartingOrder{
+        &self.starting_order
     }
 }
 
@@ -66,6 +90,12 @@ pub struct Run {
     athletes: Vec<Athlete>,
 }
 
+impl Run {
+    pub fn athletes(&self) -> &Vec<Athlete> {
+        &self.athletes
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct TimeGroup {
     name: String,
@@ -78,9 +108,9 @@ pub struct TimeGroup {
 impl TimeGroup {
     pub fn build(group_name: &String, group_info: &Value, date_info: &HashMap<String, String>,
                  discipline_starting_order_type: &HashMap<String, String>, athletes: Option<Vec<Athlete>>) -> Result<Self, Box<dyn Error>> {
-        let (default_athlete_order,default_run_order) = create_default_athlete_order(athletes);
+        let (default_athlete_order, default_run_order) = create_default_athlete_order(athletes);
 
-        let mut disciplines =vec![];
+        let mut disciplines = vec![];
         match group_info {
             Value::Object(map) => {
                 for (discipline_name, discipline_info) in map {
@@ -94,12 +124,12 @@ impl TimeGroup {
                                 Value::String(time_str) => {
                                     let time_infos: Vec<&str> = time_str.split(",").collect();
                                     if time_infos.len() != 2 {
-                                        return Err(Box::from("Wrong format of time information. Too few or too many commas (,)"))
+                                        return Err(Box::from("Wrong format of time information. Too few or too many commas (,)"));
                                     }
                                     let time = time_infos[0];
                                     let day_name = time_infos[1].trim().to_string();
                                     let day = date_info.get(&day_name)
-                                        .ok_or(Box::from("Day not found in dates") as Box<dyn Error> )?;
+                                        .ok_or(Box::from("Day not found in dates") as Box<dyn Error>)?;
 
                                     let date_str = format!("{day} {time}:00 +0100");
 
@@ -107,10 +137,10 @@ impl TimeGroup {
                                         Ok(parsed) => Utc.from_utc_datetime(&parsed.naive_utc()),
                                         Err(e) => return Err(Box::from(format!("Time string ({date_str}) could not be parsed: {e}")))
                                     }
-                                },
+                                }
                                 _ => return Err(Box::from("Time information not parsable as String"))
                             }
-                        },
+                        }
                         None => return Err(Box::from("Time information not available"))
                     };
 
@@ -120,7 +150,7 @@ impl TimeGroup {
                                 Value::String(location_str) => location_str.clone(),
                                 _ => return Err(Box::from("Location information not parsable as String"))
                             }
-                        },
+                        }
                         None => return Err(Box::from("Location information not available"))
                     };
 
@@ -130,10 +160,23 @@ impl TimeGroup {
                     };
 
                     let starting_order: StartingOrder = match starting_order_type.trim() {
-                            "Track" => StartingOrder::Track(default_run_order.clone()),
-                            "Default" => StartingOrder::Default(default_athlete_order.clone()),
-                            "None" => StartingOrder::NoOrder,
-                            x => return Err(Box::from(format!("Invalid Starting order given for {discipline_name}: {x}")))
+                        "Track" => StartingOrder::Track(default_run_order.clone()),
+                        "Default" => StartingOrder::Default(default_athlete_order.clone()),
+                        "None" => StartingOrder::NoOrder,
+                        x => return Err(Box::from(format!("Invalid Starting order given for {discipline_name}: {x}")))
+                    };
+
+                    let discipline_type: DisciplineType = match starting_order_type.trim() {
+                        "Track" => DisciplineType::Track,
+                        "Default" => {
+                            if vec!["Hochsprung", "Stabhochsprung"].contains(&discipline_name.as_str()){
+                                DisciplineType::Height
+                            }else{
+                                DisciplineType::Distance
+                            }
+                        },
+                        "None" => DisciplineType::Time,
+                        x => return Err(Box::from(format!("Invalid Starting order given for {discipline_name}: {x}")))
                     };
 
                     let discipline = Discipline {
@@ -141,12 +184,13 @@ impl TimeGroup {
                         location,
                         start_time,
                         state: DisciplineState::BeforeStart,
-                        starting_order
+                        starting_order,
+                        discipline_type
                     };
 
                     disciplines.push(discipline)
                 }
-            },
+            }
             _ => return Err(Box::from("Wrong format of discipline information"))
         }
 
@@ -157,7 +201,7 @@ impl TimeGroup {
             default_athlete_order,
             default_run_order,
             disciplines,
-            current_discipline: 0
+            current_discipline: 0,
         };
 
         Ok(group)
@@ -167,6 +211,15 @@ impl TimeGroup {
     }
     pub fn get_next_discipline(&self) -> &Discipline {
         &self.disciplines[self.current_discipline + 1]
+    }
+    pub fn get_discipline(&self, discipline_name: &str) -> Option<&Discipline> {
+        let mut selected_discipline = None;
+        for discipline in &self.disciplines{
+            if discipline_name == discipline.name {
+                selected_discipline = Some(discipline)
+            }
+        }
+        selected_discipline
     }
     pub fn get_current_discipline(&mut self) -> &Discipline {
         let current_discipline = &self.disciplines[self.current_discipline];
@@ -197,12 +250,12 @@ impl TimeGroup {
         match info {
             Value::Object(map) => {
                 discipline_name = map.get("name")
-                    .ok_or(Box::from("Discipline name not given") as Box<dyn Error> )?
+                    .ok_or(Box::from("Discipline name not given") as Box<dyn Error>)?
                     .to_string()
                     .replace("\"", "");
-                let state_value = map.get("state").ok_or(Box::from("Discipline name not given") as Box<dyn Error> )?;
+                let state_value = map.get("state").ok_or(Box::from("Discipline name not given") as Box<dyn Error>)?;
                 new_state = serde_json::from_value(state_value.clone())?;
-            },
+            }
             _ => return Err(Box::from("Could not parse new state information"))
         }
 
@@ -222,7 +275,7 @@ impl TimeGroup {
                     }
                     discipline.change_state(new_state);
                     discipline_updated = true;
-                    break
+                    break;
                 }
             }
         }
@@ -256,13 +309,13 @@ impl TimeGroup {
             }
         }
     }
-    pub fn update_athletes(&mut self, new_athletes: &Vec<Athlete>) -> Result<(), Box<dyn Error>>{
+    pub fn update_athletes(&mut self, new_athletes: &Vec<Athlete>) -> Result<(), Box<dyn Error>> {
         let all_athletes = &mut self.default_athlete_order;
 
         let mut new_athletes = new_athletes.clone();
         all_athletes.append(&mut new_athletes);
 
-        let (default_athlete_order,default_run_order) = create_default_athlete_order(Some(all_athletes.clone()));
+        let (default_athlete_order, default_run_order) = create_default_athlete_order(Some(all_athletes.clone()));
 
         self.default_athlete_order = default_athlete_order.clone();
         self.default_run_order = default_run_order.clone();
@@ -289,9 +342,9 @@ fn create_default_athlete_order(athletes: Option<Vec<Athlete>>) -> (Vec<Athlete>
         if j >= default_athlete_order.len() {
             j = default_athlete_order.len();
         }
-        let run = Run{
+        let run = Run {
             name: format!("Lauf {}", i),
-            athletes: default_athlete_order[i * num_tracks..j].to_vec().clone()
+            athletes: default_athlete_order[i * num_tracks..j].to_vec().clone(),
         };
         default_run_order.push(run);
         i += 1;
@@ -304,7 +357,7 @@ pub struct TimeGroupID {
     name: Option<String>,
 }
 
-impl TimeGroupID{
+impl TimeGroupID {
     pub fn from_time_group(time_group: &TimeGroup) -> Self {
         TimeGroupID {
             name: Some(time_group.name.clone())
@@ -314,5 +367,21 @@ impl TimeGroupID{
         TimeGroupID {
             name: Some(name)
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
+pub struct ProtocolID {
+    group_name: Option<String>,
+    discipline_name: Option<String>,
+}
+
+impl ProtocolID {
+    pub fn group_name(&self) -> String {
+        self.group_name.clone().unwrap_or("".to_string())
+    }
+
+    pub fn discipline_name(&self) -> Option<String> {
+        self.discipline_name.clone()
     }
 }

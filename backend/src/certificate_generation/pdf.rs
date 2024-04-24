@@ -1,6 +1,7 @@
 mod pdf_generation;
 mod group_results;
 mod certificates;
+mod discipline_protocol;
 
 use std::collections::HashSet;
 use std::error::Error;
@@ -15,12 +16,14 @@ use actix_web::web::Bytes;
 use log::info;
 use printpdf::PdfDocumentReference;
 use crate::certificate_generation::{CompetitionType, Athlete, Group, AgeGroup};
-use crate::certificate_generation::pdf::certificates::{get_certificate, new_group_certificates};
+use crate::certificate_generation::pdf::certificates::{get_certificate, all_group_certificates};
+use crate::certificate_generation::pdf::discipline_protocol::get_discipline_protocol;
 use crate::certificate_generation::pdf::group_results::new_group_result;
+use crate::time_planner::Discipline;
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
-const COMPETITION_NUMBER: &'static str = "28";
+const COMPETITION_NUMBER: &'static str = "29";
 const DATE: &'static str = "28. / 29. September 2024";
 
 pub struct PDFMessage {
@@ -71,7 +74,12 @@ impl PDF {
     }
 
     pub fn new_group_certificates(group: &Group) -> Self {
-        let doc = new_group_certificates(group);
+        let doc = all_group_certificates(group);
+        PDF { content: doc }
+    }
+
+    pub fn new_discipline_protocol(group: &Group, discipline: &Discipline) -> Self {
+        let doc = get_discipline_protocol(group, discipline);
         PDF { content: doc }
     }
 
