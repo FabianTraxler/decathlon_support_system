@@ -200,10 +200,10 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 update_result.first_try = new_value
             } else if (try_number == 2) {
                 athlete_result.second_try = new_value
-                update_result.first_try = new_value    
+                update_result.second_try = new_value    
             } else if (try_number == 3) {
                 athlete_result.third_try = new_value
-                update_result.first_try = new_value
+                update_result.third_try = new_value
             }
             if (!athlete_result.best_try || new_value > athlete_result.best_try) {
                 athlete_result.best_try = new_value
@@ -323,7 +323,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 }
 
 function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: (athlete: AthleteID, try_number: number, new_value: number | string) => void }) {
-    const { state, update_state } = useContext(AthleteResults)
+    const { state } = useContext(AthleteResults)
     const athlete_result = state.results.get(athlete.starting_number)
     let try_value: number | string = ""
     if (athlete_result) {

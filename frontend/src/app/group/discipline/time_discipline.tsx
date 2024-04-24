@@ -260,7 +260,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                 <div className="text-center border rounded-md shadow-md p-3 mt-3 bg-red-100"
                     onClick={finishDiscipline}
                 >
-                    <span>Diszipline abschließen</span>
+                    <span>Disziplin abschließen</span>
                 </div>
             }
         </div >
