@@ -37,7 +37,7 @@ export default function Disciplines() {
   }, [group_name])
 
   let print_protocol = function (discipline_name: string, stop_load: () => void) {
-    fetch(`/api/discipline_protocol?name=${group_name}&discipline_name=${discipline_name}`)
+    fetch(`/api/discipline_protocol?group_name=${group_name}&discipline_name=${discipline_name}`)
       .then(response => {
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);

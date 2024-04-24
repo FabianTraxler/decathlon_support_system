@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
 import { LoadingButton } from '@/app/lib/loading_button';
-import { decathlon_disciplines } from '@/app/lib/config';
+import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 
 export default function Athletes({ group_name }: { group_name: string }) {
@@ -23,8 +23,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
           </button>
         </div>
         <div className={"text-sm 2xl:text-md font-normal overflow-scroll " + (showAthletes ? "sm:max-h-[25rem] 2xl:max-h-[35rem] " : "max-h-0 overflow-hidden")}>
-          {(group_name.startsWith("Gruppe") || group_name.startsWith("AK") || group_name.startsWith("M") || group_name.startsWith("W")) && <GroupAthletes group_name={group_name}></GroupAthletes>}
-          {group_name.startsWith("U") && <YouthAthletes></YouthAthletes>}
+          <GroupAthletes group_name={group_name}></GroupAthletes>
         </div>
       </div>
     </div>
@@ -82,24 +81,38 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
 
 
 function GroupAthletes({ group_name }: { group_name: string }) {
-  const [athletes, set_athletes] = useState<Athlete[]>([]);
+  const [athleteState, set_athleteState] = useState<{athletes: Athlete[], disciplines: [string, string, string][]}>({athletes: [], disciplines: []});
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "", ascending: false })
 
+
+ 
+
   const get_data = function () {
     if (group_name.startsWith("Gruppe")) {
-      fetch_group_athletes(group_name, set_athletes)
+      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+      })
+    } else if (group_name.startsWith("U")) {
+      var disciplines: [string, string, string][] = [];
+      if (group_name == "U16") {
+        disciplines = hepathlon_disciplines;
+      } else if (group_name == "U14") {
+        disciplines = pentathlon_disciplines;
+      } else {
+        disciplines = triathlon_discplines
+      }
+      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: disciplines})
+      })
+
     } else {
-      fetch_age_group_athletes(group_name, set_athletes)
+      fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+      })
     }
   }
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => get_data(), 2000);
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, []);
 
   useEffect(() => {
     var current_index = 0
@@ -110,7 +123,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
       if (evt.which == 13) {
         evt.preventDefault();
         current_index += 1;
-        if (current_index >= athletes.length) {
+        if (current_index >= athleteState.athletes.length) {
           current_index = 0;
         }
         document.getElementById(current_index.toString())?.focus();
@@ -144,7 +157,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     }
   }
 
-  athletes.sort((a,b) => sort_athletes(a,b,sorted));
+  athleteState.athletes.sort((a, b) => sort_athletes(a, b, sorted));
 
   return (
     <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
@@ -170,7 +183,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
             {(sorted.name == "Summe" && sorted.ascending) && <span>&#x25b4;</span>}
             {(sorted.name == "Summe" && !sorted.ascending) && <span>&#x25be;</span>}
           </th>
-          {decathlon_disciplines.map((info) => {
+          {athleteState.disciplines.map((info) => {
             return <th key={info[0]} onClick={(_) => {
               discipline_edit_mode(info[0])
             }}
@@ -182,8 +195,8 @@ function GroupAthletes({ group_name }: { group_name: string }) {
         </tr>
       </thead>
       <tbody>
-        {athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={decathlon_disciplines} disciplineEdit={disciplineEdit}></AthleteTableRow>
+        {athleteState.athletes.map((athlete, i) => {
+          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines} disciplineEdit={disciplineEdit}></AthleteTableRow>
         })}
       </tbody>
     </table>
