@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NavigationContext } from "./page";
+import { NavigationContext } from "./navigation";
 
 export default function Footer() {
   const nav = useContext(NavigationContext)

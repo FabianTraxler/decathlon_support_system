@@ -1,6 +1,6 @@
 import { signOut } from "@/auth";
 import { useContext } from "react";
-import { NavigationContext } from "./page";
+import { NavigationContext } from "./navigation";
 
 export default function Header({ homescreen }: { homescreen: boolean }) {
   const nav = useContext(NavigationContext)

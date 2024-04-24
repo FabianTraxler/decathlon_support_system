@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useState } from "react";
 import Overview from "./overview";
 import Header from "./header";
 import Athletes from "./athletes/athletes";
@@ -9,19 +9,8 @@ import Field from "./field";
 import Timetable from "./timetable";
 import Title from "./title";
 import Disciplines from "./discipline/discipline";
+import { Navigation, NavigationContext, NavigationItem } from "./navigation";
 
-interface NavigationItem {
-  name: string,
-  reset_function: () => void
-}
-let empty_nav_item = {name: "", reset_function: () => {}} as NavigationItem
-interface Navigation {
-  history: NavigationItem[],
-  max_history: number,
-  tab_navigation_function: (tab: NavigationItem) => void
-}
-let empty_nav = {history: [], max_history: 0, tab_navigation_function: (empty_nav_item) => {}} as Navigation
-export const NavigationContext = createContext<Navigation>(empty_nav)
 
 
 export default function Group() {
@@ -90,6 +79,7 @@ export default function Group() {
     </NavigationContext.Provider>
   );
 }
+
 
 
 function Rules() {

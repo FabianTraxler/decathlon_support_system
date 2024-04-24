@@ -4,7 +4,7 @@ import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./disci
 import { get_group_achievements, save_distance_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { setTimeout } from "timers";
-import { NavigationContext } from "../page";
+import { NavigationContext } from "../navigation";
 
 // TODO: Add "revert" functionality and back-arrow only get one level back to current disciline and not to HOME if in input mode
 

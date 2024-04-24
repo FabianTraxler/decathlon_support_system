@@ -2,8 +2,8 @@ import { useContext, useState } from "react";
 import { AthleteResults, athlete_in_competition, decode_athlete_tries } from "./height_discipline";
 import { AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
 import { update_height_achievement } from "@/app/lib/achievement_edit/api_calls";
-import { NavigationContext } from "../../page";
 import { HeightInput } from "./achievement_input";
+import { NavigationContext } from "../../navigation";
 
 export function HeightOrderOverview({ finish_discipline }: { finish_discipline: () => void }) {
     const { state, update_state } = useContext(AthleteResults)
