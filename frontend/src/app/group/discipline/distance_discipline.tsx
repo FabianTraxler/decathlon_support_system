@@ -79,7 +79,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
             let current_try = 1
             let default_starting_order: AthleteDistanceResults[] = []
             if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
-                default_starting_order = disciplineState.discipline.starting_order.Default.map(athlete => { 
+                default_starting_order = disciplineState.discipline.starting_order.Default.filter(athlete => athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number).map(athlete => { 
                     return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number)
                 })
                 let try_order: AthleteDistanceResults[] = []
