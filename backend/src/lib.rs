@@ -22,7 +22,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
 
     info!("Connecting to Database...");
     let db = Store::new();
-    db.load();
+    //db.load();
     info!("DB State loaded from disk");
     let db_state = web::Data::new(Box::new(db) as Box<dyn Storage + Send + Sync>);
     info!("DB connection successfully!");

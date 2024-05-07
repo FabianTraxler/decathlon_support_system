@@ -16,21 +16,20 @@ pub trait TimePlanStorage {
 pub struct Athlete {
     name: Option<String>,
     surname: Option<String>,
-    starting_number: Option<u16>,
     age_group: Option<String>,
 }
 
 impl Athlete {
-    pub fn new(name: String, surname: String, starting_number: Option<u16>, age_group: Option<String>) -> Athlete {
+    pub fn new(name: String, surname: String, age_group: Option<String>) -> Athlete {
         Athlete {
             name: Some(name),
             surname: Some(surname),
-            starting_number,
             age_group,
         }
     }
-    pub fn starting_number(&self) -> &Option<u16> {
-        &self.starting_number
+
+    pub fn full_name(&self) -> String {
+        format!("{} {}", self.name.clone().unwrap_or("".to_string()), self.surname.clone().unwrap_or("".to_string()))
     }
 }
 
@@ -343,7 +342,7 @@ fn create_default_athlete_order(athletes: Option<Vec<Athlete>>) -> (Vec<Athlete>
             j = default_athlete_order.len();
         }
         let run = Run {
-            name: format!("Lauf {}", i),
+            name: format!("Lauf {}", i + 1),
             athletes: default_athlete_order[i * num_tracks..j].to_vec().clone(),
         };
         default_run_order.push(run);

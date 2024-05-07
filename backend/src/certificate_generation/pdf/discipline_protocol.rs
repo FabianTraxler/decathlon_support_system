@@ -131,7 +131,7 @@ fn add_distance_discipline(current_layer: &PdfLayerReference, font: &IndirectFon
 
     match discipline.starting_order() {
         StartingOrder::Default(athlete_order) => {
-            athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.starting_number() == *item.starting_number()).unwrap());
+            athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.full_name() == *item.full_name()).unwrap_or(0));
         }
         _ => {} // leave it the way it is
     };
@@ -357,9 +357,9 @@ fn add_track_discipline(pdf: &PdfDocumentReference, mut current_layer: PdfLayerR
             for i in 0..6{
                 let run_athletes = match track_run {
                     Some(track_run) => {
-                        let run_starting_numbers: Vec<&Option<u16>> = track_run.athletes().iter().map(|athlete| athlete.starting_number()).collect();
-                        let mut run_athletes: Vec<Athlete> = all_athletes.iter().cloned().filter(|athlete| run_starting_numbers.contains(&athlete.starting_number())).collect();
-                        run_athletes.sort_by_key(|item| track_run.athletes().iter().position(|x| *x.starting_number() == *item.starting_number()).unwrap());
+                        let run_names: Vec<String> = track_run.athletes().iter().map(|athlete| athlete.full_name()).collect();
+                        let mut run_athletes: Vec<Athlete> = all_athletes.iter().cloned().filter(|athlete| run_names.contains(&athlete.full_name())).collect();
+                        run_athletes.sort_by_key(|item| track_run.athletes().iter().position(|x| *x.full_name() == *item.full_name()).unwrap());
                         run_athletes
                     },
                     None => {
@@ -494,7 +494,7 @@ fn add_height_page(current_layer: PdfLayerReference, col_widths: &HashMap<&str, 
 
     match discipline.starting_order() {
         StartingOrder::Default(athlete_order) => {
-            athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.starting_number() == *item.starting_number()).unwrap());
+            athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.full_name() == *item.full_name()).unwrap());
         }
         _ => {} // leave it the way it is
     };

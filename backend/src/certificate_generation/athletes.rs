@@ -166,9 +166,10 @@ impl Athlete {
             self.competition_type = serde_json::from_str(competition_type_str)?;
         }
         if let Some(starting_number) = json_value.get("starting_number") {
-            let number = Value::as_i64(starting_number)
-                .ok_or("Invalid format for starting number. Expected u16 value")?;
-            self.starting_number = Some(number as u16);
+            match Value::as_i64(starting_number) {
+                Some(val) => self.starting_number = Some(val as u16),
+                None => self.starting_number = None
+            }
         }
 
         Ok(())

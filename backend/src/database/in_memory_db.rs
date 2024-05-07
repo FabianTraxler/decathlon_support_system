@@ -154,7 +154,6 @@ impl AchievementStorage for InMemoryDB {
                                 .iter()
                                 .map(|athlete| time_planner::Athlete::new(athlete.name().to_string(),
                                                                           athlete.surname().to_string(),
-                                                                          athlete.starting_number().clone(),
                                                                           Some(athlete.age_group())))
                                 .collect();
                             match time_group.update_athletes(a) {
@@ -266,7 +265,6 @@ impl TimePlanStorage for InMemoryDB {
                                             time_planner::Athlete::new(
                                                 athlete.name().to_string(),
                                                 athlete.surname().to_string(),
-                                                athlete.starting_number().clone(),
                                                 Some(athlete.age_group()))
                                         ).collect();
                                         group_athletes = Some(time_athletes);
