@@ -2,7 +2,7 @@
   "Groups": {
     "Gruppe 1": {
       "100 Meter Lauf": {
-        "location": "-",
+        "location": "Start 100m",
         "time": "08:30, Samstag"
       },
       "Weitsprung": {
@@ -153,15 +153,15 @@
       },
       "Diskuswurf": {
         "location": "",
-        "time": "10:30, Sonntag"
+        "time": "10:30, Samstag"
       },
       "Stabhochsprung": {
         "location": "",
-        "time": "11:15, Sonntag"
+        "time": "11:15, Samstag"
       },
       "Speerwurf": {
         "location": "",
-        "time": "13:30, Sonntag"
+        "time": "13:30, Samstag"
       },
       "1500 Meter Lauf": {
         "location": "",
@@ -237,7 +237,7 @@
       },
       "Diskuswurf": {
         "location": "",
-        "time": "11:45, Sonntag"
+        "time": "11:45, Samstag"
       },
       "Stabhochsprung": {
         "location": "",
@@ -245,7 +245,7 @@
       },
       "Speerwurf": {
         "location": "",
-        "time": "15:30, Sonntag"
+        "time": "15:30, Samstag"
       },
       "1500 Meter Lauf": {
         "location": "",

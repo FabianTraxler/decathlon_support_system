@@ -63,7 +63,8 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
             group_name = row["GRP"]
         group_skipped_disciplines = skipped_disciplines.get(group_name, [])
 
-        if not isinstance(row["NAME"], str) and np.isnan(row["NAME"]): continue
+        if not isinstance(row["Name"], str) or row["Name"].strip() == "":
+            continue
         achievements = []
         for (short_name, long_name, discipline_type) in disciplines:
             if long_name in group_skipped_disciplines: continue  # skip achievement
@@ -181,7 +182,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
         group_skipped_disciplines = skipped_disciplines.get(group_name, [])
 
-        if not isinstance(row["NAME"], str) and np.isnan(row["NAME"]):
+        if not isinstance(row["Name"], str) and np.isnan(row["Name"]):
             continue
         achievements = []
         for (short_name, long_name, discipline_type) in disciplines[competition_type]:
@@ -284,13 +285,13 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
 
         group_name = row["Klasse"]
 
-        #group_skipped_disciplines = skipped_disciplines.get(group_name, [])
+        group_skipped_disciplines = skipped_disciplines.get(group_name, [])
 
         if not isinstance(row["Name"], str) and np.isnan(row["Name"]):
             continue
         achievements = []
         for (short_name, long_name, discipline_type) in disciplines:
-            #if long_name in group_skipped_disciplines: continue  # skip achievement
+            if long_name in group_skipped_disciplines: continue  # skip achievement
             discipline = {}
             if isinstance(short_name, str):
                 final_result = float(row[short_name])
@@ -382,6 +383,12 @@ def upload_athlete(name: str, surname: str,
     url = "http://127.0.0.1:3001/api/athlete"
     name = str(name).replace(".", " ")
     surname = str(surname).replace(".", " ")
+    if isinstance(surname, float) or surname == "nan":
+        surname = ""
+
+    if isinstance(name, float) or name == "nan":
+        name = ""
+
     post_body = {
         "name": name,
         "surname": surname,
