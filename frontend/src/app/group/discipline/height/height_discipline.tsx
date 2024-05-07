@@ -79,46 +79,46 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
     }
 
     useEffect(() => {
-        get_group_achievements(group_name, get_discipline_results)
-    }, [group_name])
-
-    const get_discipline_results = function (athletes: Athlete[]) {
-        if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
-            let default_starting_order = disciplineState.discipline.starting_order.Default as AthleteID[]
-            //default_starting_order = default_starting_order.filter((athlete) => athlete.starting_number != undefined)
-
-            let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
-
-            if (current_state.current_try_order.length > 0) {
-                let discipline = { ...disciplineState.discipline };
-                if (!current_state.all_athletes_start_height_set) {
-                    // Not all athletes ready
-                    discipline.state = "BeforeStart"
-                }
-                setDisciplineState({
-                    ...disciplineState,
-                    discipline: discipline,
-                    current_height: current_state.current_height,
-                    current_try: current_state.current_try,
-                    results: current_state.athlete_results,
-                    current_order: current_state.current_try_order,
-                    athletes_in_next_try: current_state.next_try_order,
-                    athletes_in_next_height: current_state.athletes_in_next_height,
-                    discipline_progress_state: "jumping",
-                    default_order: current_state.default_starting_order,
-                    loaded: true,
-                    all_athletes_start_height_set: current_state.all_athletes_start_height_set
-                })
-            } else {
-                finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
+        const get_discipline_results = function (athletes: Athlete[]) {
+            if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
+                let default_starting_order = disciplineState.discipline.starting_order.Default as AthleteID[]
+                //default_starting_order = default_starting_order.filter((athlete) => athlete.starting_number != undefined)
+    
+                let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
+    
+                if (current_state.current_try_order.length > 0) {
+                    let discipline = { ...disciplineState.discipline };
+                    if (!current_state.all_athletes_start_height_set) {
+                        // Not all athletes ready
+                        discipline.state = "BeforeStart"
+                    }
                     setDisciplineState({
                         ...disciplineState,
-                        discipline: discipline
+                        discipline: discipline,
+                        current_height: current_state.current_height,
+                        current_try: current_state.current_try,
+                        results: current_state.athlete_results,
+                        current_order: current_state.current_try_order,
+                        athletes_in_next_try: current_state.next_try_order,
+                        athletes_in_next_height: current_state.athletes_in_next_height,
+                        discipline_progress_state: "jumping",
+                        default_order: current_state.default_starting_order,
+                        loaded: true,
+                        all_athletes_start_height_set: current_state.all_athletes_start_height_set
                     })
-                })
+                } else {
+                    finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
+                        setDisciplineState({
+                            ...disciplineState,
+                            discipline: discipline
+                        })
+                    })
+                }
             }
         }
-    }
+        
+        get_group_achievements(group_name, get_discipline_results)
+    }, [group_name])
 
     const finish_height_discipline = function () {
         finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {

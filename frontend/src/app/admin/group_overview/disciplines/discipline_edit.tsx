@@ -126,7 +126,6 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
         <thead>
           <tr>
             <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
-            <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
             <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
@@ -142,7 +141,6 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
                 onDragOver={(e) => handleDragOver(e, i)}
                 key={i}>
                 <td className="bg-white border border-slate-600 p-1 pl-2 pr-2 text-center">{i + 1}.</td>
-                <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.starting_number}</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
                 <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
@@ -287,7 +285,6 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
               <thead >
                 <tr onDrop={(e) => handleTableHeadDragDrop(e, run_id)}>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
-                  <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">AK</th>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
@@ -305,7 +302,6 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
                       onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
                       key={athlete_id}>
                       <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
-                      <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.starting_number}</td>
                       <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
                       <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 8)}{athlete.name.length > 8 && "..."}</td>
                       <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 8)}{athlete.surname.length > 8 && "..."}</td>

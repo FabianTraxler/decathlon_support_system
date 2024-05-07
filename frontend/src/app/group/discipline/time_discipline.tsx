@@ -5,85 +5,83 @@ import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement
 import { Athlete } from "@/app/lib/athlete_fetching";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
-    const [current_discipline, setDiscipline] = useState<Discipline>({...discipline, starting_order: {Track: []}})
+    const [current_discipline, setDiscipline] = useState<Discipline>({ ...discipline, starting_order: { Track: [] } })
 
     useEffect(() => {
+        const get_athlete_starting_numbers = function (athletes: Athlete[]) {
+            let athlete_starting_numbers: Map<string, number> = new Map()
+
+            athletes.forEach(athlete => {
+                athlete_starting_numbers.set(athlete.name + "_" + athlete.surname, athlete.starting_number)
+            })
+
+            let new_starting_order: { name: string, athletes: AthleteTimeResult[] }[] = []
+            if (typeof discipline.starting_order != "string" && discipline.starting_order.Track) {
+                new_starting_order = discipline.starting_order.Track.map(run => {
+                    let athletes = run.athletes.map(athlete => {
+                        return {
+                            ...athlete,
+                            starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
+                            full_name: () => athlete.name + "_" + athlete.surname
+                        }
+                    })
+                    return {
+                        name: run.name,
+                        athletes: athletes
+                    }
+                })
+            }
+
+
+            setDiscipline({
+                ...current_discipline,
+                starting_order: {
+                    Track: new_starting_order
+                }
+            })
+
+        }
         get_group_achievements(group_name, get_athlete_starting_numbers)
     }, [group_name])
 
-    const get_athlete_starting_numbers = function (athletes: Athlete[]) {
-        let athlete_starting_numbers: Map<string, number> = new Map()
-
-        athletes.forEach(athlete => {
-            athlete_starting_numbers.set(athlete.name + "_" + athlete.surname, athlete.starting_number)
-        })
-    
-        let new_starting_order: {name: string, athletes: AthleteTimeResult[]}[] = []
-        if (typeof discipline.starting_order != "string" && discipline.starting_order.Track){
-            new_starting_order = discipline.starting_order.Track.map(run => {
-                let athletes = run.athletes.map(athlete => {
-                    return {
-                        ...athlete,
-                        starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
-                        full_name: () => athlete.name + "_" + athlete.surname
-                    }
-            })
-                return {
-                    name: run.name,
-                    athletes: athletes
-                }
-            })
-        }
-
-
-        setDiscipline({
-            ...current_discipline,
-            starting_order: {
-                Track: new_starting_order
-            }
-            })
-
+    const saveNewStartingOrder = function (new_order: StartingOrder) {
+        saveStartingOrder(new_order, group_name, () => { })
     }
 
-
-const saveNewStartingOrder = function (new_order: StartingOrder) {
-    saveStartingOrder(new_order, group_name, () => { })
-}
-
-return (
-    <div className="h-full">
-        {
-            current_discipline.state == "BeforeStart" &&
-            <BeforeStartInfoBox
-                ready={true}
-                discipline={current_discipline}
-                start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}></BeforeStartInfoBox>
-        }
-        {
-            current_discipline.state == "Active" &&
-            <div className="h-full">
-                {
-                    (typeof current_discipline.starting_order != "string" && current_discipline.starting_order.Track && current_discipline.starting_order.Track?.length > 0) ?
-                        <StartingOrderSummary
-                            starting_order={current_discipline.starting_order.Track}
-                            saveStartingOrder={saveNewStartingOrder}
-                            finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
-                        ></StartingOrderSummary>
-                        :
-                        <div>
-                            Loading ...
-                        </div>
-                }
-            </div>
-        }
-        {
-            current_discipline.state == "Finished" &&
-            <div className="flex h-full text-2xl font-bold items-center justify-center">
-                <span>Abgeschlossen</span>
-            </div>
-        }
-    </div>
-)
+    return (
+        <div className="h-full">
+            {
+                current_discipline.state == "BeforeStart" &&
+                <BeforeStartInfoBox
+                    ready={true}
+                    discipline={current_discipline}
+                    start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}></BeforeStartInfoBox>
+            }
+            {
+                current_discipline.state == "Active" &&
+                <div className="h-full">
+                    {
+                        (typeof current_discipline.starting_order != "string" && current_discipline.starting_order.Track && current_discipline.starting_order.Track?.length > 0) ?
+                            <StartingOrderSummary
+                                starting_order={current_discipline.starting_order.Track}
+                                saveStartingOrder={saveNewStartingOrder}
+                                finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
+                            ></StartingOrderSummary>
+                            :
+                            <div>
+                                Loading ...
+                            </div>
+                    }
+                </div>
+            }
+            {
+                current_discipline.state == "Finished" &&
+                <div className="flex h-full text-2xl font-bold items-center justify-center">
+                    <span>Abgeschlossen</span>
+                </div>
+            }
+        </div>
+    )
 }
 
 

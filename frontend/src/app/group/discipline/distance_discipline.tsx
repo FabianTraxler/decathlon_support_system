@@ -34,95 +34,97 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
     const [disciplineState, setDisciplineState] = useState<DistanceDisciplineState>({ ...empty_state, discipline: discipline })
 
     useEffect(() => {
+        const get_discipline_results = function (athletes: Athlete[]) {
+            let athlete_results: Map<string, AthleteDistanceResults> = new Map()
+    
+            let discipline_unit = "m"//TODO: Check if we can get this value from somewhere else than hardcoding it
+    
+            athletes.forEach(athlete => {
+                let athlete_result: AthleteDistanceResults = {
+                    name: athlete.name,
+                    surname: athlete.surname,
+                    starting_number: athlete.starting_number,
+                    age_group: "",
+                    discipline_name: discipline.name,
+                    discipline_unit: discipline_unit, 
+                    full_name: () => athlete.name + "_" + athlete.surname
+                }
+                let achievement_map: Map<string, AchievementValue> = new Map(Object.entries(athlete.achievements));
+                let achievement = achievement_map.get(discipline.name)?.Distance;
+                if (achievement) {
+                    let all_results = []
+                    if (achievement.first_try) {
+                        athlete_result.first_try = parseFloat(achievement.first_try.integral + "." + achievement.first_try.fractional)
+                        all_results.push(athlete_result.first_try)
+                    }
+                    if (achievement.second_try) {
+                        athlete_result.second_try = parseFloat(achievement.second_try.integral + "." + achievement.second_try.fractional)
+                        all_results.push(athlete_result.second_try)
+                    }
+                    if (achievement.third_try) {
+                        athlete_result.third_try = parseFloat(achievement.third_try.integral + "." + achievement.third_try.fractional)
+                        all_results.push(athlete_result.third_try)
+                    }
+                    if (achievement.final_result) {
+                        if (all_results.length == 0 || Math.max(...all_results) == -1) {
+                            athlete_result.first_try = parseFloat(achievement.final_result.integral + "." + achievement.final_result.fractional)
+                            athlete_result.best_try = athlete_result.first_try
+                        }
+                    }
+                }
+                athlete_results.set(athlete_result.full_name(), athlete_result)
+            })
+    
+            // Get current starting order and try from results on load
+            let current_try = 1
+            let default_starting_order: AthleteDistanceResults[] = []
+            if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
+                default_starting_order = disciplineState.discipline.starting_order.Default.map(athlete => { 
+                    return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number)
+                })
+                let try_order: AthleteDistanceResults[] = []
+                let not_done = [1, 2, 3].some(try_number => { // Check all tries
+                    current_try = try_number
+                    try_order = [...default_starting_order]
+                    while (try_order.length > 0) {
+                        let athlete = athlete_results.get(try_order[0].full_name())
+                        if (athlete) {
+                            // If athlete has no attempt for this try then start with this person
+                            if (try_number == 1) {
+                                if (!("first_try" in athlete)) {
+                                    return true
+                                }
+                            } else if (try_number == 2) {
+                                if (!("second_try" in athlete)) {
+                                    return true
+                                }
+                            } else if (try_number == 3) {
+                                if (!("third_try" in athlete)) {
+                                    return true
+                                }
+                            }
+                        }
+                        try_order.shift()
+                    }
+                })
+                if (not_done) {
+                    setDisciplineState({
+                        ...disciplineState,
+                        current_try: current_try,
+                        results: athlete_results,
+                        current_order: try_order,
+                        default_order: default_starting_order
+                    })
+                } else {
+                    finish_discipline(group_name, disciplineState.discipline, setDiscipline)
+                }
+            }
+        }
+
         get_group_achievements(group_name, get_discipline_results)
     }, [group_name])
 
-    const get_discipline_results = function (athletes: Athlete[]) {
-        let athlete_results: Map<string, AthleteDistanceResults> = new Map()
 
-        let discipline_unit = "m"//TODO: Check if we can get this value from somewhere else than hardcoding it
-
-        athletes.forEach(athlete => {
-            let athlete_result: AthleteDistanceResults = {
-                name: athlete.name,
-                surname: athlete.surname,
-                starting_number: athlete.starting_number,
-                age_group: "",
-                discipline_name: discipline.name,
-                discipline_unit: discipline_unit, 
-                full_name: () => athlete.name + "_" + athlete.surname
-            }
-            let achievement_map: Map<string, AchievementValue> = new Map(Object.entries(athlete.achievements));
-            let achievement = achievement_map.get(discipline.name)?.Distance;
-            if (achievement) {
-                let all_results = []
-                if (achievement.first_try) {
-                    athlete_result.first_try = parseFloat(achievement.first_try.integral + "." + achievement.first_try.fractional)
-                    all_results.push(athlete_result.first_try)
-                }
-                if (achievement.second_try) {
-                    athlete_result.second_try = parseFloat(achievement.second_try.integral + "." + achievement.second_try.fractional)
-                    all_results.push(athlete_result.second_try)
-                }
-                if (achievement.third_try) {
-                    athlete_result.third_try = parseFloat(achievement.third_try.integral + "." + achievement.third_try.fractional)
-                    all_results.push(athlete_result.third_try)
-                }
-                if (achievement.final_result) {
-                    if (all_results.length == 0 || Math.max(...all_results) == -1) {
-                        athlete_result.first_try = parseFloat(achievement.final_result.integral + "." + achievement.final_result.fractional)
-                        athlete_result.best_try = athlete_result.first_try
-                    }
-                }
-            }
-            athlete_results.set(athlete_result.full_name(), athlete_result)
-        })
-
-        // Get current starting order and try from results on load
-        let current_try = 1
-        let default_starting_order: AthleteDistanceResults[] = []
-        if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
-            default_starting_order = disciplineState.discipline.starting_order.Default.map(athlete => { 
-                return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number)
-            })
-            let try_order: AthleteDistanceResults[] = []
-            let not_done = [1, 2, 3].some(try_number => { // Check all tries
-                current_try = try_number
-                try_order = [...default_starting_order]
-                while (try_order.length > 0) {
-                    let athlete = athlete_results.get(try_order[0].full_name())
-                    if (athlete) {
-                        // If athlete has no attempt for this try then start with this person
-                        if (try_number == 1) {
-                            if (!("first_try" in athlete)) {
-                                return true
-                            }
-                        } else if (try_number == 2) {
-                            if (!("second_try" in athlete)) {
-                                return true
-                            }
-                        } else if (try_number == 3) {
-                            if (!("third_try" in athlete)) {
-                                return true
-                            }
-                        }
-                    }
-                    try_order.shift()
-                }
-            })
-            if (not_done) {
-                setDisciplineState({
-                    ...disciplineState,
-                    current_try: current_try,
-                    results: athlete_results,
-                    current_order: try_order,
-                    default_order: default_starting_order
-                })
-            } else {
-                finish_discipline(group_name, disciplineState.discipline, setDiscipline)
-            }
-        }
-    }
 
     const setDiscipline = function (discipline: Discipline) {
         setDisciplineState({
@@ -194,7 +196,8 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             new_value = parseFloat(new_value)
         }
         if (athlete_result) {
-            let update_result = { ...athlete_result, full_name: () => athlete_result.full_name() }
+            let full_name = athlete_result.full_name()
+            let update_result = { ...athlete_result, full_name: () => full_name }
             // Reset all tries to only update the new one
             update_result.first_try = undefined
             update_result.second_try = undefined

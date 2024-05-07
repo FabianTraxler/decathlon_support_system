@@ -87,31 +87,6 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "", ascending: false })
 
-  const get_data = function () {
-    if (group_name.startsWith("Gruppe")) {
-      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
-      })
-    } else if (group_name.startsWith("U")) {
-      var disciplines: [string, string, string][] = [];
-      if (group_name == "U16") {
-        disciplines = hepathlon_disciplines;
-      } else if (group_name == "U14") {
-        disciplines = pentathlon_disciplines;
-      } else {
-        disciplines = triathlon_discplines
-      }
-      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-        set_athleteState({athletes: athletes, disciplines: disciplines})
-      })
-
-    } else {
-      fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
-        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
-      })
-    }
-  }
-
 
   useEffect(() => {
     var current_index = 0
@@ -139,7 +114,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
       document.removeEventListener('keydown', handleEnterKey);
     };
 
-  }, [disciplineEdit]);
+  }, [disciplineEdit, athleteState]);
 
 
   const discipline_edit_mode = function (selected_discipline: string) {
@@ -148,7 +123,28 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   }
 
   useEffect(() => {
-    get_data()
+    if (group_name.startsWith("Gruppe")) {
+      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+      })
+    } else if (group_name.startsWith("U")) {
+      var disciplines: [string, string, string][] = [];
+      if (group_name == "U16") {
+        disciplines = hepathlon_disciplines;
+      } else if (group_name == "U14") {
+        disciplines = pentathlon_disciplines;
+      } else {
+        disciplines = triathlon_discplines
+      }
+      fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: disciplines})
+      })
+
+    } else {
+      fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
+        set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+      })
+    }
   }, [group_name])
 
   const sortColumn = function (col_name: string) {
