@@ -5,10 +5,14 @@ import { convert_to_integral_fractional } from "@/app/lib/parsing";
 import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 
 export default function Achievement({ index, name, achievement, achievement_type, athleteName, editMode }:
-    { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, editMode: boolean}) {
+    { index: number, name: string, achievement?: AchievementValue, achievement_type: string, athleteName: string, editMode: boolean}) {
 
     const [isPopupOpen, setPopupOpen] = useState(false);
     const [current_achievement, setAchievement] = useState(achievement)
+
+    useEffect(() => {
+        setAchievement(achievement)
+    }, [achievement])
 
     let achievement_string = "";
     let achievement_unit = "";
