@@ -15,7 +15,7 @@ export default function Overview() {
   if (groupName == "Admin Übersicht") {
     return (
       <div className="flex-row w-full">
-        <div className="flex flex-col items-center justify-between p-4 2xl:p-10 overflow-scroll">
+        <div className="flex flex-col items-center justify-between p-4 2xl:p-10 overflow-scroll sm:h-screen">
           <Title title={groupName}></Title>
           <GroupOverview></GroupOverview>
         </div>
@@ -23,7 +23,7 @@ export default function Overview() {
     )
   } else {
     return (
-      <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll w-full">
+      <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll w-full h-screen">
         <Title title={groupName}></Title>
         <PrintUtilities></PrintUtilities>
         <Athletes group_name={groupName}></Athletes>

@@ -109,15 +109,17 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         let new_state = { ...achievementState }
         new_state[input_type] = e.target.value
 
-        let tries = new_state.tries.split("-") || []
+        if (input_type !== "final_result") {
+            let tries = new_state.tries.split("-") || []
 
-        let jumped_height = 0
-        tries.forEach((height_try, i) => {
-            if (height_try.toLocaleLowerCase().includes("o")) {
-                jumped_height = (parseFloat(new_state.start_height) || 0) + (i * parseFloat(new_state.height_increase) || 0)
-            }
-        })
-        new_state["final_result"] = jumped_height.toString().toUpperCase()
+            let jumped_height = 0
+            tries.forEach((height_try, i) => {
+                if (height_try.toLocaleLowerCase().includes("o")) {
+                    jumped_height = (parseFloat(new_state.start_height) || 0) + (i * parseFloat(new_state.height_increase) || 0)
+                }
+            })
+            new_state["final_result"] = jumped_height.toString().toUpperCase()
+        }
 
         setAchievementState(new_state)
     }
@@ -151,7 +153,8 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 </div>
 
                 <div className="mb-2">
-                    <label>Versuche [{unit}]: </label>
+                    <label>Versuche [{unit}] (zB.:XO-O-XXX):</label>
+                    <br></br>
                     <textarea name="tries" className="shadow-md rounded-md bg-slate-200 w-32 text-center"
                         value={achievementState.tries}
                         onChange={(e) => adapt_final_result(e, "tries")}

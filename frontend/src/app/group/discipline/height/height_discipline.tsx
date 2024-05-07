@@ -1,4 +1,4 @@
-import { AthleteHeightResults, AthleteID, Discipline } from "@/app/lib/interfaces";
+import { AthleteHeightID, AthleteHeightResults, AthleteID, Discipline } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
 import { BeforeStartInfoBox, finish_discipline, start_discipline } from "../discipline";
 import { get_group_achievements } from "@/app/lib/achievement_edit/api_calls";
@@ -9,16 +9,16 @@ import { HeightOrderOverview } from "./athlete_overview";
 
 interface HeightDisciplineState {
     discipline: Discipline
-    results: Map<number, AthleteHeightResults>
+    results: Map<string, AthleteHeightResults>
     current_try: number
     current_height: number
     height_increase: number
-    current_order: AthleteID[]
-    default_order: AthleteID[]
-    athletes_in_next_try: AthleteID[]
-    athletes_in_next_next_try: AthleteID[]
-    athletes_in_next_height: number[]
-    new_athletes_for_new_height: AthleteID[]
+    current_order: AthleteHeightID[]
+    default_order: AthleteHeightID[]
+    athletes_in_next_try: AthleteHeightID[]
+    athletes_in_next_next_try: AthleteHeightID[]
+    athletes_in_next_height: AthleteHeightID[]
+    new_athletes_for_new_height: Set<AthleteHeightID>
     discipline_progress_state: string // "new_height", "jumping",
     min_start_height: number,
     loaded: boolean,
@@ -26,7 +26,7 @@ interface HeightDisciplineState {
 }
 
 const empty_state = {
-    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "" },
+    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "" },
     results: new Map(),
     current_try: 0,
     current_height: 0,
@@ -36,7 +36,7 @@ const empty_state = {
     athletes_in_next_try: [],
     athletes_in_next_next_try: [],
     athletes_in_next_height: [],
-    new_athletes_for_new_height: [],
+    new_athletes_for_new_height: new Set(),
     discipline_progress_state: "new_height",
     min_start_height: 0,
     loaded: false,
@@ -58,13 +58,13 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
 
     const initialze_discipline = function (discipline: Discipline) {
         // Get active athletes for first height
-        let new_athletes: AthleteID[] = []
+        let new_athletes: Set<AthleteHeightID> = new Set();
 
         disciplineState.default_order.forEach((athlete) => {
-            let athlete_result = disciplineState.results.get(athlete.starting_number)
+            let athlete_result = disciplineState.results.get(athlete.full_name())
             if (athlete_result && athlete_result.starting_number != undefined) {
                 if (athlete_in_competition(athlete_result, disciplineState.current_height)) {
-                    new_athletes.push(athlete)
+                    new_athletes.add(athlete)
                 }
             }
         })
@@ -85,7 +85,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
     const get_discipline_results = function (athletes: Athlete[]) {
         if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
             let default_starting_order = disciplineState.discipline.starting_order.Default as AthleteID[]
-            default_starting_order = default_starting_order.filter((athlete) => athlete.starting_number != undefined)
+            //default_starting_order = default_starting_order.filter((athlete) => athlete.starting_number != undefined)
 
             let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
 
@@ -105,7 +105,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                     athletes_in_next_try: current_state.next_try_order,
                     athletes_in_next_height: current_state.athletes_in_next_height,
                     discipline_progress_state: "jumping",
-                    default_order: default_starting_order,
+                    default_order: current_state.default_starting_order,
                     loaded: true,
                     all_athletes_start_height_set: current_state.all_athletes_start_height_set
                 })
@@ -144,6 +144,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                 {
                     disciplineState.discipline.state == "BeforeStart" &&
                     <BeforeStartInfoBox
+                        ready={disciplineState.all_athletes_start_height_set}
                         discipline={disciplineState.discipline}
                         start_discipline={() => {
                             if (disciplineState.all_athletes_start_height_set) {
@@ -155,7 +156,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                     >
                         <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
                             <div
-                                className={"border rounded-md shadow-md  w-fit p-2 sm:p-4 hover:cursor-pointer " + (disciplineState.all_athletes_start_height_set ? " bg-green-200 active:bg-green-500 " : "bg-slate-300 active:bg-slate-500 ")}
+                                className={"border rounded-md shadow-md  w-fit p-2 sm:p-4 hover:cursor-pointer " + (disciplineState.all_athletes_start_height_set ? " bg-green-200 active:bg-green-500 " : "bg-stw_blue active:bg-blue-800 ")}
                                 onClick={() => setShowStartHeightInput(!showStartHeightInput)}
                             >
                                 Anfangshöhen bearbeiten
@@ -190,9 +191,9 @@ function NewHeightOverview() {
     const { state, update_state } = useContext(AthleteResults)
 
     const start_height = function () {
-        let new_current_order: AthleteID[] = []
+        let new_current_order: AthleteHeightID[] = []
         state.default_order.forEach(athlete => {
-            if (state.current_order.includes(athlete) || state.new_athletes_for_new_height.includes(athlete)) {
+            if (state.current_order.includes(athlete) || state.new_athletes_for_new_height.has(athlete)) {
                 new_current_order.push(athlete)
             }
         })
@@ -200,7 +201,7 @@ function NewHeightOverview() {
             ...state,
             current_order: new_current_order,
             discipline_progress_state: "jumping",
-            new_athletes_for_new_height: []
+            new_athletes_for_new_height: new Set()
         })
     }
 
@@ -218,14 +219,14 @@ function NewHeightOverview() {
 
             <div className="w-full row-span-6">
 
-                {state.new_athletes_for_new_height.length >= 1 ?
+                {state.new_athletes_for_new_height.size >= 1 ?
                     <div className="h-full w-full grid grid-rows-8">
                         <div className="text-xl underline">
                             Neu im Bewerb:
                         </div>
                         <div className="row-span-7 mt-2 w-full overflow-scroll">
                             {
-                                state.new_athletes_for_new_height.map((athlete => {
+                                Array.from(state.new_athletes_for_new_height).map((athlete => {
                                     return (
                                         <div key={athlete.starting_number} className=" grid grid-cols-4 text-lg sm:text-xl w-full">
                                             <div className="flex items-center justify-center border pt-2 pb-2"><span>{athlete.starting_number}</span></div>
@@ -287,7 +288,8 @@ interface AthleteState {
 
 function get_descipline_state_from_results(athletes: Athlete[], discipline: Discipline, min_start_height: number, height_increase: number, default_starting_order: AthleteID[]) {
 
-    let athlete_results: Map<number, AthleteHeightResults> = new Map() // stored in state as results
+
+    let athlete_results: Map<string, AthleteHeightResults> = new Map() // stored in state as results
 
     let current_height = Infinity;
 
@@ -310,7 +312,8 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 height_increase: height_increase,
                 still_active: true,
                 current_height: min_start_height,
-                current_try: 1
+                current_try: 1,
+                full_name: () => athlete.name + "_" + athlete.surname
             }
 
             // Check if some of the values are already stored in DB
@@ -348,14 +351,19 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
             } else {
                 all_athletes_start_height_set = false
             }
-            athlete_results.set(athlete.starting_number, athlete_result)
+            athlete_results.set(athlete_result.full_name(), athlete_result)
 
             if (athlete_result.still_active) {
                 active_athletes.push(athlete_result)
             }
         }
-
     })
+
+    let converted_default_starting_order = default_starting_order.map(athlete => {
+        let starting_number = athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number || NaN
+        return new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, starting_number)
+    })
+    
 
     if (active_athletes.length > 0) {
         if (current_height == Infinity) {
@@ -363,21 +371,21 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
         }
 
         let current_try = 1
-        let current_try_order: AthleteID[] = [];
-        let next_try_order: AthleteID[] = []
-        let height_successful_jumped: number[] = []
+        let current_try_order: AthleteHeightID[] = [];
+        let next_try_order: AthleteHeightID[] = []
+        let height_successful_jumped: AthleteHeightID[] = []
 
         while (current_try <= 3) {
-            default_starting_order.forEach(athlete_id => {
-                let athlete = athlete_results.get(athlete_id.starting_number)
+            converted_default_starting_order.forEach(athlete_id => {
+                let athlete = athlete_results.get(athlete_id.full_name())
                 if (athlete && athlete.still_active && athlete.current_height == current_height) {
                     if (athlete.current_try == current_try) {
-                        current_try_order.push(athlete)
+                        current_try_order.push(athlete_id)
                     } else if (athlete.current_try == (current_try + 1)) {
-                        next_try_order.push(athlete)
+                        next_try_order.push(athlete_id)
                     }
                 } else if (athlete && athlete.still_active && athlete.final_result && athlete.final_result >= current_height) {
-                    height_successful_jumped.push(athlete.starting_number)
+                    height_successful_jumped.push(athlete_id)
                 }
             })
             if (current_try_order.length > 0) {
@@ -388,11 +396,11 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 current_try += 1
             }
         }
-        return { athlete_results: athlete_results, current_height: current_height, current_try: current_try, current_try_order: current_try_order, next_try_order: next_try_order, athletes_in_next_height: height_successful_jumped, all_athletes_start_height_set: all_athletes_start_height_set }
+        return { athlete_results: athlete_results, current_height: current_height, current_try: current_try, current_try_order: current_try_order, next_try_order: next_try_order, athletes_in_next_height: height_successful_jumped, all_athletes_start_height_set: all_athletes_start_height_set, default_starting_order:converted_default_starting_order }
 
 
     } else {
-        return { athlete_results: athlete_results, current_height: 0, current_try: 0, current_try_order: [], next_try_order: [], athletes_in_next_height: [], all_athletes_start_height_set: true }
+        return { athlete_results: athlete_results, current_height: 0, current_try: 0, current_try_order: [], next_try_order: [], athletes_in_next_height: [], all_athletes_start_height_set: true, default_starting_order: [] }
     }
 }
 

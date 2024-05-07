@@ -16,26 +16,6 @@ export const default_discipline_values = {
     },
 }
 
-export const discipline_types: Map<string, string> = new Map([
-    ["100 Meter Lauf", "Time"],
-    ["Weitsprung", "Distance"],
-    ["Kugelstoß", "Distance"],
-    ["Hochsprung", "Height"],
-    ["400 Meter Lauf", "Time"],
-    ["110 Meter Hürden", "Time"],
-    ["Diskuswurf", "Distance"],
-    ["Stabhochsprung", "Height"],
-    ["Speerwurf", "Distance"],
-    ["1500 Meter Lauf", "Time"],
-
-    ["60 Meter Lauf", "Time"],
-    ["60 Meter Hürden", "Time"],
-    ["100 Meter Hürden", "Time"],
-    ["1000 Meter Lauf", "Time"],
-    ["1200 Meter Cross Lauf", "Time"],
-    ["Vortex", "Distance"]
-])
-
 export const decathlon_disciplines: [string, string, string][] = [
     ["100 Meter Lauf", "Time", "100m"],
     ["Weitsprung", "Distance", "Weit"],

@@ -207,6 +207,7 @@ function StartingNumberInput({ athlete }: { athlete: Athlete }) {
             let changed_value = {
                 "starting_number": currentState.starting_number
             }
+
             let timer = setTimeout(() => {
                 fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
                     method: "PUT",
@@ -263,7 +264,7 @@ function StartingNumberInput({ athlete }: { athlete: Athlete }) {
             className={"text-center shadow-sm hover:cursor-pointer max-w-[6rem] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none " +
                 (currentState.isError ? " bg-red-400" : "") + ((!currentState.isError && currentState.isUploaded) ? " bg-green-100" : "") +
                 ((!currentState.isError && !currentState.isUploaded) ? " bg-yellow-100" : "")}
-            defaultValue={athlete.starting_number}></input>
+            defaultValue={currentState.starting_number || ""}></input>
     )
 }
 

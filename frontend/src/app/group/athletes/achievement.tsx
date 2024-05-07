@@ -4,22 +4,7 @@ import { useContext, useState } from "react";
 import { AchievementContext } from "./athletes";
 
 
-export default function AchievementDisplay({ athlete_number, name, achievement, athlete_name }: { athlete_number: number, name: string, achievement?: AchievementValue, athlete_name: string }) {
-    const [current_achievement, setAchievement] = useState<{ showEdit: boolean, value?: AchievementValue }>({ showEdit: false, value: achievement })
-    let { updateAchievement } = useContext(AchievementContext);
-
-    let achievement_type = ""
-
-    if (achievement) {
-        if (achievement.Distance) {
-            achievement_type = "Distance"
-        } else if (achievement.Height) {
-            achievement_type = "Height"
-        } else if (achievement.Time) {
-            achievement_type = "Time"
-        }
-    }
-
+export default function AchievementDisplay({ athlete_number, name, type, achievement, athlete_name }: { athlete_number: number, name: string, type: string, achievement?: AchievementValue, athlete_name: string }) {
     let achievement_string = "";
     let achievement_unit = "";
     let default_achievement: AchievementValue = {
@@ -37,9 +22,14 @@ export default function AchievementDisplay({ athlete_number, name, achievement, 
             unit: "cm"
         },
     }
+    const [current_achievement, setAchievement] = useState<{ showEdit: boolean, value?: AchievementValue }>({ 
+        showEdit: false, 
+        value: achievement })
+    let { updateAchievement } = useContext(AchievementContext);
+
 
     if (current_achievement.value) {
-        [achievement_string, achievement_unit] = convert_achievement_to_string(current_achievement.value, achievement_type);
+        [achievement_string, achievement_unit] = convert_achievement_to_string(current_achievement.value, type);
     }
 
     var saveChanges = function (new_achievement?: AchievementValue) {
@@ -66,7 +56,7 @@ export default function AchievementDisplay({ athlete_number, name, achievement, 
 
             {
                 current_achievement.showEdit &&
-                <EditPopup key={name} achievement={current_achievement.value || default_achievement} achievementType={achievement_type}
+                <EditPopup key={name} achievement={current_achievement.value || default_achievement} achievementType={type}
                     athleteName={athlete_name} onClose={saveChanges}></EditPopup>
             }
         </div>

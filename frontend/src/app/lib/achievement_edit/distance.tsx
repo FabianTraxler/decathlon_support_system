@@ -60,10 +60,10 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
         } as AchievementValue
 
         let changable_values = {
-            final_result: new_achievement.Distance?.final_result,
-            first_try: new_achievement.Distance?.first_try,
-            second_try: new_achievement.Distance?.second_try,
-            third_try: new_achievement.Distance?.third_try
+            final_result: formData.get("final_result"),
+            first_try: formData.get("first_try"),
+            second_try: formData.get("second_try"),
+            third_try: formData.get("third_try")
         }
 
         fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Distance?.name}`, {
@@ -108,24 +108,24 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
         new_state[try_name] = new_value;
 
         let first_try = 0;
-        if (typeof achievementState.first_try == "number"){
-            first_try = achievementState.first_try
+        if (typeof new_state.first_try == "number"){
+            first_try = new_state.first_try || 0
         } else {
-            first_try = parseFloat(achievementState.first_try) || 0
+            first_try = parseFloat(new_state.first_try.replace(",", ".")) || 0
         }
         let second_try = 0;
-        if (typeof achievementState.second_try == "number"){
-            second_try = achievementState.second_try
+        if (typeof new_state.second_try == "number"){
+            second_try = new_state.second_try || 0
         } else {
-            second_try = parseFloat(achievementState.second_try) || 0
+            second_try = parseFloat(new_state.second_try.replace(",", ".")) || 0
         }
         let third_try = 0;
-        if (typeof achievementState.third_try == "number"){
-            third_try = achievementState.third_try
+        if (typeof new_state.third_try == "number"){
+            third_try = new_state.third_try || 0
         } else {
-            third_try = parseFloat(achievementState.third_try) || 0
+            third_try = parseFloat(new_state.third_try.replace(",", ".")) || 0
         }
-        let max_value = Math.max(first_try, second_try, first_try)
+        let max_value = Math.max(first_try, second_try, third_try)
 
         new_state["final_result"] = max_value
 

@@ -8,6 +8,14 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    "extend": {
+      "colors": {
+        "stw_orange": "#f5a623",
+        "stw_blue": "#4ab5e2",
+        "stw_green": "#7ed321"
+      }
+    }
+
   },
   plugins: [],
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Discipline } from "@/app/lib/interfaces";
 import Title_Footer_Layout from "../subpage_layout";
-import { discipline_types, german_discipline_states } from "@/app/lib/config";
+import { german_discipline_states } from "@/app/lib/config";
 import TimeDiscipline from "./time_discipline";
 import { convert_date } from "@/app/lib/parsing";
 import DistanceDiscipline from "./distance_discipline";
@@ -41,15 +41,15 @@ export default function Disciplines({ group_name }: { group_name: string }) {
         return (
             <Title_Footer_Layout title={discipline.name}>
                 {
-                    discipline_types.get(discipline.name) == "Time" &&
+                    (discipline.discipline_type == "Time" || discipline.discipline_type == "Track") &&
                     <TimeDiscipline discipline={discipline} group_name={group_name}></TimeDiscipline>
                 }
                 {
-                    discipline_types.get(discipline.name) == "Distance" &&
+                    discipline.discipline_type == "Distance" &&
                     <DistanceDiscipline discipline={discipline} group_name={group_name}></DistanceDiscipline>
                 }
                 {
-                    discipline_types.get(discipline.name) == "Height" &&
+                    discipline.discipline_type == "Height" &&
                     <HeightDiscipline discipline={discipline} group_name={group_name}></HeightDiscipline>
                 }
             </Title_Footer_Layout>
@@ -58,7 +58,7 @@ export default function Disciplines({ group_name }: { group_name: string }) {
 }
 
 
-export function BeforeStartInfoBox({ discipline, start_discipline, children }: { discipline: Discipline, start_discipline: () => void, children?: React.ReactNode }) {
+export function BeforeStartInfoBox({ discipline, start_discipline, ready, children }: { discipline: Discipline, start_discipline: () => void, ready: boolean, children?: React.ReactNode }) {
     return (
         <div className="w-full border rounded-md p-4 sm:p-8">
             <div className="font-bold text-center text-2xl sm:text-4xl">Info</div>
@@ -89,7 +89,8 @@ export function BeforeStartInfoBox({ discipline, start_discipline, children }: {
 
             <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
                 <div
-                    className="border rounded-md shadow-md bg-slate-300 w-fit p-2 sm:p-4 hover:cursor-pointer active:bg-slate-500"
+                    className={"border rounded-md  w-fit p-2 sm:p-4 hover:cursor-pointer active:bg-slate-500 active:shadow-none" +
+                                (ready ? " bg-stw_green shadow-lg shadow-gray-800": " bg-slate-100 shadow-none")}
                     onClick={() => start_discipline()}
                 >
                     Disiplin starten

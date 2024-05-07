@@ -2,6 +2,7 @@ import type { NextAuthConfig, User } from 'next-auth';
 import { SessionUser } from './app/lib/user_auth';
  
 export const authConfig = {
+  trustHost: true,
   pages: {
     signIn: '/login',
   },

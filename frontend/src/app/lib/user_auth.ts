@@ -12,8 +12,6 @@ export class SessionUser implements User {
         // Get token and role
         this._id = ""
 
-        //
-
         let role = get_role(pwd)
         // Abuse name and email for simplicity for "role" and "group"
         this.name = role.role
@@ -25,7 +23,7 @@ function get_role(pwd: string): {role: string, group: string} {
   // TODO: Change to get role and group info from backend
   let role = ""
   let info = ""
-  if (pwd.includes("Gruppe")){
+  if (pwd.includes("Gruppe") || pwd.includes("U")){
     role = "group" 
     info = pwd
   } else {

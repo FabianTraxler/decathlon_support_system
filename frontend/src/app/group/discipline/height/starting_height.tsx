@@ -21,7 +21,7 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
             athlete_result.tries = "";
 
             save_height_achievement(athlete_result, () => {
-                state.results.set(athlete_result.starting_number, athlete_result)
+                state.results.set(athlete_result.full_name(), athlete_result)
                 let all_athletes_set = true;
                 state.results.forEach(athlete => {
                     if(athlete.starting_number != undefined && !athlete.start_height_set){
@@ -45,7 +45,7 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
             athlete_result.tries = "";
 
             save_height_achievement(athlete_result, () => {
-                state.results.set(athlete_result.starting_number, athlete_result)
+                state.results.set(athlete_result.full_name(), athlete_result)
                 let all_athletes_set = true;
                 state.results.forEach(athlete => {
                     if(athlete.starting_number != undefined && !athlete.start_height_set){
@@ -77,19 +77,21 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
                         </thead>
                         <tbody className="">
                             {state.default_order.map(athlete => {
-                                let athlete_result = state.results.get(athlete.starting_number)
+                                let athlete_result = state.results.get(athlete.full_name())
                                 if (athlete_result && athlete.starting_number) {
                                     return (
                                         <tr className="border" key={athlete.starting_number}>
                                             <td className="border pt-1 pb-1">{athlete_result.starting_number}</td>
                                             <td className="border pt-1 pb-1">{athlete_result.name} {athlete_result.surname}</td>
-                                            <td className={"flex pl-2 pr-2 border pt-1 pb-1 " + (athlete_result.start_height_set ? "bg-green-100 justify-center" : "bg-yellow-100 justify-between ")}>
+                                            <td className={"flex pl-2 pr-2 border pt-1 pb-1 text-xl " + (athlete_result.start_height_set ? "bg-green-100 justify-center" : "bg-yellow-100 justify-between ")}>
                                                 <select defaultValue={athlete_result?.start_height} onChange={(e) => update_starting_height(e, athlete_result)}>
                                                     {start_height_values.map(val => {
                                                         return (<option key={val}>{val}</option>)
                                                     })}
                                                 </select>
-                                                {!athlete_result.start_height_set && <div onClick={() => save_starting_height(athlete_result)}>&#9989;</div>}
+                                                {!athlete_result.start_height_set &&
+                                                 <div  className="text-3xl"onClick={() => save_starting_height(athlete_result)}>&#9989;</div>
+                                                 }
                                             </td>
                                         </tr>
                                     )

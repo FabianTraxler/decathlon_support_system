@@ -10,7 +10,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(true);
 
   return (
-    <div className="items-center justify-between p-1 w-full">
+    <div className="items-center justify-between p-1 w-full ">
       <div className='text-2xl font-bold p-2 border rounded-lg '>
         <div className='flex justify-between hover:cursor-pointer' onClick={(_) => set_showAthletes(!showAthletes)}>
           <span>Athlet:innen</span>
@@ -22,7 +22,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
             </svg>
           </button>
         </div>
-        <div className={"text-sm 2xl:text-md font-normal overflow-scroll " + (showAthletes ? "sm:max-h-[25rem] 2xl:max-h-[35rem] " : "max-h-0 overflow-hidden")}>
+        <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
           <GroupAthletes group_name={group_name}></GroupAthletes>
         </div>
       </div>
@@ -32,7 +32,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
 }
 
 function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
-  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
+  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string}) {
   const achievements = new Map(Object.entries(athlete.achievements));
   const birthdate = new Date(athlete.birth_date * 1000);
   const full_name = athlete.name + "_" + athlete.surname;
@@ -65,7 +65,9 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
       <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
       {disciplines.map(([name, type]) => {
         return (
-          <Achievement key={name} index={index} name={name} athleteName={full_name} achievement={achievements.get(name)} achievement_type={type} editMode={disciplineEdit == name}></Achievement>
+          <Achievement key={name} index={index} name={name} 
+          athleteName={full_name} achievement={achievements.get(name)} achievement_type={type} 
+          editMode={disciplineEdit == name}></Achievement>
         )
       })}
       <td className='border border-slate-800'>
@@ -84,9 +86,6 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   const [athleteState, set_athleteState] = useState<{athletes: Athlete[], disciplines: [string, string, string][]}>({athletes: [], disciplines: []});
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "", ascending: false })
-
-
- 
 
   const get_data = function () {
     if (group_name.startsWith("Gruppe")) {
@@ -118,16 +117,19 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     var current_index = 0
     document.getElementById(current_index.toString())?.focus();
 
-    const handleEnterKey = function (this: Document, evt: any) {
-
-      if (evt.which == 13) {
-        evt.preventDefault();
-        current_index += 1;
-        if (current_index >= athleteState.athletes.length) {
-          current_index = 0;
+    const handleEnterKey = function (this: Document, evt: KeyboardEvent) {
+      if (evt.target instanceof Element) { 
+        var current_index = parseInt(evt.target.id);
+        if (evt.which == 13) {
+          evt.preventDefault();
+          current_index += 1;
+          if (current_index >= athleteState.athletes.length) {
+            current_index = 0;
+          }
+          document.getElementById(current_index.toString())?.focus();
         }
-        document.getElementById(current_index.toString())?.focus();
       }
+
     }
 
     document.addEventListener('keydown', handleEnterKey, true);
@@ -196,7 +198,8 @@ function GroupAthletes({ group_name }: { group_name: string }) {
       </thead>
       <tbody>
         {athleteState.athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines} disciplineEdit={disciplineEdit}></AthleteTableRow>
+          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines} 
+          disciplineEdit={disciplineEdit}></AthleteTableRow>
         })}
       </tbody>
     </table>

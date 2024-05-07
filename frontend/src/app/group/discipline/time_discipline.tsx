@@ -1,53 +1,94 @@
-import { AthleteID, Discipline, StartingOrder } from "@/app/lib/interfaces";
-import { useState } from "react";
+import { AthleteID, AthleteTimeResult, Discipline, StartingOrder } from "@/app/lib/interfaces";
+import { useEffect, useState } from "react";
 import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./discipline";
-import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
+import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
+import { Athlete } from "@/app/lib/athlete_fetching";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
-    const [current_discipline, setDiscipline] = useState(discipline)
+    const [current_discipline, setDiscipline] = useState<Discipline>({...discipline, starting_order: {Track: []}})
 
-    const saveNewStartingOrder = function (new_order: StartingOrder) {
-        saveStartingOrder(new_order, group_name, () => { })
+    useEffect(() => {
+        get_group_achievements(group_name, get_athlete_starting_numbers)
+    }, [group_name])
+
+    const get_athlete_starting_numbers = function (athletes: Athlete[]) {
+        let athlete_starting_numbers: Map<string, number> = new Map()
+
+        athletes.forEach(athlete => {
+            athlete_starting_numbers.set(athlete.name + "_" + athlete.surname, athlete.starting_number)
+        })
+    
+        let new_starting_order: {name: string, athletes: AthleteTimeResult[]}[] = []
+        if (typeof discipline.starting_order != "string" && discipline.starting_order.Track){
+            new_starting_order = discipline.starting_order.Track.map(run => {
+                let athletes = run.athletes.map(athlete => {
+                    return {
+                        ...athlete,
+                        starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
+                        full_name: () => athlete.name + "_" + athlete.surname
+                    }
+            })
+                return {
+                    name: run.name,
+                    athletes: athletes
+                }
+            })
+        }
+
+
+        setDiscipline({
+            ...current_discipline,
+            starting_order: {
+                Track: new_starting_order
+            }
+            })
+
     }
 
-    return (
-        <div className="h-full">
-            {
-                current_discipline.state == "BeforeStart" &&
-                <BeforeStartInfoBox 
-                discipline={current_discipline} 
+
+const saveNewStartingOrder = function (new_order: StartingOrder) {
+    saveStartingOrder(new_order, group_name, () => { })
+}
+
+return (
+    <div className="h-full">
+        {
+            current_discipline.state == "BeforeStart" &&
+            <BeforeStartInfoBox
+                ready={true}
+                discipline={current_discipline}
                 start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}></BeforeStartInfoBox>
-            }
-            {
-                current_discipline.state == "Active" &&
-                <div className="h-full">
-                    {
-                        (typeof current_discipline.starting_order != "string" && current_discipline.starting_order.Track) ?
-                            <StartingOrderSummary
-                                starting_order={current_discipline.starting_order.Track}
-                                saveStartingOrder={saveNewStartingOrder}
-                                finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
-                            ></StartingOrderSummary>
-                            :
-                            <div>
-                                Keine Reihenfolge
-                            </div>
-                    }
-                </div>
-            }
-            {
-                current_discipline.state == "Finished" &&
-                <div className="flex h-full text-2xl font-bold items-center justify-center">
-                    <span>Abgeschlossen</span>
-                </div>
-            }
-        </div>
-    )
+        }
+        {
+            current_discipline.state == "Active" &&
+            <div className="h-full">
+                {
+                    (typeof current_discipline.starting_order != "string" && current_discipline.starting_order.Track && current_discipline.starting_order.Track?.length > 0) ?
+                        <StartingOrderSummary
+                            starting_order={current_discipline.starting_order.Track}
+                            saveStartingOrder={saveNewStartingOrder}
+                            finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
+                        ></StartingOrderSummary>
+                        :
+                        <div>
+                            Loading ...
+                        </div>
+                }
+            </div>
+        }
+        {
+            current_discipline.state == "Finished" &&
+            <div className="flex h-full text-2xl font-bold items-center justify-center">
+                <span>Abgeschlossen</span>
+            </div>
+        }
+    </div>
+)
 }
 
 
 function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipline }:
-    { starting_order: { name: string, athletes: AthleteID[] }[], saveStartingOrder: (order: StartingOrder) => void, finishDiscipline: () => void }) {
+    { starting_order: { name: string, athletes: AthleteTimeResult[] }[], saveStartingOrder: (order: StartingOrder) => void, finishDiscipline: () => void }) {
 
     const [editActive, setEditActive] = useState(false)
     const [openRuns, setOpenRuns] = useState<Set<string>>(new Set([]));
@@ -94,7 +135,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
     }
     const addRun = function () {
         let newRuns = [...currentRuns]
-        newRuns.push({ name: "Lauf " + newRuns.length.toString(), athletes: [] })
+        newRuns.push({ name: "Lauf " + (newRuns.length + 1).toString(), athletes: [] })
         setcurrentRuns(newRuns);
     }
 
@@ -129,7 +170,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
     }
     return (
         <div className="p-1 h-full overflow-scroll ">
-            <div className={"text-center border rounded-md shadow-md p-3 " + (editActive && "bg-slate-400 text-white")}
+            <div className={"text-center border rounded-md mb-4 p-3  shadow-slate-900 " + (editActive ? "bg-stw_orange " : "bg-stw_blue shadow-md")}
                 onClick={() => setEditActive(!editActive)}
             >
                 {editActive ?
@@ -141,32 +182,33 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
 
             {currentRuns.map((run, run_id) => {
                 if (run.athletes.length == 0) {
-                    return (<div key={run_id} className="border rounded-md mt-1 p-4 sm:p-6 ">
-                        <div className="flex flex-row justify-between font-bold text-xl sm:text-4xl"
-                            onClick={() => handleOpenRun(run.name, true)}
-                            onDragOver={() => handleOpenRun(run.name, false)}>
-                            <span>{run.name}</span>
-                            <div>&gt;</div>
+                    return (
+                        <div key={run_id} className="border rounded-md mt-2 p-4 sm:p-6 ">
+                            <div className="flex flex-row justify-between font-bold text-xl sm:text-4xl"
+                                onClick={() => handleOpenRun(run.name, true)}
+                                onDragOver={() => handleOpenRun(run.name, false)}>
+                                <span>{run.name}</span>
+                                <div>&gt;</div>
+                            </div>
+                            <table className="w-full table-auto border-collapse text-[1rem] sm:text-[1.2rem] 2xl:text-sm mt-2" >
+                                <thead >
+                                    <tr className={' ' +
+                                        ((run_id == lastDraggedOver.run_index) && "  bg-slate-400")}
+                                        onDrop={(e) => handleDragDrop(e, run_id, 0)}
+                                        onDragStart={(e) => handleDragStart(e, run_id, 0)}
+                                        onDragOver={(e) => handleDragOver(e, run_id, 0)} >
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2">AK</th>
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
+                                        <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
                         </div>
-                        <table className="w-full table-auto border-collapse text-[1rem] sm:text-[1.2rem] 2xl:text-sm mt-2" >
-                            <thead >
-                                <tr className={' ' +
-                                    ((run_id == lastDraggedOver.run_index) && "  bg-slate-400")}
-                                    onDrop={(e) => handleDragDrop(e, run_id, 0)}
-                                    onDragStart={(e) => handleDragStart(e, run_id, 0)}
-                                    onDragOver={(e) => handleDragOver(e, run_id, 0)} >
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">AK</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            </tbody>
-                        </table>
-                    </div>
                     )
                 } else {
                     return (
@@ -199,9 +241,9 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                         key={athlete_id + "undraggable"}>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 8)}{athlete.name.length > 8 && "..."}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 8)}{athlete.surname.length > 8 && "..."}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 7)}{athlete.surname.length > 7 && "..."}</td>
                                                     </tr>
                                                 )
                                             })}
@@ -222,9 +264,9 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                         key={athlete_id + "draggable"}>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 8)}{athlete.name.length > 8 && "..."}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 8)}{athlete.surname.length > 8 && "..."}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 7)}{athlete.surname.length > 7 && "..."}</td>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
                                                             &#9776;
                                                         </td>
@@ -247,9 +289,10 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                         <span>&#x2B;</span>
                     </div>
                     <div className={"text-center border rounded-md shadow-md p-3 mt-5 " +
-                        (submitted == "check" && " bg-yellow-600") +
+                        (submitted == "check" && " bg-stw_yellow") +
                         (submitted == "wrong" && " bg-red-600") +
-                        (submitted == "ok" && " bg-green-600")
+                        (submitted == "ok" && " bg-stw_green") +
+                        (submitted == "" && " bg-stw_blue")
                     }
                         onClick={handleSave}
                     >
@@ -257,7 +300,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                     </div>
                 </div>}
             {!editActive &&
-                <div className="text-center border rounded-md shadow-md p-3 mt-3 bg-red-100"
+                <div className="text-center border rounded-md shadow-md p-3 mt-3 bg-stw_green shadow-slate-900"
                     onClick={finishDiscipline}
                 >
                     <span>Disziplin abschließen</span>

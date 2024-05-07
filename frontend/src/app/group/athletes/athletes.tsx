@@ -15,12 +15,14 @@ export default function Athletes({ group_name }: { group_name: string }) {
     const [athletes, setAthletes] = useState<OverviewAthlete[]>([])
 
     const setOverviewAthletes = function (athletes: Athlete[]) {
-        let overview_athletes = athletes.map(athlete => {
-            let overview_athlete = athlete as OverviewAthlete;
-            overview_athlete.achievements = new Map(Object.entries(overview_athlete.achievements))
-            overview_athlete.searched = true;
-            return overview_athlete
-        })
+        let overview_athletes = athletes
+            .filter(athlete => athlete.starting_number)
+            .map(athlete => {
+                let overview_athlete = athlete as OverviewAthlete;
+                overview_athlete.achievements = new Map(Object.entries(overview_athlete.achievements))
+                overview_athlete.searched = true;
+                return overview_athlete
+            })
         setAthletes(overview_athletes)
     }
 
@@ -142,9 +144,9 @@ function AthleteOverview({ athlete, athlete_number }: { athlete: Athlete, athlet
             <div className={(showAchievements ? "p-2 bg-slate-100" : "")}>
                 {showAchievements &&
 
-                    disciplines.map(name => {
+                    decathlon_disciplines.map(([name, type, shortname]) => {
                         return (
-                            <AchievementDisplay key={full_name + "_" + name} name={name} achievement={athlete.achievements.get(name)} athlete_name={full_name} athlete_number={athlete_number}></AchievementDisplay>
+                            <AchievementDisplay key={full_name + "_" + name} name={name} type={type} achievement={athlete.achievements.get(name)} athlete_name={full_name} athlete_number={athlete_number}></AchievementDisplay>
                         )
                     })
                 }

@@ -11,14 +11,14 @@ import { NavigationContext } from "../navigation";
 
 interface DistanceDisciplineState {
     discipline: Discipline,
-    results: Map<number, AthleteDistanceResults>,
+    results: Map<string, AthleteDistanceResults>,
     current_try: number
     current_order: AthleteDistanceResults[]
     default_order: AthleteDistanceResults[]
 }
 
 const empty_state = {
-    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "" },
+    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "" },
     results: new Map(),
     current_try: 0,
     current_order: [],
@@ -38,7 +38,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
     }, [group_name])
 
     const get_discipline_results = function (athletes: Athlete[]) {
-        let athlete_results: Map<number, AthleteDistanceResults> = new Map()
+        let athlete_results: Map<string, AthleteDistanceResults> = new Map()
+
+        let discipline_unit = "m"//TODO: Check if we can get this value from somewhere else than hardcoding it
 
         athletes.forEach(athlete => {
             let athlete_result: AthleteDistanceResults = {
@@ -47,7 +49,8 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 starting_number: athlete.starting_number,
                 age_group: "",
                 discipline_name: discipline.name,
-                discipline_unit: "m" //TODO: Check if we can get this value from somewhere else than hardcoding it
+                discipline_unit: discipline_unit, 
+                full_name: () => athlete.name + "_" + athlete.surname
             }
             let achievement_map: Map<string, AchievementValue> = new Map(Object.entries(athlete.achievements));
             let achievement = achievement_map.get(discipline.name)?.Distance;
@@ -72,21 +75,22 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                     }
                 }
             }
-            athlete_results.set(athlete.starting_number, athlete_result)
+            athlete_results.set(athlete_result.full_name(), athlete_result)
         })
 
         // Get current starting order and try from results on load
         let current_try = 1
         let default_starting_order: AthleteDistanceResults[] = []
         if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
-            default_starting_order = disciplineState.discipline.starting_order.Default as AthleteDistanceResults[]
+            default_starting_order = disciplineState.discipline.starting_order.Default.map(athlete => { 
+                return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number)
+            })
             let try_order: AthleteDistanceResults[] = []
             let not_done = [1, 2, 3].some(try_number => { // Check all tries
                 current_try = try_number
                 try_order = [...default_starting_order]
                 while (try_order.length > 0) {
-                    let athlete_starting_number = try_order[0].starting_number
-                    let athlete = athlete_results.get(athlete_starting_number)
+                    let athlete = athlete_results.get(try_order[0].full_name())
                     if (athlete) {
                         // If athlete has no attempt for this try then start with this person
                         if (try_number == 1) {
@@ -142,6 +146,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 {
                     disciplineState.discipline.state == "BeforeStart" &&
                     <BeforeStartInfoBox
+                        ready={true}
                         discipline={disciplineState.discipline}
                         start_discipline={() => start_discipline(group_name, disciplineState.discipline, setDiscipline)}
                     ></BeforeStartInfoBox>
@@ -181,15 +186,15 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             name: "Save Achievement",
             reset_function: () => {
                 setSelectedAthlete(selected_athlete)
-                update_state({...state})
+                update_state({ ...state })
             }
         })
-        let athlete_result = state.results.get(athlete.starting_number)
+        let athlete_result = state.results.get(athlete.full_name())
         if (typeof new_value == "string") {
             new_value = parseFloat(new_value)
         }
-        if (athlete_result){
-            let update_result = {...athlete_result}
+        if (athlete_result) {
+            let update_result = { ...athlete_result, full_name: () => athlete_result.full_name() }
             // Reset all tries to only update the new one
             update_result.first_try = undefined
             update_result.second_try = undefined
@@ -200,7 +205,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 update_result.first_try = new_value
             } else if (try_number == 2) {
                 athlete_result.second_try = new_value
-                update_result.second_try = new_value    
+                update_result.second_try = new_value
             } else if (try_number == 3) {
                 athlete_result.third_try = new_value
                 update_result.third_try = new_value
@@ -209,21 +214,21 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 athlete_result.best_try = new_value
                 update_result.best_try = new_value
             }
-            
+
             save_distance_achievement(update_result, () => {
                 let new_results = state.results
-                if(athlete_result){
-                    new_results.set(athlete.starting_number, athlete_result)
+                if (athlete_result) {
+                    new_results.set(athlete.full_name(), athlete_result)
                 }
                 setTimeout(() => try_completed(new_results), 200)
             })
-        } else{
+        } else {
             alert("Error while saving achievement")
         }
 
     }
 
-    const try_completed = function(new_results: Map<number, AthleteDistanceResults>) {
+    const try_completed = function (new_results: Map<string, AthleteDistanceResults>) {
         if (state.current_order.length <= 1) {
             if (state.current_try >= 3) {
                 // Finish discipline
@@ -288,10 +293,9 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                             {
                                 state.current_order.slice(1, 5).map((athlete => {
                                     return (
-                                        <div key={athlete.starting_number} className=" grid grid-cols-5 text-lg sm:text-xl">
+                                        <div key={athlete.full_name()} className=" grid grid-cols-5 text-lg sm:text-xl">
                                             <div className="flex items-center justify-center border pt-2 pb-2"><span>{athlete.starting_number}</span></div>
-                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
-                                            <div className="flex items-center justify-center border pt-2 pb-2"><span>&gt;</span></div>
+                                            <div className="col-span-4 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
                                         </div>
                                     )
                                 }))
@@ -307,8 +311,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                                     return (
                                         <div key={athlete.starting_number} className=" grid grid-cols-5 text-lg sm:text-xl">
                                             <div className="flex items-center justify-center border pt-2 pb-2"><span>{athlete.starting_number}</span></div>
-                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
-                                            <div className="flex items-center justify-center border pt-2 pb-2"><span>&gt;</span></div>
+                                            <div className="col-span-4 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
                                         </div>
                                     )
                                 }))
@@ -324,7 +327,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 
 function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: (athlete: AthleteID, try_number: number, new_value: number | string) => void }) {
     const { state } = useContext(AthleteResults)
-    const athlete_result = state.results.get(athlete.starting_number)
+    const athlete_result = state.results.get(athlete.full_name())
     let try_value: number | string = ""
     if (athlete_result) {
         if (state.current_try == 1) {
@@ -399,21 +402,23 @@ function Try({ try_number, try_value, current_try, save_value, setSelectedTry }:
                 </div>
                 {
                     current_try &&
-                    <div className="flex flex-row items-center justify-end h-full p-2">
+                    <div className="flex flex-row items-center justify-center h-full p-3">
                         {
                             (try_value != "") &&
-                            <div className="flex items-center justify-center border rounded-md shadow-lg h-full w-[50%] active:bg-slate-100"
+                            <div className="flex items-center justify-center border rounded-md shadow-lg h-full w-[75%] border-stw_green active:bg-slate-100"
                                 onClick={() => save_value(try_number, try_value)}
                             >
                                 &#9989;
                             </div>
                         }
-
-                        <div className="flex items-center justify-center  border rounded-md shadow-lg h-full  w-[50%] active:bg-slate-100"
-                            onClick={() => save_value(try_number, -1)}
-                        >
-                            &#10060;
-                        </div>
+                        {
+                            (try_value == "") &&
+                            <div className="flex items-center justify-center  border rounded-md shadow-lg h-full  w-[75%] border-stw_orange active:bg-slate-100"
+                                onClick={() => save_value(try_number, -1)}
+                            >
+                                &#10060;
+                            </div>
+                        }
                     </div>
                 }
             </div>

@@ -37,7 +37,7 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
             achievement_unit = achievement_value.unit
         }
     }
-    if (achievement_string == "-1" || achievement_string == "-1,0") {
+    if (!achievement || achievement_string == "undefined,undefined" || achievement_string == "-1" || achievement_string == "-1,0") {
         achievement_string = "-"
     }
 

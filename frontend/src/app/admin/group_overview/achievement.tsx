@@ -5,7 +5,7 @@ import { convert_to_integral_fractional } from "@/app/lib/parsing";
 import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 
 export default function Achievement({ index, name, achievement, achievement_type, athleteName, editMode }:
-    { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, editMode: boolean }) {
+    { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, editMode: boolean}) {
 
     const [isPopupOpen, setPopupOpen] = useState(false);
     const [current_achievement, setAchievement] = useState(achievement)
@@ -29,7 +29,7 @@ export default function Achievement({ index, name, achievement, achievement_type
     }
 
     if (current_achievement) {
-        [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
+        [achievement_string, achievement_unit] = convert_achievement_to_string(current_achievement, achievement_type);
     }
 
     const handleOpenPopup = () => {
@@ -67,9 +67,13 @@ export default function Achievement({ index, name, achievement, achievement_type
     }
 }
 
-function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit }:
+function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit}:
     { index: number, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
     let [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
+
+    if (achievement_string == "-") {
+        achievement_string = ""
+    }
 
     const [currentState, set_currentState] = useState({ achievement_string: achievement_string, isUploaded: (achievement_string != "" && achievement_string != "-" )})
 

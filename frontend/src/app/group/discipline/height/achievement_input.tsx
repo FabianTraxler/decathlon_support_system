@@ -1,9 +1,9 @@
 import { useContext, useState } from "react";
 import { AthleteResults } from "./height_discipline";
-import { AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
+import { AthleteHeightID, AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
 import { get_tries_for_height } from "./athlete_overview";
 
-export function HeightInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) => void }) {
+export function HeightInput({ athlete, try_completed }: { athlete: AthleteHeightID, try_completed: (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) => void }) {
     const { state } = useContext(AthleteResults)
 
     const string_html_entity_map = new Map()
@@ -11,7 +11,7 @@ export function HeightInput({ athlete, try_completed }: { athlete: AthleteID, tr
     string_html_entity_map.set("X", <span>&#10060;</span>)
     string_html_entity_map.set("/", <span>--</span>)
 
-    const athlete_result = state.results.get(athlete.starting_number)
+    const athlete_result = state.results.get(athlete.full_name())
     if (athlete_result) {
         const height_tries = get_tries_for_height(athlete_result, state.current_height)
 

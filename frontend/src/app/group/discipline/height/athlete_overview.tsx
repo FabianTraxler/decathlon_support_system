@@ -1,13 +1,13 @@
 import { useContext, useState } from "react";
 import { AthleteResults, athlete_in_competition, decode_athlete_tries } from "./height_discipline";
-import { AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
+import { AthleteHeightID, AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
 import { update_height_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { HeightInput } from "./achievement_input";
 import { NavigationContext } from "../../navigation";
 
 export function HeightOrderOverview({ finish_discipline }: { finish_discipline: () => void }) {
     const { state, update_state } = useContext(AthleteResults)
-    const [selectedAthlete, setSelectedAthlete] = useState<AthleteID | undefined>()
+    const [selectedAthlete, setSelectedAthlete] = useState<AthleteHeightID | undefined>()
     const navigation = useContext(NavigationContext)
 
     const save_athlete_try = function (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) {
@@ -25,15 +25,15 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             let current_athlete_state = decode_athlete_tries(athlete)
             athlete.final_result = current_athlete_state.jumped_height
             
-            let update_result = { ...athlete }
+            let update_result = { ...athlete, full_name: () => athlete.full_name() }
             update_height_achievement(update_result, () => {
                 let new_results = state.results
                 if (athlete) {
-                    new_results.set(athlete.starting_number, athlete)
+                    new_results.set(athlete.full_name(), athlete)
                 }
                 let height_try_result = get_try_result(athlete, state.current_height, state.current_try)
                 let try_successful = height_try_result != "X"
-                try_completed(new_results, try_successful, athlete_still_active, athlete)
+                try_completed(new_results, try_successful, athlete_still_active, new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, athlete.starting_number || NaN))
                 //setTimeout(() => try_completed(new_results, try_successful, athlete), 200)
             }, true)
         } else {
@@ -42,24 +42,24 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
 
     }
 
-    const increase_height = function (current_height: number, athletes_in_next_height: number[]) {
+    const increase_height = function (current_height: number, athletes_in_next_height: Set<string>) {
         // Increase Height + Check if new people join the competition + check if anyone still in competition
         let new_height = current_height + state.height_increase
 
-        let athletes_for_next_height: AthleteID[] = []
-        let athletes_for_second_try: AthleteID[] = []
-        let athletes_for_third_try: AthleteID[] = []
+        let athletes_for_next_height: AthleteHeightID[] = []
+        let athletes_for_second_try: AthleteHeightID[] = []
+        let athletes_for_third_try: AthleteHeightID[] = []
 
-        let new_athletes: AthleteID[] = []
-        let athletes_not_yet_in_competition: AthleteID[] = []
+        let new_athletes: Set<AthleteHeightID> = new Set();
+        let athletes_not_yet_in_competition: AthleteHeightID[] = []
 
         state.default_order.forEach((athlete) => {
-            let athlete_result = state.results.get(athlete.starting_number)
+            let athlete_result = state.results.get(athlete.full_name())
             if (athlete_result) {
                 let athlete_state = decode_athlete_tries(athlete_result)
                 if (athlete_state.still_active && athlete_state.next_height == new_height){
-                    if (!athletes_in_next_height.includes(athlete.starting_number)) {
-                        new_athletes.push(athlete)
+                    if (!athletes_in_next_height.has(athlete.full_name())) {
+                        new_athletes.add(athlete)
                     }
 
                     if (athlete_state.current_try == 1){
@@ -70,15 +70,6 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                         athletes_for_third_try.push(athlete)
                     }
                 }
-
-                // if (athlete_in_competition(athlete_result, new_height)) {
-                    
-                //     athletes_for_next_height.push(athlete)
-                //     if (!athletes_in_next_height.includes(athlete.starting_number)) {
-                //         new_athletes.push(athlete)
-                //     }
-                // }
-
                 if ((athlete_result.start_height || 0) > new_height) {
                     athletes_not_yet_in_competition.push(athlete)
                 }
@@ -89,10 +80,10 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             if (athletes_not_yet_in_competition.length == 0) {
                 finish_discipline()
             } else {
-                increase_height(new_height, [])
+                increase_height(new_height, new Set())
             }
         } else {
-            let current_try = 1
+            let current_try;
             if(athletes_for_next_height.length > 0) {
                 current_try = 1
             } else if(athletes_for_second_try.length > 0){
@@ -113,24 +104,24 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         }
     }
 
-    const try_completed = function(new_results: Map<number, AthleteHeightResults>, try_successful: boolean, athlete_still_active: boolean, athlete: AthleteID) {
+    const try_completed = function(new_results: Map<string, AthleteHeightResults>, try_successful: boolean, athlete_still_active: boolean, athlete: AthleteHeightID) {
         let athletes_in_next_try = [...state.athletes_in_next_try]
         let athletes_in_next_height = [...state.athletes_in_next_height]
 
         if (try_successful) {
-            athletes_in_next_height.push(athlete.starting_number)
+            athletes_in_next_height.push(athlete)
         } else  if (athlete_still_active){
             athletes_in_next_try.push(athlete)
         }
         if (state.current_order.length <= 1) {
             if (state.current_try == 3) {
                 // Increase Height + Check if new people join the competition + check if anyone still in competition
-                increase_height(state.current_height, athletes_in_next_height)
+                increase_height(state.current_height, new Set(athletes_in_next_height.map(athlete => athlete.full_name())))
             } else {
                 // increase try
                 if (athletes_in_next_try.length == 0){
                     if(state.athletes_in_next_next_try.length == 0){ // No athletes in this height
-                        increase_height(state.current_height, [])
+                        increase_height(state.current_height, new Set(athletes_in_next_height.map(athlete => athlete.full_name())))
                     }else { // athletes only for last try
                         update_state({
                             ...state,
@@ -179,7 +170,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
     }
 
     if (state.current_order.length == 0){
-        increase_height(state.current_height, [])
+        increase_height(state.current_height, new Set())
     }
 
     if (selectedAthlete) {

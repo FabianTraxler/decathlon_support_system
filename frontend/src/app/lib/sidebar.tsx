@@ -31,8 +31,10 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                     <button onClick={(_) => setshowNav(!showNav)} data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button"
                         className="text-gray-500 sm:mt-2 p-2 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                         {showNav ?
-                            <span className="w-6 h-6 text-2xl sm:text-4xl">&#x2715;</span>
-                            :
+                            <svg className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M 9.15625 6.3125 L 6.3125 9.15625 L 22.15625 25 L 6.21875 40.96875 L 9.03125 43.78125 L 25 27.84375 L 40.9375 43.78125 L 43.78125 40.9375 L 27.84375 25 L 43.6875 9.15625 L 40.84375 6.3125 L 25 22.15625 Z"></path>
+
+                            </svg> :
                             <svg className="w-6 h-6 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path clipRule="evenodd" fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
                             </svg>
@@ -42,7 +44,7 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                     {showNav &&
 
                         <button onClick={getHome} data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button"
-                            className="flex text-gray-500 mt-2 p-1 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                            className="text-gray-500 sm:mt-2 p-2 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <svg className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z" />
                             </svg>
@@ -52,7 +54,7 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                     {showNav &&
 
                         <button onClick={logout} data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button"
-                            className="flex text-gray-500 mt-2 p-1 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                            className="text-gray-500 sm:mt-2 p-2 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <svg className="w-8 h-8 sm:w-10 sm:h-10" aria-hidden="true" fill="currentColor" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
                                 <g id="SVGRepo_iconCarrier">
                                     <g>
