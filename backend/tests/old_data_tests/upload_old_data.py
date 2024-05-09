@@ -1,4 +1,6 @@
 """Script to upload old results into DB for testing Purposes"""
+import time
+
 import pandas as pd
 from argparse import Namespace, ArgumentParser, BooleanOptionalAction
 from typing import Dict, Union, List, Tuple
@@ -143,6 +145,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                                         group_name,
                                         "Decathlon",
                                         config)
+        time.sleep(0.05)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -263,6 +266,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                                         group_name,
                                         competition_type,
                                         config)
+        time.sleep(0.05)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -369,6 +373,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
                                         group_name,
                                         "Triathlon",
                                         config)
+        time.sleep(0.05)
 
         if not upload_success:
             print(f"Athlete: {row['Name']} not uploaded")
