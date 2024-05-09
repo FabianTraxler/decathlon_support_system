@@ -17,7 +17,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
 async fn get_athletes(
     data: web::Data<Box<dyn Storage + Send + Sync>>
 ) -> impl Responder {
-    let mut group_athletes = data.get_athletes();
+    let mut group_athletes = data.get_athletes().await;
 
     for (_, athletes) in group_athletes.iter_mut() {
         for athlete in athletes.iter_mut() {
@@ -33,7 +33,7 @@ async fn get_athlete(
     query: web::Query<AthleteID>,
 ) -> impl Responder {
     let athlete_id = query.into_inner();
-    let athlete = data.get_athlete(&athlete_id);
+    let athlete = data.get_athlete(&athlete_id).await;
 
     match athlete {
         Some(mut athlete) => {
@@ -53,7 +53,7 @@ async fn post_athlete(
     let athlete = Athlete::from_json(json_string.as_str());
     match athlete {
         Ok(athlete) => {
-            match data.write_athlete(AthleteID::from_athlete(&athlete), athlete) {
+            match data.write_athlete(AthleteID::from_athlete(&athlete), athlete).await {
                 Ok(msg) => {
                     HttpResponse::Ok().body(msg)
                 }
@@ -72,7 +72,7 @@ async fn update_athlete(
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
 
-    match data.update_athlete(athlete_id.into_inner(), json_string.as_str()) {
+    match data.update_athlete(athlete_id.into_inner(), json_string.as_str()).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         }
@@ -91,9 +91,9 @@ async fn post_athlete_with_group(
 
     match athlete {
         Ok(athlete) => {
-            match data.write_athlete(AthleteID::from_athlete(&athlete), athlete) {
+            match data.write_athlete(AthleteID::from_athlete(&athlete), athlete).await {
                 Ok(msg) => {
-                    match add_athlete_to_group(json_string.as_str(), data){
+                    match add_athlete_to_group(json_string.as_str(), data).await{
                         Ok(group_msg) => HttpResponse::Ok().body(msg + " " +group_msg.as_str()),
                         Err(e) => HttpResponse::BadRequest().body(format!("Error inserting Athlete: {}", e))
                     }
@@ -106,7 +106,7 @@ async fn post_athlete_with_group(
 }
 
 
-fn add_athlete_to_group(athlete_str: &str, data: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<String, Box<dyn Error>> {
+async fn add_athlete_to_group(athlete_str: &str, data: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<String, Box<dyn Error>> {
     let value: Value = serde_json::from_str(athlete_str)?;
     match value {
         Value::Object(map) => {
@@ -120,7 +120,7 @@ fn add_athlete_to_group(athlete_str: &str, data: web::Data<Box<dyn Storage + Sen
 
             let json_string = format!(r#"{{"athlete_ids": [{{"name": {}, "surname": {}}}]}}"#, name, surname);
 
-            match data.update_group(group_id, json_string.as_str()) {
+            match data.update_group(group_id, json_string.as_str()).await {
                 Ok(msg) => Ok(String::from(msg)),
                 Err(e) => Err(Box::from(format!("Error updating Group: {}", e)))
             }

@@ -79,15 +79,15 @@ impl Achievement {
 pub struct AchievementID {
     pub athlete_id: Option<AthleteID>,
     pub name: String,
-    athlete_name: Option<String>,
+    pub athlete_name: Option<String>,
 }
 
 impl AchievementID {
     pub fn build(athlete_id: AthleteID, achievement: &Achievement) -> AchievementID {
         AchievementID {
-            athlete_id: Some(athlete_id),
+            athlete_id: Some(athlete_id.clone()),
             name: achievement.name(),
-            athlete_name: None,
+            athlete_name: Some(athlete_id.full_name()),
         }
     }
 

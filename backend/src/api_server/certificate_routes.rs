@@ -15,7 +15,7 @@ async fn get_certificate(
     query: web::Query<AthleteID>,
 ) -> impl Responder {
     let achievement_id = query.into_inner();
-    let athlete = data.get_athlete(&achievement_id);
+    let athlete = data.get_athlete(&achievement_id).await;
 
     match athlete {
         Some(athlete) => {
@@ -39,7 +39,7 @@ async fn get_certificates(
     query: web::Query<GroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_group(&group_id);
+    let group = data.get_group(&group_id).await;
 
     match group {
         Some(group) => {
@@ -63,7 +63,7 @@ async fn get_group_results(
     query: web::Query<GroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_group(&group_id);
+    let group = data.get_group(&group_id).await;
 
     match group {
         Some(group) => {
@@ -87,7 +87,7 @@ async fn get_age_group_results(
     query: web::Query<AgeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let age_group = data.get_age_group(&group_id);
+    let age_group = data.get_age_group(&group_id).await;
 
     match age_group {
         Some(age_group) => {

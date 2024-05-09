@@ -2,14 +2,16 @@ use std::collections::HashMap;
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use async_trait::async_trait;
 use serde_json::Value;
 
+#[async_trait]
 pub trait TimePlanStorage {
-    fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup>;
+    async fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup>;
 
-    fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>>;
+    async fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>>;
 
-    fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
+    async fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -353,7 +355,7 @@ fn create_default_athlete_order(athletes: Option<Vec<Athlete>>) -> (Vec<Athlete>
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
 pub struct TimeGroupID {
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 impl TimeGroupID {

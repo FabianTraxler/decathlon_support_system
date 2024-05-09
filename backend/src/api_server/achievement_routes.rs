@@ -16,7 +16,7 @@ async fn get_achievement(
     query: web::Query<AchievementID>,
 ) -> impl Responder {
     let achievement_id = query.into_inner();
-    let achievement = data.get_achievement(&achievement_id);
+    let achievement = data.get_achievement(&achievement_id).await;
 
     match achievement {
         Some(achievement) => HttpResponse::Ok().body(serde_json::to_string(&achievement).expect("Achievement should be serializable")),
@@ -36,7 +36,7 @@ async fn post_achievement(
     let athlete_id = query.into_inner();
     match achievement {
         Ok(achievement) => {
-            match data.write_achievement(AchievementID::build(athlete_id, &achievement), achievement) {
+            match data.write_achievement(AchievementID::build(athlete_id, &achievement), achievement).await {
                 Ok(msg) => {
                     HttpResponse::Ok().body(msg)
                 }
@@ -55,7 +55,7 @@ async fn update_achievement(
 ) -> impl Responder {
     let json_string = parse_json_body(body).await;
 
-    match data.update_achievement(achievement_id.into_inner(), json_string.as_str()) {
+    match data.update_achievement(achievement_id.into_inner(), json_string.as_str()).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         },
@@ -69,7 +69,7 @@ async fn delete_achievement(
     query: web::Query<AchievementID>,
 ) -> impl Responder {
     let achievement_id = query.into_inner();
-    match data.delete_achievement(&achievement_id) {
+    match data.delete_achievement(&achievement_id).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         },

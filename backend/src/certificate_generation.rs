@@ -1,4 +1,4 @@
-mod achievements;
+pub(crate) mod achievements;
 mod age_group_utils;
 mod athletes;
 mod groups;
@@ -17,21 +17,23 @@ pub use athletes::{Athlete, AthleteID};
 pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
 pub use achievements::{Achievement, AchievementID};
 pub use pdf::PDF;
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait AchievementStorage {
-    fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
-    fn get_athletes(&self) -> HashMap<String, Vec<Athlete>>;
-    fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
-    fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
-    fn get_group(&self, group_id: &GroupID) -> Option<Group>;
-    fn write_group_store(&self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
-    fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
-    fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
-    fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
-    fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;
-    fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>>;
-    fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>>;
-    fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete>;
+    async fn get_athletes(&self) -> HashMap<String, Vec<Athlete>>;
+    async fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
+    async fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn get_group(&self, group_id: &GroupID) -> Option<Group>;
+    async fn write_group_store(&self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
+    async fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
+    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
+    async fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;
+    async fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>>;
+    async fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>>;
+    async fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]

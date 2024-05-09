@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::error::Error;
 use serde_json::Value;
 use super::{CompetitionType, preprocess_json};
-pub use super::Float;
 
 /// Athlete struct that contains all information for an athlete as well as all their achievements
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -15,11 +14,14 @@ pub struct Athlete {
     surname: String,
     #[serde(default)]
     #[serde(with = "ts_seconds_option")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     birth_date: Option<DateTime<Utc>>,
     gender: String,
     achievements: HashMap<String, Achievement>,
     competition_type: CompetitionType,
+    #[serde(skip_serializing_if = "Option::is_none")]
     starting_number: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     total_points: Option<u32>
 }
 
@@ -222,6 +224,12 @@ impl AthleteID {
             name: Some(athlete.name.clone()),
             surname: Some(athlete.surname.clone()),
         }
+    }
+
+    pub fn full_name(&self) -> String {
+        format!("{}_{}",
+                self.name.clone().unwrap_or("".to_string()),
+                self.surname.clone().unwrap_or("".to_string()))
     }
 
 }

@@ -24,11 +24,11 @@ async fn get_discipline(
     query: Query<TimeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     match group {
         Some(mut group) => {
             let discipline = group.get_current_discipline().clone();
-            match data.store_time_group(group) {
+            match data.store_time_group(group).await {
                 Ok(_) => HttpResponse::Ok()
                     .body(serde_json::to_string(&discipline)
                         .expect("Discipline should be serializable")),
@@ -45,7 +45,7 @@ async fn get_next_discipline(
     query: Query<TimeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     match group {
         Some(group) => {
             let discipline = group.get_next_discipline();
@@ -64,14 +64,14 @@ async fn change_discipline_state(
     body: web::Payload,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     let json_string = parse_json_body(body).await;
 
     match group {
         Some(mut group) => {
             match group.change_discipline_state(json_string.as_str()) {
                 Ok(msg) => {
-                    match data.store_time_group(group) {
+                    match data.store_time_group(group).await {
                         Ok(_) => HttpResponse::Ok().body(msg),
                         Err(e) => HttpResponse::BadRequest().body(format!("Error storing updated group: {e}"))
                     }
@@ -89,7 +89,7 @@ async fn get_disciplines(
     query: Query<TimeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     match group {
         Some(group) => {
             let disciplines = group.get_disciplines().clone();
@@ -108,7 +108,7 @@ async fn get_discipline_protocol(
 ) -> impl Responder {
     let discipline_id = query.into_inner();
     let time_group_id = TimeGroupID::new(discipline_id.group_name());
-    let time_group = data.get_time_group(&time_group_id);
+    let time_group = data.get_time_group(&time_group_id).await;
     match time_group {
         Some(mut time_group) => {
             let discipline = match discipline_id.discipline_name() {
@@ -122,7 +122,7 @@ async fn get_discipline_protocol(
                     time_group.get_current_discipline()
                 }
             };
-            let group = match data.get_group(&GroupID::new(&discipline_id.group_name())) {
+            let group = match data.get_group(&GroupID::new(&discipline_id.group_name())).await {
                 Some(group) => group,
                 None => return HttpResponse::NotFound().body(format!("Unable to find group {}", discipline_id.group_name()))
             };
@@ -146,7 +146,7 @@ async fn get_starting_order(
     query: Query<TimeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     match group {
         Some(group) => {
             let discipline = group.get_default_starting_order();
@@ -164,7 +164,7 @@ async fn get_track_starting_order(
     query: Query<TimeGroupID>,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
     match group {
         Some(group) => {
             let discipline = group.get_default_track_order();
@@ -183,7 +183,7 @@ async fn change_starting_order(
     body: web::Payload,
 ) -> impl Responder {
     let group_id = query.into_inner();
-    let group = data.get_time_group(&group_id);
+    let group = data.get_time_group(&group_id).await;
 
     match group {
         Some(mut group) => {
@@ -192,7 +192,7 @@ async fn change_starting_order(
             match starting_order {
                 Ok(starting_order) => {
                     group.change_starting_order(starting_order);
-                    match data.store_time_group(group) {
+                    match data.store_time_group(group).await {
                         Ok(_) => HttpResponse::Ok().body("Starting Order changed"),
                         Err(e) => HttpResponse::InternalServerError()
                             .body(format!("Could not store new starting order: {}", e))
@@ -216,7 +216,7 @@ async fn upload_time_table(
     let time_table: serde_json::error::Result<Value> = serde_json::from_str(json_string.as_str());
     match time_table {
         Ok(time_table) => {
-            match data.store_time_plan(time_table) {
+            match data.store_time_plan(time_table).await {
                 Ok(msg) => HttpResponse::Ok().body(msg),
                 Err(e) => HttpResponse::InternalServerError().body(format!("Error storing time table: {}", e))
             }

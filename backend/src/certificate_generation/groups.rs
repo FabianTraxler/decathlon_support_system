@@ -1,9 +1,7 @@
 use std::collections::HashSet;
-use std::error::Error;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use super::{Athlete, AthleteID, AchievementStorage, CompetitionType};
+use super::{Athlete, AthleteID, CompetitionType};
 
 /// Group representing the group and links to the athletes in the group
 /// Mainly used for separate storage of Groups and Athletes
@@ -55,6 +53,13 @@ impl Group {
         self.name.as_str()
     }
 
+    pub fn set_name(&mut self, name: String) {
+        self.name = name
+    }
+    pub fn add_athlete(&mut self, athlete: Athlete) {
+        self.athletes.push(athlete)
+    }
+
     pub fn athlete_ids(&self) -> HashSet<AthleteID> {
         self.athletes.iter().map(AthleteID::from_athlete).collect()
     }
@@ -66,45 +71,13 @@ impl Group {
     pub fn mut_athletes(&mut self) -> &mut Vec<Athlete> {
         &mut self.athletes
     }
-
-    pub fn update_values(&mut self, json_str: &str, db: Box<&dyn AchievementStorage>) -> Result<(), Box<dyn Error>> {
-        let json_value: Value = serde_json::from_str(json_str)?;
-
-        // Update specific fields from JSON to struct
-        if let Some(name) = json_value.get("name").and_then(Value::as_str) {
-            self.name = name.to_string();
-        }
-        if let Some(athletes) = json_value.get("athletes").and_then(Value::as_array) {
-            for athlete_value in athletes {
-                match serde_json::from_value(athlete_value.clone()) {
-                    Ok(athlete) => { self.athletes.push(athlete); }
-                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
-                }
-            }
-        }
-        if let Some(athlete_ids) = json_value.get("athlete_ids").and_then(Value::as_array) {
-            for athlete_id_value in athlete_ids {
-                match serde_json::from_value(athlete_id_value.clone()) {
-                    Ok(athlete_id) => {
-                        match db.get_athlete(&athlete_id) {
-                            Some(athlete) => { self.athletes.push(athlete); }
-                            None => { return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id))); }
-                        };
-                    }
-                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
-                }
-            }
-        }
-
-        Ok(())
-    }
 }
 
 /// GroupID Object used to access the persistent storage and get access to a specific group by its
 /// name
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GroupID {
-    name: Option<String>,
+    pub name: Option<String>,
 }
 
 impl GroupID {
