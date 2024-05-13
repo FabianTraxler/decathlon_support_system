@@ -4,13 +4,14 @@ const nextConfig = {
         return [
           {
             source: '/api/:path*', 
-            destination: 'http://localhost:3001/api/:path*' // Proxy to Backend
+            destination: 'http://rust_backend:3001/api/:path*' // Proxy to Backend
           }
         ]
       },
       env: {
         START_DATE: "2024-09-28"
-      }
+      },
+      output: "standalone"
 }
 
 // Configuration object tells the next-pwa plugin 

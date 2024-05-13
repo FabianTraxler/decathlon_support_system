@@ -4,13 +4,11 @@ use async_trait::async_trait;
 use serde_json::Value;
 use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
-use aws_sdk_dynamodb::{Client, config::Region, meta::PKG_VERSION, Error as AWSError};
-use aws_config::{BehaviorVersion, meta::region::RegionProviderChain, SdkConfig};
-use aws_sdk_dynamodb::types::{AttributeValue, AttributeValueUpdate};
-use log::warn;
+use aws_sdk_dynamodb::{Client};
+use aws_config::{BehaviorVersion};
+use aws_sdk_dynamodb::types::{AttributeValue};
 use crate::database::db_errors::ItemNotFound;
 use crate::{Storage, time_planner};
-use crate::database::in_memory_db::InMemoryDB;
 
 
 pub struct DynamoDB {
@@ -364,6 +362,9 @@ impl AchievementStorage for DynamoDB {
                 );
         }
 
+        update_call
+            .send()
+            .await?;
 
         let all_athletes = group.athletes().clone();
         let group_name = group.name().to_string();

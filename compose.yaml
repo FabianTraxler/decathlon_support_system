@@ -1,0 +1,23 @@
+services:
+  next_frontend:
+      container_name: next_frontend
+      image: fabsl22/decathlon_support_system:frontend_v0.1
+      build:
+        context: ./frontend
+        dockerfile: frontend.dockerfile
+      environment:
+          AUTH_SECRET: k305HdO9r7cxDKx8oxNCQAMqzTIM8ipYvXh/iSr6PYA=
+      ports:
+        - '3000:3000'
+      depends_on:
+        - rust_backend
+  rust_backend:
+      container_name: rust_backend
+      image: fabsl22/decathlon_support_system:backend_v0.1
+      build:
+        context: ./backend
+        dockerfile: backend.dockerfile
+      ports:
+        - '3001:3001'
+      volumes:
+        - /home/fabian/.aws:/root/.aws
