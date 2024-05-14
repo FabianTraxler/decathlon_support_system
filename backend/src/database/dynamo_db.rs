@@ -101,10 +101,14 @@ impl AchievementStorage for DynamoDB {
             .send()
             .await?;
 
-        Ok(String::from("Old athlete overwritten"))
+        Ok(String::from("New athlete inserted or old athlete overwritten"))
     }
 
     async fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>> {
+
+        if let None = self.get_athlete(&athlete_id).await {
+            return Err(Box::from("Athlete not found. Insert new athlete"));
+        }
 
         let athlete_name = athlete_id.full_name();
         let mut update_call = self.client
@@ -360,6 +364,11 @@ impl AchievementStorage for DynamoDB {
                     String::from(":a"),
                     AttributeValue::L(athlete_values)
                 );
+        }
+
+        if update_expressions.len() > 0 {
+            update_call = update_call
+                .update_expression(format!("SET {}", update_expressions.join(",")));
         }
 
         update_call
