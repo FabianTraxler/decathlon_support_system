@@ -7,11 +7,11 @@ import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, t
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 
 export default function Athletes({ group_name }: { group_name: string }) {
-  const [showAthletes, set_showAthletes] = useState(true);
+  const [showAthletes, set_showAthletes] = useState(false);
 
   return (
     <div className="items-center justify-between p-1 w-full ">
-      <div className='text-2xl font-bold p-2 border rounded-lg '>
+      <div className='text-2xl font-bold p-4 border rounded-lg shadow-lg '>
         <div className='flex justify-between hover:cursor-pointer' onClick={(_) => set_showAthletes(!showAthletes)}>
           <span>Athlet:innen</span>
 
@@ -49,7 +49,13 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
         const pdfBlobUrl = URL.createObjectURL(blob);
 
         // Open the PDF in a new window
-        window.open(pdfBlobUrl, '_blank');
+        //window.open(pdfBlobUrl, '_blank');
+
+        var link = document.createElement("a");
+        link.href = pdfBlobUrl;
+        link.download = `Urkunde: ${athlete.name} ${athlete.surname}`
+        link.click();
+
         onStop()
       })
       .catch(error => {
@@ -210,8 +216,3 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   )
 }
 
-function YouthAthletes() {
-  return (
-    <div></div>
-  )
-}

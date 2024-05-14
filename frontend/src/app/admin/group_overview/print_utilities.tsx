@@ -87,9 +87,14 @@ function DisciplineProtocolCard() {
       .then(blob => {
         // Create a blob URL for the PDF
         const pdfBlobUrl = URL.createObjectURL(blob);
+        // Download PDF
+        var link = document.createElement("a");
+        link.href = pdfBlobUrl;
+        link.download =  `Protokoll: ${group_name}`
+        link.click();
+
         done()
-        // Open the PDF in a new window
-        window.open(pdfBlobUrl, '_blank');
+
       })
       .catch(error => {
         console.error('Error fetching or opening the PDF:', error);
@@ -131,7 +136,10 @@ function GroupResultsCard() {
           const pdfBlobUrl = URL.createObjectURL(blob);
           done();
           // Open the PDF in a new window
-          window.open(pdfBlobUrl, '_blank');
+          var link = document.createElement("a");
+          link.href = pdfBlobUrl;
+          link.download =  `Ergebnisse: ${group_name}`
+          link.click();
         })
         .catch(error => {
           console.error('Error fetching or opening the PDF:', error);
@@ -151,7 +159,10 @@ function GroupResultsCard() {
           const pdfBlobUrl = URL.createObjectURL(blob);
           done();
           // Open the PDF in a new window
-          window.open(pdfBlobUrl, '_blank');
+          var link = document.createElement("a");
+          link.href = pdfBlobUrl;
+          link.download =  `Ergebnisse: ${group_name}`
+          link.click();
         })
         .catch(error => {
           console.error('Error fetching or opening the PDF:', error);
@@ -172,7 +183,10 @@ function GroupResultsCard() {
           const pdfBlobUrl = URL.createObjectURL(blob);
           done();
           // Open the PDF in a new window
-          window.open(pdfBlobUrl, '_blank');
+          var link = document.createElement("a");
+          link.href = pdfBlobUrl;
+          link.download =  `Ergebnisse: ${group_name}`
+          link.click();
         })
         .catch(error => {
           console.error('Error fetching or opening the PDF:', error);
@@ -213,7 +227,10 @@ function CertificateCard() {
         const pdfBlobUrl = URL.createObjectURL(blob);
         done();
         // Open the PDF in a new window
-        window.open(pdfBlobUrl, '_blank');
+        var link = document.createElement("a");
+        link.href = pdfBlobUrl;
+        link.download =  `Urkunden: ${group_name}`
+        link.click();
       })
       .catch(error => {
         console.error('Error fetching or opening the PDF:', error);

@@ -49,7 +49,10 @@ export default function Disciplines() {
         const pdfBlobUrl = URL.createObjectURL(blob);
         stop_load()
         // Open the PDF in a new window
-        window.open(pdfBlobUrl, '_blank');
+        var link = document.createElement("a");
+        link.href = pdfBlobUrl;
+        link.download =  `Protokoll: ${group_name} - ${discipline_name}`
+        link.click();
       })
       .catch(error => {
         console.error('Error fetching or opening the PDF:', error);
@@ -66,7 +69,7 @@ export default function Disciplines() {
 
   return (
     <div className="items-center justify-between p-1 w-full">
-      <div className='text-2xl font-bold p-2 border rounded-lg mt-5'>
+      <div className='text-2xl font-bold p-4 border rounded-lg mt-5 shadow-lg'>
         <div className='flex justify-between hover:cursor-pointer' onClick={(_) => set_showDisciplines(!showDisciplines)}>
           <span>Disziplinen</span>
           <button
