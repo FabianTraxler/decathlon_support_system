@@ -70,7 +70,8 @@ impl Achievement {
 
     pub fn from_json(json_string: &str) -> Result<Self, serde_json::error::Error> {
         let processed_content = preprocess_json(json_string);
-        let achievement: Achievement = serde_json::from_str(processed_content.as_str())?;
+        let mut achievement: Achievement = serde_json::from_str(processed_content.as_str())?;
+        achievement.compute_final_result();
         Ok(achievement)
     }
 }
