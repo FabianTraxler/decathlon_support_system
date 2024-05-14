@@ -32,4 +32,6 @@ services:
       - '443:443'
     volumes:
       - .certs/:/etc/nginx/ssl:ro
+    depends_on:
+        - next_frontend
       
