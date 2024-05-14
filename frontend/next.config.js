@@ -1,10 +1,12 @@
 /** @type {import('next').NextConfig} */
+
+let backend_domain = process.env.NODE_ENV == "development"? "localhost" : "rust_backend";
 const nextConfig = {
     async rewrites() {
         return [
           {
             source: '/api/:path*', 
-            destination: 'http://rust_backend:3001/api/:path*' // Proxy to Backend
+            destination: `http://${backend_domain}:3001/api/:path*` // Proxy to Backend
           }
         ]
       },
