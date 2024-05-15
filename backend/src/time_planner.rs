@@ -109,7 +109,9 @@ pub struct TimeGroup {
 impl TimeGroup {
     pub fn build(group_name: &String, group_info: &Value, date_info: &HashMap<String, String>,
                  discipline_starting_order_type: &HashMap<String, String>, athletes: Option<Vec<Athlete>>) -> Result<Self, Box<dyn Error>> {
-        let (default_athlete_order, default_run_order) = create_default_athlete_order(athletes);
+        let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
+        let (default_athlete_order,
+            default_run_order) = create_default_athlete_order(athletes, youth_group);
 
         let mut disciplines = vec![];
         match group_info {
@@ -316,7 +318,9 @@ impl TimeGroup {
         let mut new_athletes = new_athletes.clone();
         all_athletes.append(&mut new_athletes);
 
-        let (default_athlete_order, default_run_order) = create_default_athlete_order(Some(all_athletes.clone()));
+        let youth_group = self.disciplines.len() < 10;
+        let (default_athlete_order,
+            default_run_order) = create_default_athlete_order(Some(all_athletes.clone()), youth_group);
 
         self.default_athlete_order = default_athlete_order.clone();
         self.default_run_order = default_run_order.clone();
@@ -333,23 +337,44 @@ impl TimeGroup {
     }
 }
 
-fn create_default_athlete_order(athletes: Option<Vec<Athlete>>) -> (Vec<Athlete>, Vec<Run>) {
-    let default_athlete_order = athletes.unwrap_or_else(|| vec![]);
+fn create_default_athlete_order(athletes: Option<Vec<Athlete>>, sort_gender: bool) -> (Vec<Athlete>, Vec<Run>) {
+    let mut default_athlete_order = athletes.unwrap_or_else(|| vec![]);
+    if sort_gender {
+        default_athlete_order.sort_by_key(|athlete| athlete.age_group.clone())
+    }
+
     let mut default_run_order: Vec<Run> = vec![];
     let mut i = 0;
     let num_tracks = 6;
-    while i * num_tracks < default_athlete_order.len() {
-        let mut j = (i + 1) * num_tracks;
-        if j >= default_athlete_order.len() {
-            j = default_athlete_order.len();
+    while i < default_athlete_order.len() {
+        let mut athletes: Vec<Athlete>;
+        if sort_gender {
+            athletes = vec![];
+            for athlete in &default_athlete_order[i..] {
+                if athletes.len() == 0 || athletes[0].age_group == athlete.age_group{
+                    athletes.push(athlete.clone())
+                }
+                if athletes.len() >= num_tracks{
+                    break
+                }
+            }
+        }else {
+            let mut j = i + num_tracks;
+            if j >= default_athlete_order.len() {
+                j = default_athlete_order.len();
+            }
+            athletes = default_athlete_order[i ..j].to_vec().clone()
         }
+        i += athletes.len();
+
         let run = Run {
             name: format!("Lauf {}", i + 1),
-            athletes: default_athlete_order[i * num_tracks..j].to_vec().clone(),
+            athletes,
         };
         default_run_order.push(run);
-        i += 1;
     }
+
+
     (default_athlete_order, default_run_order)
 }
 
