@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
-import { LoadingButton } from '@/app/lib/loading_button';
+import { LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./discipline";
 import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { Athlete } from "@/app/lib/athlete_fetching";
+import { LoadingAnimation } from "@/app/lib/loading";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [current_discipline, setDiscipline] = useState<Discipline>({ ...discipline, starting_order: { Track: [] } })
@@ -68,8 +69,8 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                                 finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
                             ></StartingOrderSummary>
                             :
-                            <div>
-                                Loading ...
+                            <div className="flex justify-center items-center h-full w-full">
+                                <LoadingAnimation></LoadingAnimation>
                             </div>
                     }
                 </div>

@@ -67,7 +67,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
 
         if not isinstance(row["Name"], str) or row["Name"].strip() == "":
             continue
-        achievements = []
+        achievements = {}
         for (short_name, long_name, discipline_type) in disciplines:
             if long_name in group_skipped_disciplines: continue  # skip achievement
             discipline = {}
@@ -105,7 +105,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                     "final_result": final_result,
                     "unit": "cm"
                 }
-            achievements.append(discipline)
+            achievements[long_name] = discipline
 
         if isinstance(row["GBDT"], datetime):
             birth_day = row["GBDT"]
@@ -145,7 +145,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                                         group_name,
                                         "Decathlon",
                                         config)
-        time.sleep(0.05)
+        time.sleep(0.03)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -187,7 +187,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
         if not isinstance(row["Name"], str) and np.isnan(row["Name"]):
             continue
-        achievements = []
+        achievements = {}
         for (short_name, long_name, discipline_type) in disciplines[competition_type]:
             if long_name in group_skipped_disciplines: continue  # skip achievement
             discipline = {}
@@ -225,11 +225,11 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                     "final_result": final_result,
                     "unit": "cm"
                 }
-            achievements.append(discipline)
+            achievements[long_name] = discipline
 
         if isinstance(row["GBDT"], datetime):
             birth_day = row["GBDT"]
-            birthday_timestamp = int(datetime.timestamp(birth_day))
+            birthday_timestamp = int(datetime.timestamp(birth_day)) + 3.156e+7 # Add one year to match current year
         elif isinstance(row["GBDT"], str):
             datetime_str = row["GBDT"].strip().split(" ")[0]
             if "." in datetime_str:
@@ -238,7 +238,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                 birth_day = datetime.strptime(datetime_str, '%Y-%m-%d')
             else:
                 birth_day = ""
-            birthday_timestamp = int(datetime.timestamp(birth_day))
+            birthday_timestamp = int(datetime.timestamp(birth_day)) + 3.156e+7 # Add one year to match current year
         else:
             birthday_timestamp = None
 
@@ -266,7 +266,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                                         group_name,
                                         competition_type,
                                         config)
-        time.sleep(0.05)
+        time.sleep(0.03)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -274,7 +274,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
 
 def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines: Dict = {}):
-    group_names = ["U12", "U10", "U8", "U6", "U4"]
+    group_names = ["U12", "U10", "U8", "U4/U6"]
     for group_name in group_names:
         if not upload_group(group_name, "Triathlon"):
             print(f"{group_name} not uploaded")
@@ -288,12 +288,14 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
             continue
 
         group_name = row["Klasse"]
+        if group_name in ["U4", "U6"]:
+            group_name = "U4/U6"
 
         group_skipped_disciplines = skipped_disciplines.get(group_name, [])
 
         if not isinstance(row["Name"], str) and np.isnan(row["Name"]):
             continue
-        achievements = []
+        achievements = {}
         for (short_name, long_name, discipline_type) in disciplines:
             if long_name in group_skipped_disciplines: continue  # skip achievement
             discipline = {}
@@ -332,7 +334,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
                     "final_result": final_result,
                     "unit": "cm"
                 }
-            achievements.append(discipline)
+            achievements[long_name] = discipline
 
         if isinstance(row["Geb.Datum"], datetime):
             birth_day = row["Geb.Datum"]
@@ -373,7 +375,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
                                         group_name,
                                         "Triathlon",
                                         config)
-        time.sleep(0.05)
+        time.sleep(0.03)
 
         if not upload_success:
             print(f"Athlete: {row['Name']} not uploaded")
@@ -382,7 +384,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
 
 def upload_athlete(name: str, surname: str,
                    starting_number: int, birth_day: int, gender: str,
-                   achievements: List[Dict[str, Dict[str, Union[str, float]]]],
+                   achievements: Dict[str, Dict[str, Dict[str, Union[str, float]]]],
                    group_name: str, competition_type: str,
                    config: Dict) -> bool:
     url = "http://127.0.0.1:3001/api/athlete"
@@ -394,11 +396,15 @@ def upload_athlete(name: str, surname: str,
     if isinstance(name, float) or name == "nan":
         name = ""
 
+    upload_achievements = {}
+    if config["achievements"]:
+        upload_achievements = achievements
+
     post_body = {
         "name": name,
         "surname": surname,
         "gender": gender,
-        "achievements": {},
+        "achievements": upload_achievements,
         "competition_type": competition_type,
         "starting_number": starting_number
     }
@@ -407,21 +413,6 @@ def upload_athlete(name: str, surname: str,
     response = requests.post(url,
                              json=post_body)
     if response.ok:
-        if config["achievements"]:
-            ## Upload Acievements
-            post_params = {
-                "name": name,
-                "surname": surname
-            }
-            for achievement in achievements:
-                url = "http://127.0.0.1:3001/api/achievement"
-                post_body = achievement
-                response = requests.post(url,
-                                         params=post_params,
-                                         json=post_body)
-                if not response.ok:
-                    return False
-
         ## Add to group
         url = "http://127.0.0.1:3001/api/group"
         post_body = {

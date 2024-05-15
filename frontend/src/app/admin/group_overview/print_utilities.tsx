@@ -1,7 +1,7 @@
 "use client";
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { LoadingButton } from '@/app/lib/loading_button';
+import { LoadingButton } from '@/app/lib/loading';
 
 export default function PrintUtilities() {
   let searchParams = useSearchParams();

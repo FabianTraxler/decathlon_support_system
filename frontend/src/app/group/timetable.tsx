@@ -3,6 +3,7 @@ import { Discipline, StartingOrder } from "../lib/interfaces";
 import { convert_date_to_time } from "../lib/parsing";
 import { StartingOrderEditButton } from "../admin/group_overview/disciplines/discipline_edit";
 import Title_Footer_Layout from "./subpage_layout";
+import { LoadingAnimation } from "../lib/loading";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
@@ -78,7 +79,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
     if (disciplines.size == 0) {
         return (
             <Title_Footer_Layout title="Aktuelle Disciplin">
-                <div>Loading ...</div>
+                <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
             </Title_Footer_Layout>
         )
     } else {

@@ -4,6 +4,7 @@ import AchievementDisplay from "./achievement";
 import { createContext } from 'react';
 import { decathlon_disciplines } from "@/app/lib/config";
 import Title_Footer_Layout from "../subpage_layout";
+import { LoadingAnimation } from "@/app/lib/loading";
 
 interface OverviewAthlete extends Athlete {
     searched: boolean
@@ -81,24 +82,27 @@ export default function Athletes({ group_name }: { group_name: string }) {
                 </div>
             </div>
 
-            <AchievementContext.Provider value={{ updateAchievement }}>
+            {
+                athletes.length > 0 ?
+                    <AchievementContext.Provider value={{ updateAchievement }}>
+                        <div className="grid row-span-6 items-top overflow-scroll overscroll-contain m-1 mt-3 border rounded-md">
+                            <div>
+                                {
+                                    athletes.map((athlete, index) => {
+                                        return athlete.searched
+                                            ? (
+                                                <AthleteOverview key={athlete.starting_number} athlete={athlete} athlete_number={index}></AthleteOverview>
+                                            )
+                                            : null
+                                    })
+                                }
+                            </div>
+                        </div>
+                    </AchievementContext.Provider>
+                    :
+                    <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
+            }
 
-                <div className="grid row-span-6 items-top overflow-scroll overscroll-contain m-1 mt-3 border rounded-md">
-                    <div>
-                        {
-                            athletes.map((athlete, index) => {
-                                return athlete.searched
-                                    ? (
-                                        <AthleteOverview key={athlete.starting_number} athlete={athlete} athlete_number={index}></AthleteOverview>
-                                    )
-                                    : null
-                            })
-                        }
-                    </div>
-
-                </div>
-
-            </AchievementContext.Provider>
         </Title_Footer_Layout>
     )
 }

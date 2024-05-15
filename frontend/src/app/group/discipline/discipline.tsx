@@ -6,6 +6,7 @@ import TimeDiscipline from "./time_discipline";
 import { convert_date } from "@/app/lib/parsing";
 import DistanceDiscipline from "./distance_discipline";
 import HeightDiscipline from "./height/height_discipline";
+import { LoadingAnimation } from "@/app/lib/loading";
 
 export default function Disciplines({ group_name }: { group_name: string }) {
     const [discipline, setDiscipline] = useState<Discipline>();
@@ -34,7 +35,7 @@ export default function Disciplines({ group_name }: { group_name: string }) {
     if (!discipline) {
         return (
             <Title_Footer_Layout title="Aktuelle Disciplin">
-                <div>Loading ...</div>
+                <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
             </Title_Footer_Layout>
         )
     } else {

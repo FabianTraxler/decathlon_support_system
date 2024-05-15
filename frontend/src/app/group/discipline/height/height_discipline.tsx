@@ -5,6 +5,7 @@ import { get_group_achievements } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { StartHeightInput } from "./starting_height";
 import { HeightOrderOverview } from "./athlete_overview";
+import { LoadingAnimation } from "@/app/lib/loading";
 
 
 interface HeightDisciplineState {
@@ -131,7 +132,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
 
     if (disciplineState.loaded == false) {
         return (
-            <div>Loading ...</div>
+            <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
         )
     }
 

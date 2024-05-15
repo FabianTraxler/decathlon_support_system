@@ -1,7 +1,7 @@
 "use client";
 
 import { german_discipline_states } from '@/app/lib/config';
-import { LoadingButton } from '@/app/lib/loading_button';
+import { LoadingButton } from '@/app/lib/loading';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
