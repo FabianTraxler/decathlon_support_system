@@ -5,7 +5,6 @@ use serde_json::Value;
 use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use aws_sdk_dynamodb::{Client};
-use aws_config::{BehaviorVersion};
 use aws_sdk_dynamodb::types::{AttributeValue};
 use crate::database::db_errors::ItemNotFound;
 use crate::{Storage, time_planner};
