@@ -17,7 +17,7 @@ pub struct DynamoDB {
 
 impl DynamoDB {
     pub fn new() -> Self {
-        let config = futures::executor::block_on(aws_config::load_defaults(BehaviorVersion::latest()));
+        let config = futures::executor::block_on(aws_config::load_from_env());
         let client = Client::new(&config);
         DynamoDB {
             client
