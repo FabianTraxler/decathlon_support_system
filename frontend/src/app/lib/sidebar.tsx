@@ -140,7 +140,7 @@ function Groups() {
 function Youth() {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
-            {youth_groups.map(name => <GroupSelection key={name} name={"U" + name}></GroupSelection>)}
+            {youth_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
         </div>
     )
 }
