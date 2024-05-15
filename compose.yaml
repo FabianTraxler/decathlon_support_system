@@ -11,6 +11,7 @@ services:
         - '3000:3000'
       depends_on:
         - rust_backend
+      restart: always
   rust_backend:
       container_name: rust_backend
       image: fabsl22/decathlon_support_system:backend_v0.1
@@ -21,6 +22,7 @@ services:
         - '3001:3001'
       volumes:
         - /home/fabian/.aws:/root/.aws
+      restart: always
   reverse_proxy:
     container_name: reverse_proxy
     image: fabsl22/decathlon_support_system:reverse_proxy
@@ -34,4 +36,5 @@ services:
       - .certs/:/etc/nginx/ssl:ro
     depends_on:
         - next_frontend
+    restart: always
       
