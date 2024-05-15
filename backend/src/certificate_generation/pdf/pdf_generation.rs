@@ -1,7 +1,5 @@
 pub use printpdf::PdfDocumentReference;
-use printpdf::{Mm, PdfDocument, PdfLayerIndex, PdfPageIndex, image_crate, Image, ImageTransform, PdfLayerReference};
-use std::fs::File;
-use std::io::BufReader;
+use printpdf::{Mm, Pt, PdfDocument, PdfLayerIndex, PdfPageIndex, PdfLayerReference, SvgTransform};
 
 const A4_HEIGHT: f32 = 297.0;
 const A4_WIDTH: f32 = 210.0;
@@ -42,29 +40,34 @@ pub fn add_pdf_page(
 }
 
 pub fn add_logo(layer: PdfLayerReference, landscape: bool) {
-    let image_file = File::open("assets/img/Logo_STW.jpg")
+    // let image_file = File::open("assets/img/Logo_STW.jpg")
+    //     .expect("Logo should be available");
+    // let mut image_file = BufReader::new(image_file);
+    //
+    // let image = Image::try_from(image_crate::codecs::jpeg::JpegDecoder::new(&mut image_file)
+    //     .expect("Image should be png"))
+    //     .expect("Image should be convertible to Image class");
+
+    let logo_svg_string = std::fs::read_to_string("assets/img/logo_stw.svg")
         .expect("Logo should be available");
-    let mut image_file = BufReader::new(image_file);
+    let logo = printpdf::svg::Svg::parse(&logo_svg_string).
+        expect("Logo should be readable");
 
-    let image = Image::try_from(image_crate::codecs::jpeg::JpegDecoder::new(&mut image_file)
-        .expect("Image should be png"))
-        .expect("Image should be convertible to Image class");
-
-    let mut image_transform = ImageTransform::default();
+    let mut image_transform = SvgTransform::default();
     if landscape {
-        image_transform.translate_x = Some(Mm(267.0));
-        image_transform.translate_y = Some(Mm(180.0));
+        image_transform.translate_x = Some(Pt(750.0));
+        image_transform.translate_y = Some(Pt(515.0));
         image_transform.scale_x = Some(0.08);
         image_transform.scale_y = Some(0.08);
     } else {
-        image_transform.translate_x = Some(Mm(160.0));
-        image_transform.translate_y = Some(Mm(247.0));
+        image_transform.translate_x = Some(Pt(460.0));
+        image_transform.translate_y = Some(Pt(710.0));
         image_transform.scale_x = Some(0.13);
         image_transform.scale_y = Some(0.13);
     }
 
-
+    logo.add_to_layer(&layer, image_transform);
     //image_transform.dpi = Some(1000.);
 
-    image.add_to_layer(layer, image_transform);
+    //image.add_to_layer(layer, image_transform);
 }

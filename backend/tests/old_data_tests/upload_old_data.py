@@ -229,7 +229,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
         if isinstance(row["GBDT"], datetime):
             birth_day = row["GBDT"]
-            birthday_timestamp = int(datetime.timestamp(birth_day)) + 3.156e+7 # Add one year to match current year
+            birthday_timestamp = int(datetime.timestamp(birth_day) + 3.156e+7) # Add one year to match current year
         elif isinstance(row["GBDT"], str):
             datetime_str = row["GBDT"].strip().split(" ")[0]
             if "." in datetime_str:
@@ -238,7 +238,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                 birth_day = datetime.strptime(datetime_str, '%Y-%m-%d')
             else:
                 birth_day = ""
-            birthday_timestamp = int(datetime.timestamp(birth_day)) + 3.156e+7 # Add one year to match current year
+            birthday_timestamp = int(datetime.timestamp(birth_day) + 3.156e+7) # Add one year to match current year
         else:
             birthday_timestamp = None
 
@@ -338,14 +338,14 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
 
         if isinstance(row["Geb.Datum"], datetime):
             birth_day = row["Geb.Datum"]
-            birthday_timestamp = int(datetime.timestamp(birth_day))
+            birthday_timestamp = int(datetime.timestamp(birth_day) + 3.156e+7) # Add one year to match current year
         elif isinstance(row["Geb.Datum"], str):
             datetime_str = row["Geb.Datum"].strip().split(" ")[0]
             if "." in datetime_str:
                 birth_day = datetime.strptime(datetime_str, '%d.%m.%Y')
             elif "-" in datetime_str:
                 birth_day = datetime.strptime(datetime_str, '%Y-%m-%d')
-            birthday_timestamp = int(datetime.timestamp(birth_day))
+            birthday_timestamp = int(datetime.timestamp(birth_day) + 3.156e+7) # Add one year to match current year
         else:
             birthday_timestamp = None
 

@@ -867,7 +867,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn insert_and_access_athlete() {
-        let db = DynamoDB::new().await;
+        let db = DynamoDB::new();
         let new_athlete = Athlete::new("Insert",
                                        "Test",
                                        None,
@@ -891,7 +891,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn update_athlete() {
-        let db = DynamoDB::new().await;
+        let db = DynamoDB::new();
         let mut new_athlete = Athlete::new("Fabian",
                                        "Traxler",
                                        None,
@@ -928,7 +928,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn insert_and_access_group() {
-        let db = DynamoDB::new().await;
+        let db = DynamoDB::new();
         let athletes = get_athletes();
         for athlete in &athletes {
             match db.write_athlete(AthleteID::from_athlete(&athlete), athlete.clone()).await {
@@ -953,7 +953,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn access_age_group() {
-        let db = DynamoDB::new().await;
+        let db = DynamoDB::new();
         let athletes = get_athletes();
         for athlete in &athletes {
             let athlete_key = AthleteID::from_athlete(&athlete);
@@ -997,7 +997,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn add_delete_and_update_achievements() {
-        let db = DynamoDB::new().await;
+        let db = DynamoDB::new();
         let mut new_athlete = Athlete::new("Achievement",
                                        "Test",
                                        None,
@@ -1028,7 +1028,7 @@ mod tests {
             panic!("Previously stored age group not found");
         }
 
-        for mut achievement in &get_achievements()[..1]{
+        for achievement in &get_achievements()[..1]{
             let _ = new_athlete.delete_achievement(&achievement.name());
             let achievement_id = AchievementID::build(AthleteID::from_athlete(&new_athlete),
                                                       &achievement);
@@ -1050,7 +1050,7 @@ mod tests {
                 "tries": "XXO-XXX"
             }
         "#;
-        for mut achievement in &mut get_achievements()[1..2]{
+        for achievement in &mut get_achievements()[1..2]{
             let _ = achievement.update_values(achievement_update);
             let _ = new_athlete.update_achievement(achievement.clone());
             let achievement_id = AchievementID::build(AthleteID::from_athlete(&new_athlete),

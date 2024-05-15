@@ -51,7 +51,6 @@ fn add_successfully_completion(pdf_layer: &PdfLayerReference, font: &IndirectFon
     pdf_layer.end_text_section();
 }
 
-
 fn add_achievements(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athlete: &Athlete,
                     start_height: f32, line_height: f32) {
     // Define font metrics
@@ -141,7 +140,6 @@ fn new_triathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page:
     current_layer.write_text("Urkunde", &font_bold);
     current_layer.add_line_break();
     current_layer.end_text_section();
-    add_logo(current_layer.clone(), false);
 
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
@@ -188,7 +186,6 @@ fn new_pentathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page
     current_layer.write_text("Urkunde", &font_bold);
     current_layer.add_line_break();
     current_layer.end_text_section();
-    add_logo(current_layer.clone(), false);
 
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
@@ -232,7 +229,6 @@ fn new_heptathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page
     current_layer.write_text("Urkunde", &font_bold);
     current_layer.add_line_break();
     current_layer.end_text_section();
-    add_logo(current_layer.clone(), false);
 
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
@@ -277,7 +273,6 @@ fn new_decathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page:
     current_layer.write_text("Urkunde", &font_bold);
     current_layer.add_line_break();
     current_layer.end_text_section();
-    add_logo(current_layer.clone(), false);
 
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
