@@ -6,7 +6,8 @@ export interface Athlete {
   achievements: Map<string, AchievementValue>,
   total_points: number,
   gender: string,
-  group_name?: string
+  group_name?: string,
+  competition_type: string
 }
 
 export interface AchievementValue {

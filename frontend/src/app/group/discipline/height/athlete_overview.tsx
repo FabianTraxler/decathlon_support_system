@@ -204,7 +204,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                         onClick={select_athlete}
                     >
                         <div className="flex items-center justify-center border bg-green-200"><span>{state.current_order[0].starting_number}</span></div>
-                        <div className="col-span-3 flex items-center justify-center border bg-green-200"><span>{state.current_order[0].name} {state.current_order[0].surname}</span></div>
+                        <div className="col-span-3 flex items-center justify-center border bg-green-200"><span className="text-center">{state.current_order[0].name} {state.current_order[0].surname}</span></div>
                         <div className="flex items-center justify-center border bg-green-200"><span>&gt;</span></div>
                     </div>
                 </div>
@@ -217,8 +217,8 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                                     return (
                                         <div key={athlete.starting_number} className=" grid grid-cols-5 text-lg sm:text-xl">
                                             <div className="flex items-center justify-center border pt-2 pb-2"><span>{athlete.starting_number}</span></div>
-                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
-                                            <div className="flex items-center justify-center border pt-2 pb-2"><span>&gt;</span></div>
+                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span className="text-center">{athlete.name} {athlete.surname}</span></div>
+                                            <div className="flex items-center justify-center border pt-2 pb-2"><span></span></div>
                                         </div>
                                     )
                                 }))
@@ -234,8 +234,8 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                                     return (
                                         <div key={athlete.starting_number} className=" grid grid-cols-5 text-lg sm:text-xl">
                                             <div className="flex items-center justify-center border pt-2 pb-2"><span>{athlete.starting_number}</span></div>
-                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span>{athlete.name} {athlete.surname}</span></div>
-                                            <div className="flex items-center justify-center border pt-2 pb-2"><span>&gt;</span></div>
+                                            <div className="col-span-3 flex items-center justify-center border pt-2 pb-2"><span className="text-center">{athlete.name} {athlete.surname}</span></div>
+                                            <div className="flex items-center justify-center border pt-2 pb-2"><span></span></div>
                                         </div>
                                     )
                                 }))

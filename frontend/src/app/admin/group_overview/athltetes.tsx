@@ -91,7 +91,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
 function GroupAthletes({ group_name }: { group_name: string }) {
   const [athleteState, set_athleteState] = useState<{athletes: Athlete[], disciplines: [string, string, string][]}>({athletes: [], disciplines: []});
   const [disciplineEdit, setDisciplineEdit] = useState("")
-  const [sorted, setSorted] = useState({ name: "", ascending: false })
+  const [sorted, setSorted] = useState({ name: "#", ascending: true })
 
 
   useEffect(() => {

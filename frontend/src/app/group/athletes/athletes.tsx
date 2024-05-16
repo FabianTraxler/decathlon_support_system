@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AchievementValue, Athlete, fetch_group_athletes } from "@/app/lib/athlete_fetching";
 import AchievementDisplay from "./achievement";
 import { createContext } from 'react';
-import { decathlon_disciplines } from "@/app/lib/config";
+import { decathlon_disciplines, discipline_mapping } from "@/app/lib/config";
 import Title_Footer_Layout from "../subpage_layout";
 import { LoadingAnimation } from "@/app/lib/loading";
 
@@ -110,9 +110,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
 function AthleteOverview({ athlete, athlete_number }: { athlete: Athlete, athlete_number: number }) {
     const [showAchievements, setShowAchievements] = useState(false);
 
-    const disciplines = decathlon_disciplines.map(([name, type, shortname]) => {
-        return name
-    })
+    const disciplines = discipline_mapping[athlete.competition_type];
 
     const full_name = athlete.name + "_" + athlete.surname;
 
@@ -148,7 +146,7 @@ function AthleteOverview({ athlete, athlete_number }: { athlete: Athlete, athlet
             <div className={(showAchievements ? "p-2 bg-slate-100" : "")}>
                 {showAchievements &&
 
-                    decathlon_disciplines.map(([name, type, shortname]) => {
+                    disciplines.map(([name, type, shortname]) => {
                         return (
                             <AchievementDisplay key={full_name + "_" + name} name={name} type={type} achievement={athlete.achievements.get(name)} athlete_name={full_name} athlete_number={athlete_number}></AchievementDisplay>
                         )

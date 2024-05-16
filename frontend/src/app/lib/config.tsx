@@ -16,7 +16,9 @@ export const default_discipline_values = {
     },
 }
 
-export const decathlon_disciplines: [string, string, string][] = [
+type Disciplines = [string, string, string][]
+
+export const decathlon_disciplines: Disciplines = [
     ["100 Meter Lauf", "Time", "100m"],
     ["Weitsprung", "Distance", "Weit"],
     ["Kugelstoß", "Distance", "Kugel"],
@@ -29,7 +31,7 @@ export const decathlon_disciplines: [string, string, string][] = [
     ["1500 Meter Lauf", "Time", "1500m"]
 ]
 
-export const hepathlon_disciplines: [string, string, string][] = [
+export const hepathlon_disciplines: Disciplines = [
     ["100 Meter Hürden", "Time", "Hürden"],
     ["Hochsprung", "Height", "Hoch"],
     ["Kugelstoß", "Distance", "Kugel"],
@@ -39,7 +41,7 @@ export const hepathlon_disciplines: [string, string, string][] = [
     ["1000 Meter Lauf", "Time", "1000m"]
 ]
 
-export const pentathlon_disciplines: [string, string, string][] = [
+export const pentathlon_disciplines: Disciplines = [
     ["60 Meter Hürden", "Time", "Hürden"],
     ["Hochsprung", "Height", "Hoch"],
     ["60 Meter Lauf", "Time", "60m"],
@@ -47,11 +49,19 @@ export const pentathlon_disciplines: [string, string, string][] = [
     ["1200 Meter Cross Lauf", "Time", "Cross Lauf"]
 ]
 
-export const triathlon_discplines: [string, string, string][] = [
+export const triathlon_discplines: Disciplines = [
     ["60 Meter Lauf", "Time", "60m"],
     ["Schlagball", "Distance", "Schlagball"],
     ["Weitsprung", "Distance", "Weit"],
 ]
+
+type DisciplineMap = {[index: string]: Disciplines}
+export const discipline_mapping: DisciplineMap = {
+    "Decathlon": decathlon_disciplines,
+    "Triathlon": triathlon_discplines,
+    "Hepathlon": hepathlon_disciplines,
+    "Pentathlon": pentathlon_disciplines
+}
 
 
 export const german_discipline_states: Map<string, string> =  new Map([

@@ -5,6 +5,7 @@ import { get_group_achievements, save_distance_achievement } from "@/app/lib/ach
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { setTimeout } from "timers";
 import { NavigationContext } from "../navigation";
+import { LoadingAnimation } from "@/app/lib/loading";
 
 // TODO: Add "revert" functionality and back-arrow only get one level back to current disciline and not to HOME if in input mode
 
@@ -135,7 +136,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
 
 
     if (disciplineState.current_try == 0 || disciplineState.results.size == 0) {
-        return (<div>Loading results...</div>)
+        return (
+            <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
+        )
     }
 
 
@@ -223,7 +226,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 if (athlete_result) {
                     new_results.set(athlete.full_name(), athlete_result)
                 }
-                setTimeout(() => try_completed(new_results), 200)
+                try_completed(new_results)
             })
         } else {
             alert("Error while saving achievement")

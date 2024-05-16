@@ -30,11 +30,11 @@ export default function Group() {
   } as Navigation
 
   let all_tabs = [
+    "Aktuelle Disziplin",
     "Athletenübersicht",
     "Platzübersicht",
     "Zeitplan",
     "Disziplinen & Regelwerk",
-    "Aktuelle Disziplin"
   ]
 
 
@@ -55,7 +55,7 @@ export default function Group() {
 
   return (
     <NavigationContext.Provider value={navigation}>
-      <div className="h-screen flex flex-col items-center p-0 sm:p-42 xl:p-10 w-screen sm:w-full">
+      <div className="absolute inset-0 flex flex-col items-center p-0 sm:p-42 xl:p-10 w-screen sm:w-full">
         <Header homescreen={homescreen}></Header>
         {homescreen && (
           <Overview groupname={groupName} changeTab={setCurrentTab} allTabs={all_tabs}></Overview>

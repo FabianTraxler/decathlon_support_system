@@ -169,7 +169,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
     }
     return (
         <div className="p-1 h-full overflow-scroll ">
-            <div className={"text-center border rounded-md mb-4 p-3  shadow-slate-900 " + (editActive ? "bg-stw_orange " : "bg-stw_blue shadow-md")}
+            <div className={"text-center border rounded-md mb-4 p-3  shadow-slate-900 select-none " + (editActive ? "bg-stw_orange " : "bg-stw_blue shadow-md")}
                 onClick={() => setEditActive(!editActive)}
             >
                 {editActive ?

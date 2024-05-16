@@ -7,7 +7,7 @@ import { LoadingAnimation } from "../lib/loading";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
-    const [selectedDay, setSelectedDay] = useState("day 1");
+    const [selectedDay, setSelectedDay] = useState("");
 
     const days = [
         ["day 1", "Samstag"],
@@ -88,8 +88,12 @@ export default function Timetable({ group_name }: { group_name: string }) {
                 <div>
                     {
                         days.map(([day_id, name]) => {
+                            if (disciplines.get(day_id)?.length == 0) {
+                                return null
+                            }
+
                             return (
-                                <div key={day_id} className="border p-1 mt-4 sm:mt-8" >
+                                <div key={day_id} className="border p-1 mt-4 sm:mt-8 shadow-md rounded-md" >
                                     <div className={"flex justify-between text-2xl items-center m-2 hover:cursor-pointer" + (selectedDay == day_id && " font-bold")}
                                         onClick={() => change_selected_date(day_id)}
                                     >
@@ -116,7 +120,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
                                     </div>
                                     {(disciplines.has(day_id) && selectedDay == day_id) &&
-                                        <div>
+                                        <div className="max-h-[60vh] overflow-scroll">
                                             <table className="table-auto border-collapse w-full">
                                                 <thead>
                                                     <tr>
