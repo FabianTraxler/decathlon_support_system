@@ -40,14 +40,6 @@ pub fn add_pdf_page(
 }
 
 pub fn add_logo(layer: PdfLayerReference, landscape: bool) {
-    // let image_file = File::open("assets/img/Logo_STW.jpg")
-    //     .expect("Logo should be available");
-    // let mut image_file = BufReader::new(image_file);
-    //
-    // let image = Image::try_from(image_crate::codecs::jpeg::JpegDecoder::new(&mut image_file)
-    //     .expect("Image should be png"))
-    //     .expect("Image should be convertible to Image class");
-
     let logo_svg_string = std::fs::read_to_string("assets/img/logo_stw.svg")
         .expect("Logo should be available");
     let logo = printpdf::svg::Svg::parse(&logo_svg_string).
@@ -67,7 +59,4 @@ pub fn add_logo(layer: PdfLayerReference, landscape: bool) {
     }
 
     logo.add_to_layer(&layer, image_transform);
-    //image_transform.dpi = Some(1000.);
-
-    //image.add_to_layer(layer, image_transform);
 }

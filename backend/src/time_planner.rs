@@ -345,6 +345,7 @@ fn create_default_athlete_order(athletes: Option<Vec<Athlete>>, sort_gender: boo
 
     let mut default_run_order: Vec<Run> = vec![];
     let mut i = 0;
+    let mut run_number = 1;
     let num_tracks = 6;
     while i < default_athlete_order.len() {
         let mut athletes: Vec<Athlete>;
@@ -368,10 +369,11 @@ fn create_default_athlete_order(athletes: Option<Vec<Athlete>>, sort_gender: boo
         i += athletes.len();
 
         let run = Run {
-            name: format!("Lauf {}", i + 1),
+            name: format!("Lauf {}", run_number),
             athletes,
         };
         default_run_order.push(run);
+        run_number += 1;
     }
 
 
