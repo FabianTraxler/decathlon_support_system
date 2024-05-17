@@ -30,11 +30,11 @@ export default function Group() {
   } as Navigation
 
   let all_tabs = [
-    "Aktuelle Disziplin",
     "Athletenübersicht",
     "Platzübersicht",
     "Zeitplan",
     "Disziplinen & Regelwerk",
+    "Aktuelle Disziplin"
   ]
 
 

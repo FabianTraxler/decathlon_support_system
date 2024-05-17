@@ -9,7 +9,7 @@ export default function Overview({ groupname, allTabs, changeTab }: { groupname:
           return (
             <button key={key} onClick={_ => changeTab(key)} 
             className="w-full flex justify-between p-4 sm:p-8 mt-4 mb-4 text-2xl border-b-2 
-            first:font-bold first:mb-16 first:border-2 first:shadow-md first:rounded-sm
+            last:font-bold last:mt-16 last:border-2 last:shadow-md last:rounded-sm last:bg-slate-300
             last:border-none 
             hover:cursor-pointer hover:bg-slate-400 hover:bg-opacity-80">
               <div> {key}</div>
