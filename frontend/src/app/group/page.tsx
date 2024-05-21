@@ -10,6 +10,7 @@ import Timetable from "./timetable";
 import Title from "./title";
 import Disciplines from "./discipline/discipline";
 import { Navigation, NavigationContext, NavigationItem } from "./navigation";
+import Rules from "./rules";
 
 
 
@@ -70,7 +71,7 @@ export default function Group() {
           <Timetable group_name={groupName}></Timetable>
         }
         {currentTab == "Disziplinen & Regelwerk" &&
-          <Rules></Rules>
+          <Rules group_name={groupName}></Rules>
         }
         {currentTab == "Aktuelle Disziplin" &&
           <Disciplines group_name={groupName}></Disciplines>
@@ -78,12 +79,4 @@ export default function Group() {
       </div>
     </NavigationContext.Provider>
   );
-}
-
-
-
-function Rules() {
-  return (
-    <div><Title title="Regelwerk"></Title></div>
-  )
 }
