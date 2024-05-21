@@ -34,10 +34,10 @@ export function HeightInput({ athlete, try_completed }: { athlete: AthleteHeight
             <div className="grid grid-rows-9 h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md select-none">
                 <div className="flex flex-row items-center justify-between text-xl sm:text-4xl p-2 bg-slate-700 text-slate-100 rounded-md">
                     <div>{athlete_result.name} {athlete_result.surname}</div>
-                    <div>{athlete_result?.final_result != -1 && athlete_result?.final_result} m</div>
+                    <div>{athlete_result?.final_result != -1 && athlete_result?.final_result} cm</div>
                 </div>
                 <div className="flex items-center text-lg font-bold"><span>Aktuelle Höhe: {state.current_height}cm</span></div>
-                <div className="row-span-4">
+                <div className="row-span-5">
                     <div className="grid grid-rows-3 h-full">
                         {Array.from(Array(state.current_try).keys()).map(try_number => {
                             try_number += 1
@@ -46,7 +46,7 @@ export function HeightInput({ athlete, try_completed }: { athlete: AthleteHeight
                                     <div key={try_number}>
                                         <div className="text-lg underline">{try_number}. Versuch</div>
                                         <div className="grid grid-cols-1">
-                                            <div className="p-2 border text-center">{string_html_entity_map.get(height_tries[try_number - 1])}</div>
+                                            <div className="p-3 border text-center">{string_html_entity_map.get(height_tries[try_number - 1])}</div>
                                         </div>
                                     </div>
                                 )
@@ -55,8 +55,8 @@ export function HeightInput({ athlete, try_completed }: { athlete: AthleteHeight
                                     <div key={try_number}>
                                         <div className="text-lg underline">{try_number}. Versuch</div>
                                         <div className="grid grid-cols-2">
-                                            <div className="rounded-md shadow-lg m-2 p-2 border text-center hover:cursor-pointer bg-green-200  bg-opacity-40 active:bg-opacity-100" onClick={() => handle_try_update("O")}>&#9989;</div>
-                                            <div className="rounded-md shadow-lg m-2 p-2 border text-center hover:cursor-pointer bg-red-200 bg-opacity-40 active:bg-opacity-100" onClick={() => handle_try_update("X")}>&#10060;</div>
+                                            <div className="rounded-md shadow-lg m-2 p-3 border text-center hover:cursor-pointer bg-green-200  bg-opacity-40 active:bg-opacity-100" onClick={() => handle_try_update("O")}>&#9989;</div>
+                                            <div className="rounded-md shadow-lg m-2 p-3 border text-center hover:cursor-pointer bg-red-200 bg-opacity-40 active:bg-opacity-100" onClick={() => handle_try_update("X")}>&#10060;</div>
                                         </div>
                                     </div>
                                 )
@@ -65,12 +65,13 @@ export function HeightInput({ athlete, try_completed }: { athlete: AthleteHeight
                     </div>
 
                 </div>
-                <div className="flex items-center justify-center text-lg font-bold">
+                <div className="row-span-2">
+                    <div className="flex justify-center items-center h-full">
                     <div className="w-4/5 flex items-center justify-between text-lg font-bold">
                         <span className="rounded-md shadow-lg border p-2 bg-red-400 bg-opacity-40 active:bg-opacity-100" onClick={handle_surrender}>Aufgabe</span>
                         <span className="rounded-md shadow-lg border p-2 bg-yellow-200 bg-opacity-40 active:bg-opacity-100" onClick={handle_height_skip}>Höhe auslassen</span>
                     </div>
-
+                    </div>
                 </div>
 
             </div>

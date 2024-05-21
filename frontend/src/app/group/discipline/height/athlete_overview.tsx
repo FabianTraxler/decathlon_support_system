@@ -180,7 +180,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
     } else {
         let first_athlete = state.current_order[0]
         if (first_athlete == undefined) {
-            return (<div>weird</div>)
+            return (<div>Error</div>)
         }
         return (
             <div className="grid grid-rows-7">
