@@ -453,7 +453,7 @@ function NumberPad({ current_value, updateValue }: { current_value: { try_number
         updateValue({ ...current_value, try_value: new_value })
     }
     return (
-        <div className="row-span-4 grid grid-cols-3 grid-rows-4 h-full">
+        <div className="row-span-4 grid grid-cols-3 grid-rows-4 h-full select-none">
             {
                 [1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0, "C"].map(val => {
                     return (

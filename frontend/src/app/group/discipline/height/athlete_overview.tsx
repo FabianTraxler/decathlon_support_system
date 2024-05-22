@@ -183,7 +183,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             return (<div>Error</div>)
         }
         return (
-            <div className="grid grid-rows-7">
+            <div className="grid grid-rows-7 h-full">
                 <div>
                     <div className="flex  justify-between font-bold text-2xl p-2">
                         <div className="underline">
@@ -193,7 +193,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                             {state.current_height}cm
                         </div> </div>
                 </div>
-                <div className="row-span-3 grid grid-rows-5">
+                <div className="row-span-2 grid grid-rows-5">
                     <div className="font-bold underline text-2xl">{state.current_try}. Versuch: </div>
                     <div className="row-span-1 grid grid-cols-5 text-xl font-bold h-full">
                         <div className="flex items-center justify-center border"><span>#</span></div>
@@ -208,7 +208,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                         <div className="flex items-center justify-center border bg-green-200"><span>&gt;</span></div>
                     </div>
                 </div>
-                <div className="row-span-3 mt-3">
+                <div className="row-span-4">
                     {state.current_order.length > 1 &&
                         <div>
                             <div className="font-bold underline text-xl">In Vorbereitung {state.current_try}. Versuch</div>
