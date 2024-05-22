@@ -20,6 +20,8 @@ export const authConfig = {
             return Response.redirect(new URL('/register', nextUrl));
           } else if(user.name == "admin") {
             return Response.redirect(new URL('/admin', nextUrl));
+          } else if(user.name == "timing") {
+            return Response.redirect(new URL('/timing', nextUrl));
           } else {
             return false
           }

@@ -4,10 +4,11 @@ use actix_web::web::{Query};
 use serde_json::Value;
 use crate::api_server::parse_json_body;
 use crate::certificate_generation::{GroupID, PDF};
-use crate::time_planner::{TimeGroupID, StartingOrder, ProtocolID};
+use crate::time_planner::{TimeGroupID, StartingOrder, DisciplineID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_discipline);
+    cfg.service(get_current_discipline);
     cfg.service(get_disciplines);
     cfg.service(get_next_discipline);
     cfg.service(get_discipline_protocol);
@@ -18,8 +19,39 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(change_discipline_state);
 }
 
-#[get("/current_discipline")]
+#[get("/discipline")]
 async fn get_discipline(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: Query<DisciplineID>,
+) -> impl Responder {
+    let discipline_id = query.into_inner();
+    let time_group_id = TimeGroupID::new(discipline_id.group_name());
+    let time_group = data.get_time_group(&time_group_id).await;
+    match time_group {
+        Some(time_group) => {
+            match discipline_id.discipline_name() {
+                Some(discipline_name) => {
+                    match time_group.get_discipline(&discipline_name) {
+                        Some(discipline) => {
+                            HttpResponse::Ok()
+                                .body(serde_json::to_string(&discipline)
+                                    .expect("Discipline should be serializable"))
+                        }
+                        None => HttpResponse::NotFound().body(format!("Unable to find discipline {} in group", discipline_name))
+                    }
+                }
+                None => {
+                    HttpResponse::NotFound().body(format!("Unable to find discipline {:?} in group {}", discipline_id.discipline_name(), discipline_id.group_name()))
+                }
+            }
+        }
+        None => HttpResponse::NotFound().body("Time-Group Not Found")
+    }
+}
+
+
+#[get("/current_discipline")]
+async fn get_current_discipline(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: Query<TimeGroupID>,
 ) -> impl Responder {
@@ -104,7 +136,7 @@ async fn get_disciplines(
 #[get("/discipline_protocol")]
 async fn get_discipline_protocol(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
-    query: Query<ProtocolID>,
+    query: Query<DisciplineID>,
 ) -> impl Responder {
     let discipline_id = query.into_inner();
     let time_group_id = TimeGroupID::new(discipline_id.group_name());
@@ -113,7 +145,7 @@ async fn get_discipline_protocol(
         Some(mut time_group) => {
             let discipline = match discipline_id.discipline_name() {
                 Some(discipline_name) => {
-                    match time_group.get_discipline(&discipline_name){
+                    match time_group.get_discipline(&discipline_name) {
                         Some(discipline) => discipline,
                         None => return HttpResponse::NotFound().body(format!("Unable to find discipline {} in group", discipline_name))
                     }

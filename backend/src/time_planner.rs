@@ -399,12 +399,12 @@ impl TimeGroupID {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
-pub struct ProtocolID {
+pub struct DisciplineID {
     group_name: Option<String>,
     discipline_name: Option<String>,
 }
 
-impl ProtocolID {
+impl DisciplineID {
     pub fn group_name(&self) -> String {
         self.group_name.clone().unwrap_or("".to_string())
     }

@@ -34,7 +34,7 @@ export class AthleteID {
 
 export class AthleteTimeResult extends AthleteID {
     starting_number?: number;
-    final_result?: number;
+    final_result?: number | string;
 
     constructor(name: string, surname: string, age_group: string, starting_number?: number) {
         super(name, surname, age_group)
