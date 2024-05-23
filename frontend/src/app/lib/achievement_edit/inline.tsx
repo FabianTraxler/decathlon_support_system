@@ -16,6 +16,9 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
     useEffect(() => {
         if (currentState.achievement_string != achievement_string && !currentState.isUploaded) {
             let timer = setTimeout(() => {
+                if (!/^[0-9,.]*$/.test(currentState.achievement_string)){
+                    return
+                }
                 let final_result = convert_to_integral_fractional(currentState.achievement_string)
 
                 let new_achievement: AchievementValue;

@@ -93,36 +93,6 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "#", ascending: true })
 
-
-  useEffect(() => {
-    var current_index = 0
-    document.getElementById(current_index.toString())?.focus();
-
-    const handleEnterKey = function (this: Document, evt: KeyboardEvent) {
-      if (evt.target instanceof Element) { 
-        var current_index = parseInt(evt.target.id);
-        if (evt.which == 13) {
-          evt.preventDefault();
-          current_index += 1;
-          if (current_index >= athleteState.athletes.length) {
-            current_index = 0;
-          }
-          document.getElementById(current_index.toString())?.focus();
-        }
-      }
-
-    }
-
-    document.addEventListener('keydown', handleEnterKey, true);
-
-
-    return () => {
-      document.removeEventListener('keydown', handleEnterKey);
-    };
-
-  }, [disciplineEdit, athleteState]);
-
-
   const discipline_edit_mode = function (selected_discipline: string) {
     let new_discipline = (selected_discipline != disciplineEdit) ? selected_discipline : "";
     setDisciplineEdit(new_discipline)

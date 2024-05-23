@@ -135,7 +135,7 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
         if(selected_discipline){
             selected_discipline.runs[run_id].athletes[track_number] = athlete;
             all_disciplines.set(selected_discipline.name, selected_discipline)
-            setGroupState({selected_discipline: selected_discipline, all_disciplines: all_disciplines, selected_run: ""})
+            setGroupState({...groupState, selected_discipline: selected_discipline, all_disciplines: all_disciplines})
         }
 
     }
