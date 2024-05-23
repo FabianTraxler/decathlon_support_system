@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Title_Footer_Layout from "./subpage_layout";
 import { discipline_rules, general_rules } from "../lib/discipline_rules";
-import { discipline_mapping } from "../lib/config";
 import Image from "next/image";
 import { Discipline } from "../lib/interfaces";
 import { LoadingAnimation } from "../lib/loading";
