@@ -122,7 +122,8 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
 
   return (
     <div className="relative flex-auto p-4 items-center" data-te-modal-body-ref>
-      <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
+      <div className="max-h-[70vh] overflow-scroll">
+      <table className=" table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
         <thead>
           <tr>
             <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
@@ -152,6 +153,8 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
         </tbody>
 
       </table>
+      </div>
+
       <div
         className="flex flex-shrink-0 flex-wrap items-center justify-end rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
         <button id="submit_button"
