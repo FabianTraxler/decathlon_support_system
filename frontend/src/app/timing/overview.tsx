@@ -4,14 +4,13 @@ import { useSearchParams } from 'next/navigation';
 import Title from "../lib/title";
 import { groups, youth_groups } from '@/app/lib/config';
 import { usePathname, useRouter } from 'next/navigation';
-import RunOverview from './runs';
 import GroupDisciplines from './group';
 
 export default function Overview() {
   let searchParams = useSearchParams();
-  let groupName = searchParams.get('group') ?? "Übersicht";
+  let groupName = searchParams.get('group') ?? "Zeitnehmung-Übersicht";
 
-  if (groupName == "Übersicht") {
+  if (groupName == "Zeitnehmung-Übersicht") {
     return (
       <div className="flex-row w-full">
         <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll sm:h-screen">
