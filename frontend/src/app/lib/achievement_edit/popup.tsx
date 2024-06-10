@@ -38,7 +38,8 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
         }
     }
     if (!achievement || achievement_string == "undefined,undefined" || achievement_string == "-1" || achievement_string == "-1,0") {
-        achievement_string = "-"
+        achievement_string = ""
+        achievement_unit = ""
     }
 
     return [achievement_string, achievement_unit]

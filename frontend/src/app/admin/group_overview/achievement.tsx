@@ -1,7 +1,6 @@
 import { AchievementValue } from "@/app/lib/athlete_fetching";
 import { useEffect, useState } from "react";
 
-import { convert_to_integral_fractional } from "@/app/lib/parsing";
 import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 import { InlineEdit } from "@/app/lib/achievement_edit/inline";
 

@@ -23,7 +23,7 @@ export default function Overview() {
     )
   } else {
     return (
-      <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll w-full h-screen">
+      <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-screen">
         <Title title={groupName}></Title>
         <PrintUtilities></PrintUtilities>
         <Athletes group_name={groupName}></Athletes>

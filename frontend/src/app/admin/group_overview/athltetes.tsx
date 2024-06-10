@@ -5,6 +5,7 @@ import Achievement from './achievement';
 import { LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
+import { nan } from 'zod';
 
 export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(false);
@@ -32,9 +33,9 @@ export default function Athletes({ group_name }: { group_name: string }) {
 }
 
 function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
-  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string}) {
+  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
   var achievements = new Map(Object.entries(athlete.achievements));
-  const birthdate = new Date(athlete.birth_date * 1000);
+  const birthdate =new Date(athlete.birth_date * 1000);;
   const full_name = athlete.name + "_" + athlete.surname;
   const athlete_certificate_print = function (onStop: () => void) {
     fetch(`/api/certificate?name=${athlete.name}&surname=${athlete.surname}`)
@@ -67,13 +68,13 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
     <tr key={full_name}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.name + " " + athlete.surname}</td>
-      <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear()}</td>
+      <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear() || ""}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
       {disciplines.map(([name, type]) => {
         return (
-          <Achievement key={name} index={index} name={name} 
-          athleteName={full_name} achievement={achievements.get(name)} achievement_type={type} 
-          editMode={disciplineEdit == name}></Achievement>
+          <Achievement key={name} index={index} name={name}
+            athleteName={full_name} achievement={achievements.get(name)} achievement_type={type}
+            editMode={disciplineEdit == name}></Achievement>
         )
       })}
       <td className='border border-slate-800'>
@@ -89,7 +90,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
 
 
 function GroupAthletes({ group_name }: { group_name: string }) {
-  const [athleteState, set_athleteState] = useState<{athletes: Athlete[], disciplines: [string, string, string][]}>({athletes: [], disciplines: []});
+  const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
   const [disciplineEdit, setDisciplineEdit] = useState("")
   const [sorted, setSorted] = useState({ name: "#", ascending: true })
 
@@ -99,10 +100,10 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   }
 
   useEffect(() => {
-    const getData = function(){
+    const getData = function () {
       if (group_name.startsWith("Gruppe")) {
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+          set_athleteState({ athletes: athletes, disciplines: decathlon_disciplines })
         })
       } else if (group_name.startsWith("U")) {
         var disciplines: [string, string, string][] = [];
@@ -114,12 +115,12 @@ function GroupAthletes({ group_name }: { group_name: string }) {
           disciplines = triathlon_discplines
         }
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({athletes: athletes, disciplines: disciplines})
+          set_athleteState({ athletes: athletes, disciplines: disciplines })
         })
-  
+
       } else {
         fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({athletes: athletes, disciplines: decathlon_disciplines})
+          set_athleteState({ athletes: athletes, disciplines: decathlon_disciplines })
         })
       }
     }
@@ -178,8 +179,8 @@ function GroupAthletes({ group_name }: { group_name: string }) {
       </thead>
       <tbody>
         {athleteState.athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines} 
-          disciplineEdit={disciplineEdit}></AthleteTableRow>
+          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
+            disciplineEdit={disciplineEdit}></AthleteTableRow>
         })}
       </tbody>
     </table>
