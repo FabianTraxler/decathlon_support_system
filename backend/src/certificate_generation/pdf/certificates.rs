@@ -72,9 +72,14 @@ fn add_achievements(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athle
 
 
                 if !AGE_GROUPS_WO_POINTS.contains(&athlete.age_group().as_str()){ // only print for older athletes
-                    pdf_layer.use_text(achievement.points(athlete).to_string(), font_size, Mm(point_align), Mm(current_height), font);
-                    pdf_layer.use_text(format!("{}", final_result), font_size, Mm(achievement_align), Mm(current_height), font);
-                    pdf_layer.use_text(format!("{}", unit ), font_size, Mm(achievement_align + 20.), Mm(current_height), font);
+                    if final_result == "".to_string() {
+                        pdf_layer.use_text("DNF", font_size, Mm(achievement_align), Mm(current_height), font);
+                        pdf_layer.use_text("0", font_size, Mm(point_align), Mm(current_height), font);
+                    } else {
+                        pdf_layer.use_text(achievement.points(athlete).to_string(), font_size, Mm(point_align), Mm(current_height), font);
+                        pdf_layer.use_text(format!("{}", final_result), font_size, Mm(achievement_align), Mm(current_height), font);
+                        pdf_layer.use_text(format!("{}", unit ), font_size, Mm(achievement_align + 20.), Mm(current_height), font);
+                    }
                 } else {
                     pdf_layer.use_text(format!("{}", final_result), font_size, Mm(point_align), Mm(current_height), font);
                     pdf_layer.use_text(format!("{}", unit ), font_size, Mm(point_align + 15.), Mm(current_height), font);
@@ -82,8 +87,7 @@ fn add_achievements(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athle
             }
             None => {
                 pdf_layer.use_text("DNF", font_size, Mm(achievement_align), Mm(current_height), font);
-
-                pdf_layer.use_text("0.0", font_size, Mm(point_align), Mm(current_height), font);
+                pdf_layer.use_text("0", font_size, Mm(point_align), Mm(current_height), font);
             }
         }
     }

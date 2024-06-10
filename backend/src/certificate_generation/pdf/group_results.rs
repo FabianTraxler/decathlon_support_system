@@ -121,7 +121,7 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
             .replace("wurf", "")
             .replace("hoch", "")
             .replace("stoß", "")
-            .replace("110 Meter ", "");
+            .replace("110m ", "");
         pdf_layer.use_text(short_name, font_size, Mm(x_coord), Mm(y_coord), font);
 
         x_coord += discipline_width;
@@ -169,7 +169,11 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
         pdf_layer.use_text((i + 1).to_string(), font_size, Mm(x_coord), Mm(y_coord), font_bold);
         x_coord += *alignments.get("place").expect("Value defined before");
 
-        pdf_layer.use_text(athlete.gender(), font_size, Mm(x_coord), Mm(y_coord), font);
+        let gender = match athlete.gender().as_ref() {
+            "Staffel" => "S".to_string(),
+            ref x => x.to_string()
+        };
+        pdf_layer.use_text(gender, font_size, Mm(x_coord), Mm(y_coord), font);
         x_coord += *alignments.get("sex").expect("Value defined before");
 
 
@@ -192,7 +196,7 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
 
         let birthyear = match athlete.birth_date() {
             Some(date) => date.year().to_string()[2..4].to_string(),
-            None => "XX".to_string()
+            None => "".to_string()
         };
         pdf_layer.use_text(birthyear, font_size, Mm(x_coord), Mm(y_coord), &font);
         x_coord += *alignments.get("birthyear").expect("Value defined before");
@@ -204,8 +208,8 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
             let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
             let (achievement_string, points_string) = match athlete.get_achievement(discipline_name) {
                 Some(achievement) => {
-                    if achievement.final_result() == "-1,0" {
-                        ("".to_string(), achievement.points(&athlete).to_string())
+                    if achievement.final_result() == "" {
+                        ("".to_string(), "".to_string())
                     } else {
                         let (fmt_final_result, _) = achievement.fmt_final_result();
                         (fmt_final_result, achievement.points(&athlete).to_string())
