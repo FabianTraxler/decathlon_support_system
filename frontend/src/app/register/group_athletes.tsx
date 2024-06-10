@@ -186,7 +186,7 @@ function AddAthlete({ groupName }: { groupName: string }) {
                                 </select>
                                 <select defaultValue={groupName || "U4"} className="max-w-32 sm:max-w-fit shadow-md bg-slate-200" name="group_name">
                                     {youth_groups.map((group_id) => {
-                                        let group_name = "U" + group_id
+                                        let group_name = group_id
                                         return (
                                             <option key={group_id} value={group_name}>{group_name}</option>
                                         )
