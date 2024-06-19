@@ -1,3 +1,4 @@
+use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use std::collections::HashMap;
 use std::error::Error;
@@ -272,6 +273,17 @@ impl TimePlanStorage for InMemoryDB {
                     None => return Err(Box::from("Discipline information not found"))
                 };
 
+                let group_pwds: HashMap<String, String> = match time_table_map.get("Passwords") {
+                    Some(pwds) => match pwds {
+                        Value::Object(group_passwords) => group_passwords
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
+                            .collect(),
+                        _ => return Err(Box::from("Group passwords in invalid format"))
+                    },
+                    None => return Err(Box::from("Group passwords not found"))
+                };
+
                 match time_table_map.get("Groups") {
                     Some(group_value) => {
                         if let Value::Object(group_map) = group_value {
@@ -310,6 +322,17 @@ impl TimePlanStorage for InMemoryDB {
         self.time_group_store.lock().expect("Mutex Lox poised")
             .insert(TimeGroupID::from_time_group(&group), group);
         Ok(String::from("New group stored"))
+    }
+}
+
+#[async_trait]
+impl AuthenticateStorage for InMemoryDB {
+    async fn get_role_and_group(&self, login_info: LoginInfo) -> Option<Role>{
+        !todo!()
+    }
+
+    async fn store_role(&self, role: Role) -> Result<String, Box<dyn Error>>{
+        !todo!()
     }
 }
 

@@ -6,35 +6,38 @@ import { signIn } from '../../auth';
 export class SessionUser implements User {
     _id: string;
     name: string;
-    email: string
+    email: string;
 
-    constructor(pwd: string) {
+    constructor(role: string, group: string) {
         // Get token and role
         this._id = ""
 
-        let role = get_role(pwd)
         // Abuse name and email for simplicity for "role" and "group"
-        this.name = role.role
-        this.email = role.group
+        this.name = role
+        this.email = group
     }
 }
 
-function get_role(pwd: string): {role: string, group: string} {
-  // TODO: Change to get role and group info from backend
-  let role = ""
-  let info = ""
-  if (pwd.includes("Gruppe") || pwd.includes("U")){
-    role = "group" 
-    info = pwd
-  } else {
-    role = pwd 
-    info = pwd
+export async function get_role_and_group(pwd: string): Promise<{role: string, group: string} | null> {
+    // TODO: Use Hashed pwd in frontend and backend 
+
+  let response = await fetch(`http://localhost:3001/api/get_group_and_role`, {
+    method:"POST",
+    body: JSON.stringify({"pwd": pwd})
+    }
+  )
+  if (response.ok) {
+    let data = await response.json()
+
+    return {
+       role: data.role, 
+       group: data.group
+     }
+  }else {
+    return null
   }
 
-  return {
-    role: role, 
-    group: info
-  }
+
 }
 
 
@@ -42,17 +45,10 @@ export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
   ) {
+    formData.append("redirect", "false");
     try {
       await signIn('credentials', formData);
     } catch (error) {
-      if (error instanceof AuthError) {
-        switch (error.type) {
-          case 'CredentialsSignin':
-            return 'Invalid credentials.';
-          default:
-            return 'Something went wrong.';
-        }
-      }
-      throw error;
+      return 'Invalid credentials.';
     }
   } 

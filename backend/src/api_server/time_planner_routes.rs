@@ -1,10 +1,10 @@
 use crate::Storage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
-use actix_web::web::{Query};
+use actix_web::web::Query;
 use serde_json::Value;
 use crate::api_server::parse_json_body;
 use crate::certificate_generation::{GroupID, PDF};
-use crate::time_planner::{TimeGroupID, StartingOrder, DisciplineID};
+use crate::time_planner::{DisciplineID, StartingOrder, TimeGroupID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_discipline);

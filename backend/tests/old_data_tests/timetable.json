@@ -467,5 +467,24 @@
     "Schlagball": "Default",
     "60 Meter Lauf": "Track",
     "60 Meter Hürden": "Track"
+  },
+  "Passwords": {
+    "JG1": {"role": "group", "group": "Gruppe 1"},
+    "JG2": {"role": "group", "group": "Gruppe 2"},
+    "JG3": {"role": "group", "group": "Gruppe 3"},
+    "JG4": {"role": "group", "group": "Gruppe 4"},
+    "JG5": {"role": "group", "group": "Gruppe 5"},
+    "JG6": {"role": "group", "group": "Gruppe 6"},
+    "JG7": {"role": "group", "group": "Gruppe 7"},
+    "JG8": {"role": "group", "group": "Gruppe 8"},
+    "JU16": {"role": "group", "group": "U16"},
+    "JU14": {"role": "group", "group": "U14"},
+    "JU12": {"role": "group", "group": "U12"},
+    "JU10": {"role": "group", "group": "U10"},
+    "JU8": {"role": "group", "group": "U8"},
+    "JU46": {"role": "group", "group": "U4/U6"},
+    "jzk-admin": {"role": "admin", "group": ""},
+    "jzk-zeitnehmung": {"role": "timing", "group": ""},
+    "jzk-anmeldung": {"role": "register", "group": ""}
   }
 }

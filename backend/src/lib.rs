@@ -1,4 +1,5 @@
 use actix_web::web;
+use authenticate::AuthenticateStorage;
 use env_logger;
 use log::info;
 use std::error::Error;
@@ -7,12 +8,13 @@ mod api_server;
 mod certificate_generation;
 mod database;
 mod time_planner;
+mod authenticate;
 
 use certificate_generation::AchievementStorage;
 use time_planner::TimePlanStorage;
 use database::Store;
 
-pub trait Storage: AchievementStorage + TimePlanStorage {
+pub trait Storage: AchievementStorage + TimePlanStorage + AuthenticateStorage {
     fn serialize(&self);
     fn load(&self);
 }

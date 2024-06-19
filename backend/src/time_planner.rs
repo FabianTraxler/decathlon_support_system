@@ -204,7 +204,7 @@ impl TimeGroup {
             default_athlete_order,
             default_run_order,
             disciplines,
-            current_discipline: 0,
+            current_discipline: 0
         };
 
         Ok(group)

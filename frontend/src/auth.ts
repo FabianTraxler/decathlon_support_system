@@ -1,12 +1,20 @@
 "use server"
-import NextAuth  from 'next-auth';
+import NextAuth, { AuthError }  from 'next-auth';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
-import { SessionUser } from './app/lib/user_auth';
+import { SessionUser, get_role_and_group } from './app/lib/user_auth';
 
-function getSession(password: string): SessionUser | null {
-    return new SessionUser(password);
+async function getSession(password: string): Promise<SessionUser> {
+    if (!password){
+        throw new AuthError("Password not given")
+    }
+    let session_info = await get_role_and_group(password).catch(e => console.log(e))
+    if (session_info){
+        return new SessionUser(session_info.role, session_info.group);
+    }else {
+        throw new AuthError("Password not found")
+    }
 }
 
 export const { auth, signIn, signOut } = NextAuth({
@@ -20,11 +28,13 @@ export const { auth, signIn, signOut } = NextAuth({
 
                 if (parsedCredentials.success) {
                     const { password } = parsedCredentials.data;
-                    const session =  getSession(password);
-                    if (!session) return null;
+                    const session =  await getSession(password).catch( e => {
+                        throw e
+                    });
                     return session;
                 }
-                return null;
+                throw new Error("Password in incorrect format")
+
             },
         }),],
 });

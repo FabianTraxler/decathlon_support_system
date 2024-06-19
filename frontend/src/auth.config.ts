@@ -1,4 +1,4 @@
-import type { NextAuthConfig, User } from 'next-auth';
+import { type NextAuthConfig, type User } from 'next-auth';
 import { SessionUser } from './app/lib/user_auth';
  
 export const authConfig = {
@@ -27,7 +27,7 @@ export const authConfig = {
           }
         }
       } else {
-        return false;
+        return false
       }
     }
   },  

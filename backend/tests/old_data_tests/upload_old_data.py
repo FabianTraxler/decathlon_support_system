@@ -454,7 +454,26 @@ def upload_timetable(timetable: Dict) -> bool:
     post_body = timetable
     response = requests.post(url,
                              json=post_body)
-    return response.ok
+    if response.ok: 
+        all_groups_uploaded = True
+        for group_name, disciplines in timetable["Groups"].items():
+            num_disciplines = len(disciplines)
+            competition_type = ""
+            
+            if num_disciplines == 3:
+                competition_type = "Triathlon"
+            elif num_disciplines == 5:
+                competition_type = "Pentathlon"
+            elif num_disciplines == 7:
+                competition_type = "Heptathlon"
+            elif num_disciplines == 10:
+                competition_type = "Decathlon"
+                
+            all_groups_uploaded = all_groups_uploaded & upload_group(group_name, competition_type)
+        return all_groups_uploaded
+    else:
+        return False    
+        
 
 
 def simulate_in_progress(timetable: Dict, selected_time: Dict) -> Tuple[Dict, bool]:

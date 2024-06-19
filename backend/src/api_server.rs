@@ -8,6 +8,7 @@ mod group_routes;
 mod achievement_routes;
 mod certificate_routes;
 mod time_planner_routes;
+mod auth_routes;
 
 #[actix_web::main]
 pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<()> {
@@ -19,6 +20,7 @@ pub async fn start_server(db_handler: web::Data<Box<dyn Storage + Send + Sync>>)
                 .configure(achievement_routes::configure_routes)
                 .configure(certificate_routes::configure_routes)
                 .configure(time_planner_routes::configure_routes)
+                .configure(auth_routes::configure_routes)
                 .route("/status", web::get().to(status))
                 .route("/save_db", web::get().to(save_db)) // TODO: Remove in deployment
                 .route("/load_db", web::get().to(load_db)), // TODO: Remove in deployment

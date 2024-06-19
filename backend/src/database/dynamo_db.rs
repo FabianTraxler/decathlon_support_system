@@ -2,10 +2,11 @@ use std::collections::HashMap;
 use std::error::Error;
 use async_trait::async_trait;
 use serde_json::Value;
+use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
-use aws_sdk_dynamodb::{Client};
-use aws_sdk_dynamodb::types::{AttributeValue};
+use aws_sdk_dynamodb::Client;
+use aws_sdk_dynamodb::types::AttributeValue;
 use crate::database::db_errors::ItemNotFound;
 use crate::{Storage, time_planner};
 
@@ -563,6 +564,40 @@ impl TimePlanStorage for DynamoDB {
                     None => return Err(Box::from("Discipline information not found"))
                 };
 
+                let group_pwds: HashMap<String, Value> = match time_table_map.get("Passwords") {
+                    Some(pwds) => match pwds {
+                        Value::Object(group_passwords) => group_passwords
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.clone()))
+                            .collect(),
+                        _ => return Err(Box::from("Group passwords in invalid format"))
+                    },
+                    None => return Err(Box::from("Group passwords not found"))
+                };
+
+                for (pwd, role) in group_pwds {
+                    let role_info: HashMap<String, String> = match role {
+                        Value::Object(group_passwords) => group_passwords
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "").clone()))
+                            .collect(),
+                        _ => return Err(Box::from("Group passwords in invalid format"))
+                    };
+                    let role_name = match role_info.get("role") {
+                        Some(role_name) => role_name,
+                        None => return Err(Box::from("Group role not given"))
+                    };
+                    let role_group = match role_info.get("group") {
+                        Some(role_group) => role_group,
+                        None => return Err(Box::from("Group name not given"))
+                    };
+
+                    let login_info = Role::build(role_name.clone(), role_group.clone(), pwd);
+
+                    self.store_role(login_info).await?;
+
+                }
+
                 match time_table_map.get("Groups") {
                     Some(group_value) => {
                         if let Value::Object(group_map) = group_value {
@@ -607,6 +642,43 @@ impl TimePlanStorage for DynamoDB {
             .await?;
 
         Ok(String::from("New group stored"))
+    }
+}
+
+#[async_trait]
+impl AuthenticateStorage for DynamoDB {
+    async fn get_role_and_group(&self, login_info: LoginInfo) -> Option<Role>{
+        let item = self.client
+            .get_item()
+            .table_name("authentication")
+            .key(
+                "password",
+                AttributeValue::S(login_info.pwd),
+            )
+            .send()
+            .await;
+
+        match item {
+            Ok(item) => {
+                let item_map = item.item()?;
+                let role: Role = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
+                Some(role)
+            },
+            Err(_) => {
+                None
+            }
+        }
+    }
+
+    async fn store_role(&self, role: Role) -> Result<String, Box<dyn Error>> {
+        let item = serde_dynamo::to_item(role)?;
+        self.client
+            .put_item()
+            .table_name("authentication")
+            .set_item(Some(item))
+            .send()
+            .await?;
+        Ok(String::from("Role inserted or available"))
     }
 }
 
