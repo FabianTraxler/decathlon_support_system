@@ -230,7 +230,9 @@ impl TimeGroup {
             DisciplineState::Active => current_discipline,
             DisciplineState::BeforeStart => current_discipline,
             DisciplineState::Finished => {
-                self.current_discipline += 1;
+                if self.current_discipline < self.disciplines.len() -1 {
+                    self.current_discipline += 1;
+                }
                 &self.disciplines[self.current_discipline]
             }
         }
@@ -240,7 +242,9 @@ impl TimeGroup {
             DisciplineState::Active => &mut self.disciplines[self.current_discipline],
             DisciplineState::BeforeStart => &mut self.disciplines[self.current_discipline],
             DisciplineState::Finished => {
-                self.current_discipline += 1;
+                if self.current_discipline < self.disciplines.len() -1 {
+                    self.current_discipline += 1;
+                }
                 &mut self.disciplines[self.current_discipline]
             }
         }

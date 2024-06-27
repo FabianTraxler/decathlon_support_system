@@ -38,6 +38,14 @@ export default function Disciplines({ group_name }: { group_name: string }) {
                 <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
             </Title_Footer_Layout>
         )
+    } else if (discipline.state == "Finished") {
+        return (
+            <Title_Footer_Layout title={"Wettkampf Ende"}>
+                <div className="flex items-center justify-center">
+                    <div>Alle Disziplinen abgeschlossen. </div>
+                </div>
+            </Title_Footer_Layout>
+        )
     } else {
         return (
             <Title_Footer_Layout title={discipline.name}>
