@@ -2,6 +2,7 @@ import { AuthError } from 'next-auth';
 import { User } from "next-auth"
 import { signIn } from '../../auth';
 
+var backend_domain = process.env.NODE_ENV == "development"? "localhost" : "rust_backend";
 
 export class SessionUser implements User {
     _id: string;
@@ -21,7 +22,7 @@ export class SessionUser implements User {
 export async function get_role_and_group(pwd: string): Promise<{role: string, group: string} | null> {
     // TODO: Use Hashed pwd in frontend and backend 
 
-  let response = await fetch(`http://localhost:3001/api/get_group_and_role`, {
+  let response = await fetch(`http://${backend_domain}:3001/api/get_group_and_role`, {
     method:"POST",
     body: JSON.stringify({"pwd": pwd})
     }
