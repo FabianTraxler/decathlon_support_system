@@ -3,7 +3,7 @@ use std::error::Error;
 use async_trait::async_trait;
 use serde_json::Value;
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
-use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
+use crate::certificate_generation::{achievements, Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use aws_sdk_dynamodb::Client;
 use aws_sdk_dynamodb::types::AttributeValue;
@@ -22,6 +22,36 @@ impl DynamoDB {
         DynamoDB {
             client
         }
+    }
+
+    async fn overwrite_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
+        let athlete_name = achievement_id.athlete_name.ok_or("Athlete name not given")?; 
+
+        let mut update_call = self.client
+            .update_item()
+            .table_name("athlete_store")
+            .key(
+                "athlete_id",
+                AttributeValue::S(athlete_name)
+            );
+
+        update_call = update_call
+            .update_expression(String::from("SET achievements.#achievement_name = :a"))
+            .expression_attribute_names(
+                String::from("#achievement_name"),
+                achievement.name()
+            )
+            .expression_attribute_values(
+                String::from(":a"),
+                AttributeValue::M(serde_dynamo::to_item(achievement)
+                    .or(Err("Achievement could not be converted to dynamoDB json"))?)
+            );
+
+        update_call
+            .send()
+            .await?;
+
+        Ok(String::from("Achievement added"))
     }
 }
 
@@ -474,32 +504,11 @@ impl AchievementStorage for DynamoDB {
     }
 
     async fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
-        let athlete_name = achievement_id.athlete_name.ok_or("Athlete name not given")?;
-        let mut update_call = self.client
-            .update_item()
-            .table_name("athlete_store")
-            .key(
-                "athlete_id",
-                AttributeValue::S(athlete_name)
-            );
+        if let Some(_) = self.get_achievement(&achievement_id).await {
+            return Err(Box::from("Achievement already exists"));
+        }
 
-        update_call = update_call
-            .update_expression(String::from("SET achievements.#achievement_name = :a"))
-            .expression_attribute_names(
-                String::from("#achievement_name"),
-                achievement.name()
-            )
-            .expression_attribute_values(
-                String::from(":a"),
-                AttributeValue::M(serde_dynamo::to_item(achievement)
-                    .or(Err("Achievement could not be converted to dynamoDB json"))?)
-            );
-
-        update_call
-            .send()
-            .await?;
-
-        Ok(String::from("Achievement added"))
+        self.overwrite_achievement(achievement_id, achievement).await
     }
 
     async fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>> {
@@ -508,7 +517,7 @@ impl AchievementStorage for DynamoDB {
             .ok_or(ItemNotFound::new("Key not found", "404"))?;
         achievement.update_values(json_string)?;
 
-        self.write_achievement(achievement_id, achievement).await?;
+        self.overwrite_achievement(achievement_id, achievement).await?;
         Ok(String::from("Achievement updated"))
     }
 }
