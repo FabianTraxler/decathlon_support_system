@@ -118,7 +118,16 @@ async fn add_athlete_to_group(athlete_str: &str, data: web::Data<Box<dyn Storage
             let name = map.get("name").ok_or("Athlete name not specified")?;
             let surname = map.get("surname").ok_or("Athlete surname not specified")?;
 
-            let json_string = format!(r#"{{"athlete_ids": [{{"name": {}, "surname": {}}}]}}"#, name, surname);
+            let name = match name {
+                serde_json::Value::String(a) => a.trim(),
+                _ => ""
+            };
+            let surname = match surname {
+                serde_json::Value::String(a) => a.trim(),
+                _ => ""
+            };
+
+            let json_string = format!(r#"{{"athlete_ids": [{{"name": "{}", "surname": "{}"}}]}}"#, name, surname);
 
             match data.update_group(group_id, json_string.as_str()).await {
                 Ok(msg) => Ok(String::from(msg)),

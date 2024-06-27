@@ -37,8 +37,8 @@ impl Athlete {
         total_points: Option<u32>
     ) -> Self {
         Athlete {
-            name: name.to_string(),
-            surname: surname.to_string(),
+            name: name.trim().to_string(),
+            surname: surname.trim().to_string(),
             birth_date,
             gender: gender.to_string(),
             achievements,
@@ -50,7 +50,10 @@ impl Athlete {
 
     pub fn from_json(json_string: &str) -> Result<Athlete, serde_json::error::Error> {
         let processed_content = preprocess_json(json_string);
-        let athlete: Athlete = serde_json::from_str(processed_content.as_str())?;
+        let mut athlete: Athlete = serde_json::from_str(processed_content.as_str())?;
+        athlete.name = athlete.name.trim().to_string();
+        athlete.surname = athlete.surname.trim().to_string();
+
         Ok(athlete)
     }
 
