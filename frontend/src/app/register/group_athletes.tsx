@@ -126,6 +126,10 @@ function AddAthlete({ groupName }: { groupName: string }) {
                     }
                     values.push(["competition_type", comptetion_name])
                 }
+                if (key == "birth_date"){
+                    let date = new Date(parseInt(string_val), 1, 1, 0,0)
+                    values.push(["birth_date", date.getTime() / 1000])
+                }
             }
         })
 
@@ -176,14 +180,17 @@ function AddAthlete({ groupName }: { groupName: string }) {
                         <div className="flex flex-col">
                             <div className="flex flex-row justify-between">
                                 <label>Geschlecht: </label>
+                                <label>JG: </label>
                                 <label>Gruppe: </label>
                             </div>
                             <div className="flex flex-row justify-between">
-                                <select className="max-w-32 sm:max-w-fit shadow-md bg-slate-200" name="gender">
+                                <select className="max-w-30 sm:max-w-fit shadow-md bg-slate-200" name="gender">
                                     <option value="W">W</option>
                                     <option value="M">M</option>
                                     <option value="M">Diverse</option>
                                 </select>
+                                <input type="number" className="w-16 max-w-30 shadow-md bg-slate-200" name="birth_date">
+                                </input>
                                 <select defaultValue={groupName || "U4"} className="max-w-32 sm:max-w-fit shadow-md bg-slate-200" name="group_name">
                                     {youth_groups.map((group_id) => {
                                         let group_name = group_id
