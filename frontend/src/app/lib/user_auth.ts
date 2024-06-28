@@ -43,7 +43,6 @@ export async function get_role_and_group(pwd: string): Promise<{role: string, gr
 
 
 export async function authenticate(
-    prevState: string | undefined,
     formData: FormData,
   ) {
     formData.append("redirect", "false");
