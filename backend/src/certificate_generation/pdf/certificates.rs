@@ -148,8 +148,8 @@ fn new_triathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page:
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
     let font_size = 36.0;
-    current_layer.use_text(format!("STW Schulschluss"), font_size, Mm(50.0), Mm(230.0), &font_bold);
-    current_layer.use_text("Meeting", font_size, Mm(80.0), Mm(215.0), &font_bold);
+    current_layer.use_text(format!("{COMPETITION_NUMBER}. Favoritner"), font_size, Mm(60.0), Mm(230.0), &font_bold);
+    current_layer.use_text("Jedermann Zehnkampf", font_size, Mm(40.0), Mm(215.0), &font_bold);
     current_layer.use_text(format!("{DATE}"), 20.0, Mm(65.0), Mm(205.0), &font);
 
     add_logo(current_layer.clone(), false);
@@ -194,8 +194,8 @@ fn new_pentathlon_certificate(athlete: &Athlete, pdf: PdfDocumentReference, page
     // Write JZK Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
     let font_size = 36.0;
-    current_layer.use_text(format!("STW Schulschluss"), font_size, Mm(50.0), Mm(230.0), &font_bold);
-    current_layer.use_text("Meeting", font_size, Mm(80.0), Mm(215.0), &font_bold);
+    current_layer.use_text(format!("{COMPETITION_NUMBER}. Favoritner"), font_size, Mm(60.0), Mm(230.0), &font_bold);
+    current_layer.use_text("Jedermann Zehnkampf", font_size, Mm(40.0), Mm(215.0), &font_bold);
     current_layer.use_text(format!("{DATE}"), 20.0, Mm(65.0), Mm(205.0), &font);
 
     add_logo(current_layer.clone(), false);
