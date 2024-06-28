@@ -42,24 +42,24 @@ export default function LoginForm({ authenticate_fn }: { authenticate_fn: (formD
         }
     }
 
-    if (state.login_state == "loading" || state.login_state == "logging_in") {
-        return (
-            <div className="flex w-full h-full justify-center items-center">
-                <LoadingAnimation></LoadingAnimation>
-            </div>
-        )
-    }
-
 
     return (
         <div className="flex flex-col items-center w-full h-full">
             <div className="h-1/2 flex items-center">
-                <Image className="flex"
-                    src="./logo_stw.svg"
-                    width={200}
-                    height={200}
-                    alt="Logo-STW"
-                ></Image>
+                {(state.login_state == "loading" || state.login_state == "logging_in") ?
+                    <div className="flex w-72 h-72 justify-center items-center">
+                        <LoadingAnimation></LoadingAnimation>
+                    </div>
+                    :
+                    <Image className="flex"
+                        src="./logo_stw.svg"
+                        width={200}
+                        height={200}
+                        alt="Logo-STW"
+                    ></Image>
+                }
+
+
             </div>
 
             <div className="h-1/2 flex items-start">
