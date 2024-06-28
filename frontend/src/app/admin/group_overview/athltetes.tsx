@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
-import { LoadingButton } from '@/app/lib/loading';
+import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
-import { nan } from 'zod';
+import { PopUp } from '@/app/lib/achievement_edit/popup';
 
 export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(false);
@@ -34,8 +34,9 @@ export default function Athletes({ group_name }: { group_name: string }) {
 
 function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
+  const [popupOpen, setPopupOpen] = useState(false)
   var achievements = new Map(Object.entries(athlete.achievements));
-  const birthdate =new Date(athlete.birth_date * 1000);;
+  const birthdate = new Date(athlete.birth_date * 1000);;
   const full_name = athlete.name + "_" + athlete.surname;
   const athlete_certificate_print = function (onStop: () => void) {
     fetch(`/api/certificate?name=${athlete.name}&surname=${athlete.surname}`)
@@ -64,10 +65,12 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
       });
   }
 
+
+
   return (
     <tr key={full_name}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
-      <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.name + " " + athlete.surname}</td>
+      <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear() || ""}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
       {disciplines.map(([name, type]) => {
@@ -84,7 +87,146 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
           </svg>
         </LoadingButton>
       </td>
+      {
+        popupOpen &&
+        <PopUp title="Athleten Einstellungen" onClose={() => setPopupOpen(false)}>
+          <AthleteEditPopup athlete={athlete}></AthleteEditPopup>
+
+        </PopUp>
+      }
     </tr>
+  )
+}
+
+function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
+  const birthdate = new Date(athlete.birth_date * 1000);
+  const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
+  const [birthyearState, changeBirthyearState] = useState<string>("")
+  const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
+  const [birthyearstartingNumber, changestartingNumber] = useState<string>("")
+
+  const deleteAthlete = function () {
+    if (confirm("Athlet:in löschen?")) {
+      fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+        method: "DELETE"
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+          }
+          alert("Athlet:in gelöscht")
+        })
+        .catch(error => {
+          console.error('Error deleting Athlete:', error);
+        });
+    }
+  }
+  const handleStartingNumberChange = function (e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value.length == 0) {
+      changeStartingNumber("")
+    } else {
+      let starting_number = parseInt(e.target.value);
+      if (starting_number) {
+        changeStartingNumber(starting_number)
+      } else {
+        changeStartingNumber("")
+      }
+    }
+
+  }
+  const handleBirthyearChange = function (e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value.length == 0) {
+      changeBirthyear("")
+    } else {
+      let birth_year = parseInt(e.target.value);
+      if (birth_year) {
+        changeBirthyear(birth_year)
+      } else {
+        changeBirthyear("")
+      }
+    }
+  }
+
+  const saveStartingNumber = function (stop_load: () => void) {
+    fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        starting_number: startingNumber
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+        }
+        stop_load()
+      })
+      .catch(error => {
+        console.error('Error deleting Athlete:', error);
+      });
+  }
+
+  const saveBirhyear = function (stop_load: () => void) {
+    let birth_year = birthyear;
+    if (typeof birth_year == "string") {
+      birth_year = 0
+    }
+    birthdate.setFullYear(birth_year)
+    let birth_date_utc_sec = birthdate.getTime() / 1000;
+    fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        birth_date: birth_date_utc_sec
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+        }
+        stop_load()
+      })
+      .catch(error => {
+        console.error('Error deleting Athlete:', error);
+      });
+  }
+
+  return (
+    <div className='p-2'>
+      <div className='flex flex-row'>
+        <div className='mr-2 font-bold'>Name:</div>
+        <div>{athlete.name} {athlete.surname}</div>
+      </div>
+      <div className='grid grid-cols-3'>
+        <div className='mr-2 font-bold'>Startnummer:</div>
+        <input
+          className={'border-black border rounded w-16 text-center shadow-md ' + (startingNumber == "-" && "bg-red-200")}
+          value={startingNumber}
+          onChange={handleStartingNumberChange}
+        ></input>
+        <div className='text-lg'>
+          <LoadingButton size={"2"} onclick={saveStartingNumber} >&#9989;</LoadingButton>
+        </div>
+      </div>
+      <div className='grid grid-cols-3'>
+        <div className='mr-2 font-bold'>Geburtsjahr:</div>
+        <input
+          className='border-black border rounded w-16 text-center shadow-md'
+          value={birthyear}
+          onChange={handleBirthyearChange}
+        ></input>
+        <div className='text-lg'>
+          <LoadingButton size={"2"} onclick={saveBirhyear} >&#9989;</LoadingButton>
+        </div>
+      </div>
+      <div className='flex justify-end mt-5'>
+        <div
+          className='p-2 font-bold shadow-lg bg-red-500 rounded-md'
+          onClick={deleteAthlete}
+        >
+          Löschen
+        </div>
+      </div>
+
+    </div>
   )
 }
 
