@@ -1,15 +1,16 @@
+use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
+use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID,
+    AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore,
+};
+use crate::database::db_errors::ItemNotFound;
+use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
+use crate::{time_planner, Storage};
+use async_trait::async_trait;
+use aws_sdk_dynamodb::types::AttributeValue;
+use aws_sdk_dynamodb::Client;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
-use async_trait::async_trait;
-use serde_json::Value;
-use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
-use crate::certificate_generation::{achievements, Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
-use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
-use aws_sdk_dynamodb::Client;
-use aws_sdk_dynamodb::types::AttributeValue;
-use crate::database::db_errors::ItemNotFound;
-use crate::{Storage, time_planner};
-
 
 pub struct DynamoDB {
     client: Client,
@@ -19,37 +20,36 @@ impl DynamoDB {
     pub fn new() -> Self {
         let config = futures::executor::block_on(aws_config::load_from_env());
         let client = Client::new(&config);
-        DynamoDB {
-            client
-        }
+        DynamoDB { client }
     }
 
-    async fn overwrite_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
-        let athlete_name = achievement_id.athlete_name.ok_or("Athlete name not given")?; 
+    async fn overwrite_achievement(
+        &self,
+        achievement_id: AchievementID,
+        achievement: Achievement,
+    ) -> Result<String, Box<dyn Error>> {
+        let athlete_name = achievement_id
+            .athlete_name
+            .ok_or("Athlete name not given")?;
 
-        let mut update_call = self.client
+        let mut update_call = self
+            .client
             .update_item()
             .table_name("athlete_store")
-            .key(
-                "athlete_id",
-                AttributeValue::S(athlete_name)
-            );
+            .key("athlete_id", AttributeValue::S(athlete_name));
 
         update_call = update_call
             .update_expression(String::from("SET achievements.#achievement_name = :a"))
-            .expression_attribute_names(
-                String::from("#achievement_name"),
-                achievement.name()
-            )
+            .expression_attribute_names(String::from("#achievement_name"), achievement.name())
             .expression_attribute_values(
                 String::from(":a"),
-                AttributeValue::M(serde_dynamo::to_item(achievement)
-                    .or(Err("Achievement could not be converted to dynamoDB json"))?)
+                AttributeValue::M(
+                    serde_dynamo::to_item(achievement)
+                        .or(Err("Achievement could not be converted to dynamoDB json"))?,
+                ),
             );
 
-        update_call
-            .send()
-            .await?;
+        update_call.send().await?;
 
         Ok(String::from("Achievement added"))
     }
@@ -59,13 +59,11 @@ impl DynamoDB {
 impl AchievementStorage for DynamoDB {
     async fn get_athlete(&self, athlete_id: &AthleteID) -> Option<Athlete> {
         let athlete_name = athlete_id.full_name();
-        let item = self.client
+        let item = self
+            .client
             .get_item()
             .table_name("athlete_store")
-            .key(
-                "athlete_id",
-                AttributeValue::S(athlete_name),
-            )
+            .key("athlete_id", AttributeValue::S(athlete_name))
             .send()
             .await;
 
@@ -74,35 +72,33 @@ impl AchievementStorage for DynamoDB {
                 let item_map = item.item()?;
                 let athlete: Athlete = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
                 Some(athlete)
-            },
-            Err(_) => {
-                None
             }
+            Err(_) => None,
         }
     }
 
     async fn get_athletes(&self) -> HashMap<String, Vec<Athlete>> {
-        let results = self.client
-            .scan()
-            .table_name("group_store")
-            .send()
-            .await;
+        let results = self.client.scan().table_name("group_store").send().await;
 
         let group_ids: Vec<GroupID> = match results {
             Ok(items) => {
                 if let Some(items) = items.items {
-                    items.iter().map(|v| {
-                        let group_name = v.get("name")
-                            .expect("Name should be available since it is primary key")
-                            .as_s()
-                            .expect("Name should be convertable to string");
-                        GroupID::new(group_name)
-                    } ).collect()
+                    items
+                        .iter()
+                        .map(|v| {
+                            let group_name = v
+                                .get("name")
+                                .expect("Name should be available since it is primary key")
+                                .as_s()
+                                .expect("Name should be convertable to string");
+                            GroupID::new(group_name)
+                        })
+                        .collect()
                 } else {
                     vec![]
                 }
-            },
-            Err(_) => vec![]
+            }
+            Err(_) => vec![],
         };
 
         let mut groups = HashMap::new();
@@ -110,186 +106,252 @@ impl AchievementStorage for DynamoDB {
             match self.get_group(&group_id).await {
                 Some(group) => {
                     groups.insert(group.name().to_string(), group.athletes().clone());
-                },
+                }
                 None => {}
             }
         }
         groups
     }
 
-    async fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>> {
+    async fn write_athlete(
+        &self,
+        athlete_id: AthleteID,
+        athlete: Athlete,
+    ) -> Result<String, Box<dyn Error>> {
         let athlete_name = athlete_id.full_name();
         let item = serde_dynamo::to_item(athlete)?;
         self.client
             .put_item()
             .table_name("athlete_store")
             .set_item(Some(item))
-            .item(
-                "athlete_id",
-                AttributeValue::S(athlete_name),
-            )
+            .item("athlete_id", AttributeValue::S(athlete_name))
             .send()
             .await?;
 
-        Ok(String::from("New athlete inserted or old athlete overwritten"))
+        Ok(String::from(
+            "New athlete inserted or old athlete overwritten",
+        ))
     }
 
-    async fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>> {
-
+    async fn update_athlete(
+        &self,
+        athlete_id: AthleteID,
+        json_string: &str,
+    ) -> Result<String, Box<dyn Error>> {
         if let None = self.get_athlete(&athlete_id).await {
             return Err(Box::from("Athlete not found. Insert new athlete"));
         }
 
         let athlete_name = athlete_id.full_name();
-        let mut update_call = self.client
+        let mut update_call = self
+            .client
             .update_item()
             .table_name("athlete_store")
-            .key(
-                "athlete_id",
-                AttributeValue::S(athlete_name)
-            );
+            .key("athlete_id", AttributeValue::S(athlete_name));
 
         let json_value: Value = serde_json::from_str(json_string)?;
 
         let mut update_expressions: Vec<String> = vec![];
 
         if let Some(_) = json_value.get("achievements").and_then(Value::as_i64) {
-            return Err("Achievements not updated. Please use /achievement routes to update achievements")?;
+            return Err(
+                "Achievements not updated. Please use /achievement routes to update achievements",
+            )?;
         }
         if let Some(timestamp) = json_value.get("birth_date").and_then(Value::as_i64) {
             update_expressions.push(String::from(" birth_date = :b"));
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":b"),
-                    AttributeValue::N(timestamp.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":b"),
+                AttributeValue::N(timestamp.to_string()),
+            );
         }
 
         // Update specific fields from JSON to struct
         if let Some(name) = json_value.get("name") {
             // TODO: Check behavior if name if updated and does not match athlete_id anymore
-            let name_str = Value::as_str(name)
-                .ok_or("Invalid format for gender. Expected string")?;
+            let name_str =
+                Value::as_str(name).ok_or("Invalid format for gender. Expected string")?;
             update_expressions.push(String::from(" name = :n"));
 
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":n"),
-                    AttributeValue::S(name_str.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":n"),
+                AttributeValue::S(name_str.to_string()),
+            );
         }
         if let Some(surname) = json_value.get("surname") {
             // TODO: Check behavior if name if updated and does not match athlete_id anymore
-            let surname_str = Value::as_str(surname)
-                .ok_or("Invalid format for gender. Expected string")?;
+            let surname_str =
+                Value::as_str(surname).ok_or("Invalid format for gender. Expected string")?;
             update_expressions.push(String::from(" surname = :s"));
 
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":s"),
-                    AttributeValue::S(surname_str.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":s"),
+                AttributeValue::S(surname_str.to_string()),
+            );
         }
         if let Some(gender) = json_value.get("gender") {
-            let gender_str = Value::as_str(gender)
-                .ok_or("Invalid format for gender. Expected string")?;
+            let gender_str =
+                Value::as_str(gender).ok_or("Invalid format for gender. Expected string")?;
             update_expressions.push(String::from(" gender=:g"));
 
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":g"),
-                    AttributeValue::S(gender_str.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":g"),
+                AttributeValue::S(gender_str.to_string()),
+            );
         }
         if let Some(competition_type) = json_value.get("competition_type") {
-            let competition_type_str = Value::as_str(competition_type)
-                .ok_or("Invalid format for competition_type.")?;
+            let competition_type_str =
+                Value::as_str(competition_type).ok_or("Invalid format for competition_type.")?;
             update_expressions.push(String::from(" competition_type=:c"));
 
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":c"),
-                    AttributeValue::S(competition_type_str.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":c"),
+                AttributeValue::S(competition_type_str.to_string()),
+            );
         }
         if let Some(starting_number) = json_value.get("starting_number") {
             update_expressions.push(String::from(" starting_number = :st"));
 
             match Value::as_i64(starting_number) {
                 Some(val) => {
-                    update_call = update_call
-                        .expression_attribute_values(
-                            String::from(":st"),
-                            AttributeValue::N(val.to_string())
-                        );
-                },
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":st"),
+                        AttributeValue::N(val.to_string()),
+                    );
+                }
                 None => {
-                    update_call = update_call
-                        .expression_attribute_values(
-                            String::from(":st"),
-                            AttributeValue::Null(true)
-                        );
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":st"),
+                        AttributeValue::Null(true),
+                    );
                 }
             }
         }
 
         if update_expressions.len() > 0 {
-            update_call = update_call
-                .update_expression(format!("SET {}", update_expressions.join(",")));
+            update_call =
+                update_call.update_expression(format!("SET {}", update_expressions.join(",")));
         }
 
-        update_call
-            .send()
-            .await?;
+        update_call.send().await?;
 
         Ok(String::from("Athlete updated"))
     }
 
+    async fn delete_athlete(&self, athlete_id: AthleteID) -> Result<String, Box<dyn Error>> {
+        let athlete = self.get_athlete(&athlete_id).await.ok_or("Athlete not found")?;
+        // Delete Athlete from athlete_store
+        // self.client
+        //     .delete_item()
+        //     .table_name("athlete_store")
+        //     .key("athlete_id", AttributeValue::S(athlete_id.full_name().into()))
+        //     .send().await?;
+
+        // Delete athlete from group_store
+        // First get all groups
+        let mut athlete_map: HashMap<String, AttributeValue> = HashMap::new();
+        athlete_map.insert("name".to_string(), AttributeValue::S(athlete_id.name()));
+        athlete_map.insert("surname".to_string(), AttributeValue::S(athlete_id.surname()));
+
+        let groups = match self.client
+            .scan()
+            .table_name("group_store")
+            .send()
+            .await{
+                Ok(groups) => {
+                    match groups.items{
+                        Some(groups) => Ok(groups),
+                        None => Err(format!("No groups found"))
+                    }
+                },
+                Err(e) => Err(format!("Error loading groups: {}", e))
+            }?;
+
+        // Iterate over groups until athlete is found
+        for group_map in groups {
+            let mut group: GroupStore = serde_dynamo::from_item(group_map.clone())?;
+            let group_name = group.name.clone();
+            // delete athlete from group 
+            if group.athlete_ids.remove(&athlete_id){
+                // store updated group to db
+                let group_id = GroupID::from_group_store(&group);
+                self.write_group_store(group_id, group).await?;
+
+
+                // delete athlete from time_group_store in athlete_orders of all disciplines and defaults
+                match self.get_time_group(&TimeGroupID::new(group_name)).await {
+                    Some(mut time_group) => {
+                        // Time group already available -> Update athletes
+                        let time_athlete = time_planner::Athlete::new(
+                            athlete_id.name().to_string(),
+                            athlete_id.surname().to_string(),
+                            Some(athlete.age_group())
+                        );
+                        time_group.delete_athlete(time_athlete)?;
+                        self.store_time_group(time_group).await
+                    }
+                    None => Ok(String::from("Time Group not found")), // Do nothing
+                }?;
+
+                return Ok("Athelte deleted".to_string())
+            }
+        }
+
+        Err(Box::from("Athlete not found in any group".to_string()))
+
+
+    }
+
     async fn get_group(&self, group_id: &GroupID) -> Option<Group> {
         let athlete_name = group_id.name.clone()?;
-        let item = self.client
+        let item = self
+            .client
             .get_item()
             .table_name("group_store")
-            .key(
-                "name",
-                AttributeValue::S(athlete_name),
-            )
+            .key("name", AttributeValue::S(athlete_name))
             .send();
 
-        let all_athletes = self.client
-            .scan()
-            .table_name("athlete_store")
-            .send();
-
+        let all_athletes = self.client.scan().table_name("athlete_store").send();
 
         match item.await {
             Ok(item) => {
                 let item_map = item.item()?;
-                let group_store: GroupStore = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
+                let group_store: GroupStore =
+                    serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
                 let mut athletes = Vec::new();
                 for athlete_data in all_athletes.await.ok()?.items() {
                     let athlete_name = athlete_data.get(&"name".to_string())?.as_s().ok()?;
                     let athlete_surname = athlete_data.get(&"surname".to_string())?.as_s().ok()?;
                     let athlete_id = AthleteID::new(athlete_name, athlete_surname);
                     if group_store.athlete_ids.contains(&athlete_id) {
-                        let athlete: Athlete = serde_dynamo::from_item(athlete_data.clone()).ok()?;
+                        let athlete: Athlete =
+                            serde_dynamo::from_item(athlete_data.clone()).ok()?;
                         athletes.push(athlete);
                     }
                 }
 
-                Some(Group::new(group_store.name.as_str(), athletes, group_store.competition_type))
-            },
-            Err(_) => {
-                None
+                Some(Group::new(
+                    group_store.name.as_str(),
+                    athletes,
+                    group_store.competition_type,
+                ))
             }
+            Err(_) => None,
         }
     }
 
-    async fn write_group_store(&self, _: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>> {
+    async fn write_group_store(
+        &self,
+        _: GroupID,
+        group_store: GroupStore,
+    ) -> Result<String, Box<dyn Error>> {
         // Check if all athletes exists
         for athlete_id in &group_store.athlete_ids {
             if let None = self.get_athlete(athlete_id).await {
-                return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id)));
+                return Err(Box::from(format!(
+                    "Athlete with ID {:?} not found",
+                    athlete_id
+                )));
             }
         }
         let item = serde_dynamo::to_item(group_store)?;
@@ -307,28 +369,33 @@ impl AchievementStorage for DynamoDB {
         let group_store = GroupStore {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
-            competition_type: group.competition_type()
+            competition_type: group.competition_type(),
         };
 
         self.write_group_store(group_id, group_store).await
     }
 
-    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
-        let mut group = self.get_group(&group_id).await.ok_or(ItemNotFound::new("Key not found", "404"))?;
+    async fn update_group(
+        &self,
+        group_id: GroupID,
+        json_string: &str,
+    ) -> Result<String, Box<dyn Error>> {
+        let mut group = self
+            .get_group(&group_id)
+            .await
+            .ok_or(ItemNotFound::new("Key not found", "404"))?;
 
         let old_athletes = group.athletes().clone();
-        let group_name = match group_id.name.clone(){
+        let group_name = match group_id.name.clone() {
             Some(name) => Ok(name),
-            None => Err("Group name not suuplied")
+            None => Err("Group name not suuplied"),
         }?;
 
-        let mut update_call = self.client
+        let mut update_call = self
+            .client
             .update_item()
             .table_name("group_store")
-            .key(
-                "name",
-                AttributeValue::S(group_name)
-            );
+            .key("name", AttributeValue::S(group_name));
 
         let json_value: Value = serde_json::from_str(json_string)?;
 
@@ -338,72 +405,88 @@ impl AchievementStorage for DynamoDB {
         if let Some(name) = json_value.get("name").and_then(Value::as_str) {
             update_expressions.push(String::from(" name = :n"));
 
-            update_call = update_call
-                .expression_attribute_values(
-                    String::from(":n"),
-                    AttributeValue::S(name.to_string())
-                );
+            update_call = update_call.expression_attribute_values(
+                String::from(":n"),
+                AttributeValue::S(name.to_string()),
+            );
         }
         if let Some(athletes) = json_value.get("athletes").and_then(Value::as_array) {
             for athlete_value in athletes {
                 match serde_json::from_value(athlete_value.clone()) {
-                    Ok(athlete) => {group.add_athlete(athlete); }
-                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
+                    Ok(athlete) => {
+                        group.add_athlete(athlete);
+                    }
+                    Err(e) => {
+                        return Err(Box::try_from(e).expect("Parsing Error should be convertible"));
+                    }
                 }
             }
             update_expressions.push(String::from(" athletes = :a"));
 
             let mut athlete_values = vec![];
-            for athlete in group.athletes(){
+            for athlete in group.athletes() {
                 let mut athlete_map = HashMap::new();
-                athlete_map.insert("name".to_string(), AttributeValue::S(athlete.name().to_string()));
-                athlete_map.insert("surname".to_string(), AttributeValue::S(athlete.surname().to_string()));
+                athlete_map.insert(
+                    "name".to_string(),
+                    AttributeValue::S(athlete.name().to_string()),
+                );
+                athlete_map.insert(
+                    "surname".to_string(),
+                    AttributeValue::S(athlete.surname().to_string()),
+                );
                 athlete_values.push(AttributeValue::M(athlete_map));
             }
 
             update_call = update_call
-                .expression_attribute_values(
-                    String::from(":a"),
-                    AttributeValue::L(athlete_values)
-                );
+                .expression_attribute_values(String::from(":a"), AttributeValue::L(athlete_values));
         }
         if let Some(athlete_ids) = json_value.get("athlete_ids").and_then(Value::as_array) {
             for athlete_id_value in athlete_ids {
                 match serde_json::from_value(athlete_id_value.clone()) {
                     Ok(athlete_id) => {
                         match self.get_athlete(&athlete_id).await {
-                            Some(athlete) => { group.add_athlete(athlete); }
-                            None => { return Err(Box::from(format!("Athlete with ID {:?} not found", athlete_id))); }
+                            Some(athlete) => {
+                                group.add_athlete(athlete);
+                            }
+                            None => {
+                                return Err(Box::from(format!(
+                                    "Athlete with ID {:?} not found",
+                                    athlete_id
+                                )));
+                            }
                         };
                     }
-                    Err(e) => { return Err(Box::try_from(e).expect("Parsing Error should be convertible")); }
+                    Err(e) => {
+                        return Err(Box::try_from(e).expect("Parsing Error should be convertible"));
+                    }
                 }
             }
             update_expressions.push(String::from(" athletes = :a"));
 
             let mut athlete_values = vec![];
-            for athlete in group.athletes(){
+            for athlete in group.athletes() {
                 let mut athlete_map = HashMap::new();
-                athlete_map.insert("name".to_string(), AttributeValue::S(athlete.name().to_string()));
-                athlete_map.insert("surname".to_string(), AttributeValue::S(athlete.surname().to_string()));
+                athlete_map.insert(
+                    "name".to_string(),
+                    AttributeValue::S(athlete.name().to_string()),
+                );
+                athlete_map.insert(
+                    "surname".to_string(),
+                    AttributeValue::S(athlete.surname().to_string()),
+                );
                 athlete_values.push(AttributeValue::M(athlete_map));
             }
 
             update_call = update_call
-                .expression_attribute_values(
-                    String::from(":a"),
-                    AttributeValue::L(athlete_values)
-                );
+                .expression_attribute_values(String::from(":a"), AttributeValue::L(athlete_values));
         }
 
         if update_expressions.len() > 0 {
-            update_call = update_call
-                .update_expression(format!("SET {}", update_expressions.join(",")));
+            update_call =
+                update_call.update_expression(format!("SET {}", update_expressions.join(",")));
         }
 
-        update_call
-            .send()
-            .await?;
+        update_call.send().await?;
 
         let all_athletes = group.athletes().clone();
         let group_name = group.name().to_string();
@@ -416,14 +499,18 @@ impl AchievementStorage for DynamoDB {
                     let new_athletes = all_athletes[old_athletes.len()..].to_vec();
                     let a = &new_athletes
                         .iter()
-                        .map(|athlete| time_planner::Athlete::new(athlete.name().to_string(),
-                                                                  athlete.surname().to_string(),
-                                                                  Some(athlete.age_group())))
+                        .map(|athlete| {
+                            time_planner::Athlete::new(
+                                athlete.name().to_string(),
+                                athlete.surname().to_string(),
+                                Some(athlete.age_group()),
+                            )
+                        })
                         .collect();
                     time_group.update_athletes(a)?;
                     self.store_time_group(time_group).await
                 }
-                None => Ok(String::from("")) // Do nothing
+                None => Ok(String::from("")), // Do nothing
             }?;
         }
 
@@ -435,26 +522,29 @@ impl AchievementStorage for DynamoDB {
             if let Ok(age_group_selector) = AgeGroupSelector::build(age_identifier) {
                 let mut athletes: Vec<Athlete> = Vec::new();
 
-                let all_athletes: Vec<Option<Athlete>> = match self.client
-                    .scan()
-                    .table_name("athlete_store")
-                    .send()
-                    .await{
-                    Ok(items) => {
-                        if let Some(items) = items.items {
-                            Some(items.iter().map(|v| {
-                                let athlete: Option<Athlete> = serde_dynamo::from_item(v.clone()).unwrap_or(None);
-                                athlete
-                            }).collect())
-                        } else {
+                let all_athletes: Vec<Option<Athlete>> =
+                    match self.client.scan().table_name("athlete_store").send().await {
+                        Ok(items) => {
+                            if let Some(items) = items.items {
+                                Some(
+                                    items
+                                        .iter()
+                                        .map(|v| {
+                                            let athlete: Option<Athlete> =
+                                                serde_dynamo::from_item(v.clone()).unwrap_or(None);
+                                            athlete
+                                        })
+                                        .collect(),
+                                )
+                            } else {
+                                None
+                            }
+                        }
+                        Err(e) => {
+                            println!("{:?}", e);
                             None
                         }
-                    },
-                    Err(e) => {
-                        println!("{:?}", e);
-                        None
-                    }
-                }?;
+                    }?;
 
                 for athlete_option in all_athletes {
                     if let Some(athlete) = athlete_option {
@@ -462,7 +552,6 @@ impl AchievementStorage for DynamoDB {
                             athletes.push(athlete.clone());
                         }
                     }
-
                 }
                 Some(AgeGroup::new(&age_identifier, athletes))
             } else {
@@ -474,50 +563,68 @@ impl AchievementStorage for DynamoDB {
     }
 
     async fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement> {
-        let athlete = self.get_athlete(&achievement_id.athlete_id().expect("Athlete ID should be available.")).await?;
-        athlete.get_achievement(achievement_id.name.as_str()).cloned()
+        let athlete = self
+            .get_athlete(
+                &achievement_id
+                    .athlete_id()
+                    .expect("Athlete ID should be available."),
+            )
+            .await?;
+        athlete
+            .get_achievement(achievement_id.name.as_str())
+            .cloned()
     }
 
-    async fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>> {
-        let athlete_name = achievement_id.clone().athlete_name.ok_or("Athlete name not given")?;
+    async fn delete_achievement(
+        &self,
+        achievement_id: &AchievementID,
+    ) -> Result<String, Box<dyn Error>> {
+        let athlete_name = achievement_id
+            .clone()
+            .athlete_name
+            .ok_or("Athlete name not given")?;
 
-        let mut update_call = self.client
+        let mut update_call = self
+            .client
             .update_item()
             .table_name("athlete_store")
-            .key(
-                "athlete_id",
-                AttributeValue::S(athlete_name)
-            );
+            .key("athlete_id", AttributeValue::S(athlete_name));
 
         update_call = update_call
             .update_expression(String::from("REMOVE achievements.#name"))
-            .expression_attribute_names(
-                String::from("#name"),
-                achievement_id.name.clone()
-            );
+            .expression_attribute_names(String::from("#name"), achievement_id.name.clone());
 
-        update_call
-            .send()
-            .await?;
+        update_call.send().await?;
 
         Ok(String::from("Achievement deleted"))
     }
 
-    async fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>> {
+    async fn write_achievement(
+        &self,
+        achievement_id: AchievementID,
+        achievement: Achievement,
+    ) -> Result<String, Box<dyn Error>> {
         if let Some(_) = self.get_achievement(&achievement_id).await {
             return Err(Box::from("Achievement already exists"));
         }
 
-        self.overwrite_achievement(achievement_id, achievement).await
+        self.overwrite_achievement(achievement_id, achievement)
+            .await
     }
 
-    async fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>> {
-        let mut achievement = self.get_achievement(&achievement_id)
+    async fn update_achievement(
+        &self,
+        achievement_id: AchievementID,
+        json_string: &str,
+    ) -> Result<String, Box<dyn Error>> {
+        let mut achievement = self
+            .get_achievement(&achievement_id)
             .await
             .ok_or(ItemNotFound::new("Key not found", "404"))?;
         achievement.update_values(json_string)?;
 
-        self.overwrite_achievement(achievement_id, achievement).await?;
+        self.overwrite_achievement(achievement_id, achievement)
+            .await?;
         Ok(String::from("Achievement updated"))
     }
 }
@@ -526,13 +633,11 @@ impl AchievementStorage for DynamoDB {
 impl TimePlanStorage for DynamoDB {
     async fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup> {
         let group_name = group_id.name.clone()?;
-        let item = self.client
+        let item = self
+            .client
             .get_item()
             .table_name("time_group_store")
-            .key(
-                "name",
-                AttributeValue::S(group_name),
-            )
+            .key("name", AttributeValue::S(group_name))
             .send()
             .await;
 
@@ -541,10 +646,8 @@ impl TimePlanStorage for DynamoDB {
                 let item_map = item.item()?;
                 let group: TimeGroup = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
                 Some(group)
-            },
-            Err(_) => {
-                None
             }
+            Err(_) => None,
         }
     }
 
@@ -557,9 +660,9 @@ impl TimePlanStorage for DynamoDB {
                             .into_iter()
                             .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
                             .collect(),
-                        _ => return Err(Box::from("Dates information in invalid format"))
+                        _ => return Err(Box::from("Dates information in invalid format")),
                     },
-                    None => return Err(Box::from("Dates information not found"))
+                    None => return Err(Box::from("Dates information not found")),
                 };
 
                 let discipline_info = match time_table_map.get("DisciplineTypes") {
@@ -568,9 +671,9 @@ impl TimePlanStorage for DynamoDB {
                             .into_iter()
                             .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
                             .collect(),
-                        _ => return Err(Box::from("Discipline information in invalid format"))
+                        _ => return Err(Box::from("Discipline information in invalid format")),
                     },
-                    None => return Err(Box::from("Discipline information not found"))
+                    None => return Err(Box::from("Discipline information not found")),
                 };
 
                 let group_pwds: HashMap<String, Value> = match time_table_map.get("Passwords") {
@@ -579,9 +682,9 @@ impl TimePlanStorage for DynamoDB {
                             .into_iter()
                             .map(|(k, v)| (k.clone(), v.clone()))
                             .collect(),
-                        _ => return Err(Box::from("Group passwords in invalid format"))
+                        _ => return Err(Box::from("Group passwords in invalid format")),
                     },
-                    None => return Err(Box::from("Group passwords not found"))
+                    None => return Err(Box::from("Group passwords not found")),
                 };
 
                 for (pwd, role) in group_pwds {
@@ -590,21 +693,20 @@ impl TimePlanStorage for DynamoDB {
                             .into_iter()
                             .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "").clone()))
                             .collect(),
-                        _ => return Err(Box::from("Group passwords in invalid format"))
+                        _ => return Err(Box::from("Group passwords in invalid format")),
                     };
                     let role_name = match role_info.get("role") {
                         Some(role_name) => role_name,
-                        None => return Err(Box::from("Group role not given"))
+                        None => return Err(Box::from("Group role not given")),
                     };
                     let role_group = match role_info.get("group") {
                         Some(role_group) => role_group,
-                        None => return Err(Box::from("Group name not given"))
+                        None => return Err(Box::from("Group name not given")),
                     };
 
                     let login_info = Role::build(role_name.clone(), role_group.clone(), pwd);
 
                     self.store_role(login_info).await?;
-
                 }
 
                 match time_table_map.get("Groups") {
@@ -612,32 +714,43 @@ impl TimePlanStorage for DynamoDB {
                         if let Value::Object(group_map) = group_value {
                             for (group_name, times) in group_map {
                                 let mut group_athletes = None;
-                                if let Some(group) = self.get_group(&GroupID::new(group_name)).await {
+                                if let Some(group) = self.get_group(&GroupID::new(group_name)).await
+                                {
                                     let athletes = group.athletes();
                                     if athletes.len() > 0 {
-                                        let time_athletes = athletes.iter().map(|athlete|
-                                            time_planner::Athlete::new(
-                                                athlete.name().to_string(),
-                                                athlete.surname().to_string(),
-                                                Some(athlete.age_group()))
-                                        ).collect();
+                                        let time_athletes = athletes
+                                            .iter()
+                                            .map(|athlete| {
+                                                time_planner::Athlete::new(
+                                                    athlete.name().to_string(),
+                                                    athlete.surname().to_string(),
+                                                    Some(athlete.age_group()),
+                                                )
+                                            })
+                                            .collect();
                                         group_athletes = Some(time_athletes);
                                     }
                                 }
 
-                                let group = TimeGroup::build(group_name, times, &date_info, &discipline_info, group_athletes)?;
+                                let group = TimeGroup::build(
+                                    group_name,
+                                    times,
+                                    &date_info,
+                                    &discipline_info,
+                                    group_athletes,
+                                )?;
                                 self.store_time_group(group).await?;
                             }
                         } else {
                             return Err(Box::from("Group information in invalid format"));
                         }
                     }
-                    None => return Err(Box::from("Group information not found"))
+                    None => return Err(Box::from("Group information not found")),
                 }
 
                 Ok(String::from("Time table stored"))
             }
-            _ => Err(Box::from("Invalid format"))
+            _ => Err(Box::from("Invalid format")),
         }
     }
 
@@ -656,14 +769,12 @@ impl TimePlanStorage for DynamoDB {
 
 #[async_trait]
 impl AuthenticateStorage for DynamoDB {
-    async fn get_role_and_group(&self, login_info: LoginInfo) -> Option<Role>{
-        let item = self.client
+    async fn get_role_and_group(&self, login_info: LoginInfo) -> Option<Role> {
+        let item = self
+            .client
             .get_item()
             .table_name("authentication")
-            .key(
-                "password",
-                AttributeValue::S(login_info.pwd),
-            )
+            .key("password", AttributeValue::S(login_info.pwd))
             .send()
             .await;
 
@@ -672,10 +783,8 @@ impl AuthenticateStorage for DynamoDB {
                 let item_map = item.item()?;
                 let role: Role = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
                 Some(role)
-            },
-            Err(_) => {
-                None
             }
+            Err(_) => None,
         }
     }
 
@@ -691,146 +800,206 @@ impl AuthenticateStorage for DynamoDB {
     }
 }
 
-
 impl Storage for DynamoDB {
-    fn serialize(&self) {
-    }
+    fn serialize(&self) {}
 
-    fn load(&self) {
-    }
+    fn load(&self) {}
 }
 #[cfg(test)]
 mod tests {
     use std::collections::HashMap;
 
-    use crate::certificate_generation::{AgeGroup, AgeGroupID, Athlete, AthleteID, CompetitionType, Group, GroupID, AchievementStorage, Achievement, AchievementID};
+    use crate::certificate_generation::{
+        Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID, Athlete, AthleteID,
+        CompetitionType, Group, GroupID,
+    };
 
     use super::DynamoDB;
-    use chrono::{Utc, NaiveDateTime, TimeZone};
-    use crate::certificate_generation::Achievement::{Distance, Height, Time};
     use crate::certificate_generation::achievements::{DistanceResult, HeightResult, TimeResult};
+    use crate::certificate_generation::Achievement::{Distance, Height, Time};
+    use chrono::{NaiveDateTime, TimeZone, Utc};
 
     fn get_athletes() -> Vec<Athlete> {
         let athletes: Vec<Athlete> = vec![
             Athlete::new(
                 "Person",
                 "1",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1997.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1997.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "2",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1962.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1962.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "3",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1961.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1961.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "W",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "4",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1973.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1973.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "W",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "5",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1959.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1959.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "6",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1974.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1974.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "7",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1983.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1983.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "8",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1976.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1976.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "9",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "10",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "11",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2021.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2021.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "12",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
         ];
 
@@ -842,32 +1011,47 @@ mod tests {
             Athlete::new(
                 "Person",
                 "6",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1974.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1974.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "7",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1983.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1983.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "8",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("1976.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("1976.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
         ];
 
@@ -879,39 +1063,54 @@ mod tests {
             Athlete::new(
                 "Person",
                 "9",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "10",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
             Athlete::new(
                 "Person",
                 "12",
-                Some(Utc.from_utc_datetime(&NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S").unwrap())),
+                Some(
+                    Utc.from_utc_datetime(
+                        &NaiveDateTime::parse_from_str("2019.03.22 0:0:0", "%Y.%m.%d %H:%M:%S")
+                            .unwrap(),
+                    ),
+                ),
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
-                None
+                None,
             ),
         ];
 
         athletes
     }
 
-    fn get_achievements() -> Vec<Achievement>{
+    fn get_achievements() -> Vec<Achievement> {
         let mut achievements = vec![];
         let achievement_json = r#"
             {
@@ -922,7 +1121,9 @@ mod tests {
                 "unit": "m"
             }
         "#;
-        achievements.push(Distance(DistanceResult::build(achievement_json).expect("Achievement not loaded")));
+        achievements.push(Distance(
+            DistanceResult::build(achievement_json).expect("Achievement not loaded"),
+        ));
         let achievement_json = r#"
             {
                 "name": "Hochsprung",
@@ -932,7 +1133,9 @@ mod tests {
                 "unit": "cm"
             }
         "#;
-        achievements.push(Height(HeightResult::build(achievement_json).expect("Achievement not loaded")));
+        achievements.push(Height(
+            HeightResult::build(achievement_json).expect("Achievement not loaded"),
+        ));
 
         let achievement_json = r#"
             {
@@ -941,7 +1144,9 @@ mod tests {
                 "unit": "s"
             }
         "#;
-        achievements.push(Time(TimeResult::build(achievement_json).expect("Achievement not loaded")));
+        achievements.push(Time(
+            TimeResult::build(achievement_json).expect("Achievement not loaded"),
+        ));
 
         achievements
     }
@@ -949,17 +1154,21 @@ mod tests {
     #[actix_rt::test]
     async fn insert_and_access_athlete() {
         let db = DynamoDB::new();
-        let new_athlete = Athlete::new("Insert",
-                                       "Test",
-                                       None,
-                                       "M", HashMap::new(),
-                                       CompetitionType::Decathlon,
-                                       None,
-                                       None);
+        let new_athlete = Athlete::new(
+            "Insert",
+            "Test",
+            None,
+            "M",
+            HashMap::new(),
+            CompetitionType::Decathlon,
+            None,
+            None,
+        );
         let athlete_key = AthleteID::new("Insert", "Test");
 
-        db.write_athlete(athlete_key.clone(),
-                         new_athlete.clone()).await.expect("Write should not fail in this test");
+        db.write_athlete(athlete_key.clone(), new_athlete.clone())
+            .await
+            .expect("Write should not fail in this test");
 
         let accessed_athlete = db.get_athlete(&athlete_key).await;
 
@@ -973,31 +1182,33 @@ mod tests {
     #[actix_rt::test]
     async fn update_athlete() {
         let db = DynamoDB::new();
-        let mut new_athlete = Athlete::new("Fabian",
-                                       "Traxler",
-                                       None,
-                                       "M", HashMap::new(),
-                                       CompetitionType::Decathlon,
-                                       None,
-                                       None);
+        let mut new_athlete = Athlete::new(
+            "Fabian",
+            "Traxler",
+            None,
+            "M",
+            HashMap::new(),
+            CompetitionType::Decathlon,
+            None,
+            None,
+        );
         let athlete_key = AthleteID::new("Fabian", "Traxler");
 
-        db.write_athlete(athlete_key.clone(),
-                         new_athlete.clone())
+        db.write_athlete(athlete_key.clone(), new_athlete.clone())
             .await
             .expect("Write should not fail in this test");
 
         let update_string = r#"{"gender": "W", "birth_date": 12345, "starting_number": 12}"#;
         match db.update_athlete(athlete_key.clone(), update_string).await {
-            Ok(_) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(_) => {}
+            Err(e) => panic!("{:?}", e),
         }
 
         let accessed_athlete = db.get_athlete(&athlete_key).await;
 
         match new_athlete.update_values(update_string) {
-            Ok(_) => {},
-            Err(e) => panic!("{:?}", e)
+            Ok(_) => {}
+            Err(e) => panic!("{:?}", e),
         }
         if let Some(accessed_athlete) = accessed_athlete {
             assert_eq!(new_athlete, accessed_athlete);
@@ -1006,27 +1217,36 @@ mod tests {
         }
     }
 
-
     #[actix_rt::test]
     async fn insert_and_access_group() {
         let db = DynamoDB::new();
         let athletes = get_athletes();
         for athlete in &athletes {
-            match db.write_athlete(AthleteID::from_athlete(&athlete), athlete.clone()).await {
+            match db
+                .write_athlete(AthleteID::from_athlete(&athlete), athlete.clone())
+                .await
+            {
                 Ok(_) => {}
-                Err(e) => { panic!("Failed to write athlete: {e}"); }
+                Err(e) => {
+                    panic!("Failed to write athlete: {e}");
+                }
             }
         }
 
         let new_group = Group::new("Gruppe 1", athletes, CompetitionType::Decathlon);
         let group_key = GroupID::new("Gruppe 1");
 
-        db.write_group(group_key.clone(), new_group.clone()).await.expect("Write should not fail in this test");
+        db.write_group(group_key.clone(), new_group.clone())
+            .await
+            .expect("Write should not fail in this test");
 
         let accessed_group = db.get_group(&group_key).await;
 
         if let Some(accessed_group) = accessed_group {
-            assert!(new_group.athlete_ids().iter().all(|item| accessed_group.athlete_ids().contains(item)));
+            assert!(new_group
+                .athlete_ids()
+                .iter()
+                .all(|item| accessed_group.athlete_ids().contains(item)));
         } else {
             panic!("Previously stored group not found");
         }
@@ -1038,7 +1258,9 @@ mod tests {
         let athletes = get_athletes();
         for athlete in &athletes {
             let athlete_key = AthleteID::from_athlete(&athlete);
-            db.write_athlete(athlete_key, athlete.clone()).await.expect("Write should not fail in this test");
+            db.write_athlete(athlete_key, athlete.clone())
+                .await
+                .expect("Write should not fail in this test");
         }
 
         //assert_eq!(athletes.len(), db.athlete_store.lock().expect("Mutex Lock poised").len());
@@ -1059,7 +1281,10 @@ mod tests {
         let accessed_age_group = db.get_age_group(&age_group_key).await;
 
         if let Some(accessed_age_group) = accessed_age_group {
-            assert!(age_group.athletes().iter().all(|item| accessed_age_group.athletes().contains(item)));
+            assert!(age_group
+                .athletes()
+                .iter()
+                .all(|item| accessed_age_group.athletes().contains(item)));
         } else {
             panic!("Previously stored age group not found");
         }
@@ -1070,7 +1295,10 @@ mod tests {
         let accessed_age_group = db.get_age_group(&age_group_key).await;
 
         if let Some(accessed_age_group) = accessed_age_group {
-            assert!(age_group.athletes().iter().all(|item| accessed_age_group.athletes().contains(item)));
+            assert!(age_group
+                .athletes()
+                .iter()
+                .all(|item| accessed_age_group.athletes().contains(item)));
         } else {
             panic!("Previously stored age group not found");
         }
@@ -1079,23 +1307,27 @@ mod tests {
     #[actix_rt::test]
     async fn add_delete_and_update_achievements() {
         let db = DynamoDB::new();
-        let mut new_athlete = Athlete::new("Achievement",
-                                       "Test",
-                                       None,
-                                       "M", HashMap::new(),
-                                       CompetitionType::Decathlon,
-                                       None,
-                                       None);
+        let mut new_athlete = Athlete::new(
+            "Achievement",
+            "Test",
+            None,
+            "M",
+            HashMap::new(),
+            CompetitionType::Decathlon,
+            None,
+            None,
+        );
         let athlete_key = AthleteID::new("Achievement", "Test");
 
-        db.write_athlete(athlete_key.clone(),
-                         new_athlete.clone()).await.expect("Write should not fail in this test");
+        db.write_athlete(athlete_key.clone(), new_athlete.clone())
+            .await
+            .expect("Write should not fail in this test");
 
-        for mut achievement in get_achievements(){
+        for mut achievement in get_achievements() {
             achievement.compute_final_result();
             let _ = new_athlete.add_achievement(achievement.clone());
-            let achievement_id = AchievementID::build(AthleteID::from_athlete(&new_athlete),
-                                                      &achievement);
+            let achievement_id =
+                AchievementID::build(AthleteID::from_athlete(&new_athlete), &achievement);
             if let Err(e) = db.write_achievement(achievement_id, achievement).await {
                 panic!("{:?}", e);
             }
@@ -1109,10 +1341,10 @@ mod tests {
             panic!("Previously stored age group not found");
         }
 
-        for achievement in &get_achievements()[..1]{
+        for achievement in &get_achievements()[..1] {
             let _ = new_athlete.delete_achievement(&achievement.name());
-            let achievement_id = AchievementID::build(AthleteID::from_athlete(&new_athlete),
-                                                      &achievement);
+            let achievement_id =
+                AchievementID::build(AthleteID::from_athlete(&new_athlete), &achievement);
             if let Err(e) = db.delete_achievement(&achievement_id).await {
                 panic!("{:?}", e);
             }
@@ -1131,12 +1363,15 @@ mod tests {
                 "tries": "XXO-XXX"
             }
         "#;
-        for achievement in &mut get_achievements()[1..2]{
+        for achievement in &mut get_achievements()[1..2] {
             let _ = achievement.update_values(achievement_update);
             let _ = new_athlete.update_achievement(achievement.clone());
-            let achievement_id = AchievementID::build(AthleteID::from_athlete(&new_athlete),
-                                                      &achievement);
-            if let Err(e) = db.update_achievement(achievement_id, achievement_update).await {
+            let achievement_id =
+                AchievementID::build(AthleteID::from_athlete(&new_athlete), &achievement);
+            if let Err(e) = db
+                .update_achievement(achievement_id, achievement_update)
+                .await
+            {
                 panic!("{:?}", e);
             }
         }
@@ -1149,5 +1384,4 @@ mod tests {
             panic!("Previously stored age group not found");
         }
     }
-
 }

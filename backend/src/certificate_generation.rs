@@ -25,6 +25,7 @@ pub trait AchievementStorage {
     async fn get_athletes(&self) -> HashMap<String, Vec<Athlete>>;
     async fn write_athlete(&self, athlete_id: AthleteID, athlete: Athlete) -> Result<String, Box<dyn Error>>;
     async fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn delete_athlete(&self, athlete_id: AthleteID) -> Result<String, Box<dyn Error>>;
     async fn get_group(&self, group_id: &GroupID) -> Option<Group>;
     async fn write_group_store(&self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
     async fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;

@@ -14,7 +14,7 @@ pub trait TimePlanStorage {
     async fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Athlete {
     name: Option<String>,
     surname: Option<String>,
@@ -321,6 +321,29 @@ impl TimeGroup {
 
         let mut new_athletes = new_athletes.clone();
         all_athletes.append(&mut new_athletes);
+
+        let youth_group = self.disciplines.len() < 10;
+        let (default_athlete_order,
+            default_run_order) = create_default_athlete_order(Some(all_athletes.clone()), youth_group);
+
+        self.default_athlete_order = default_athlete_order.clone();
+        self.default_run_order = default_run_order.clone();
+
+        for discipline in &mut self.disciplines {
+            discipline.starting_order = match discipline.starting_order {
+                StartingOrder::NoOrder => StartingOrder::NoOrder,
+                StartingOrder::Default(_) => StartingOrder::Default(default_athlete_order.clone()),
+                StartingOrder::Track(_) => StartingOrder::Track(default_run_order.clone())
+            }
+        }
+
+        Ok(())
+    }
+    pub fn delete_athlete(&mut self, athlete:Athlete) -> Result<(), Box<dyn Error>> {
+        let all_athletes: &mut Vec<Athlete> = &mut self.default_athlete_order;
+
+        let index = all_athletes.iter().position(|x| x == &athlete).ok_or("Athlete not found")?;
+        all_athletes.remove(index);
 
         let youth_group = self.disciplines.len() < 10;
         let (default_athlete_order,

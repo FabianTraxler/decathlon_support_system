@@ -1,5 +1,5 @@
 use std::error::Error;
-use actix_web::{get, web, HttpResponse, Responder, post, put};
+use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use serde_json::Value;
 use super::parse_json_body;
 use crate::certificate_generation::{Athlete, AthleteID, GroupID};
@@ -10,6 +10,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_athlete);
     cfg.service(post_athlete);
     cfg.service(update_athlete);
+    cfg.service(delete_athlete);
     cfg.service(post_athlete_with_group);
 }
 
@@ -73,6 +74,20 @@ async fn update_athlete(
     let json_string = parse_json_body(body).await;
 
     match data.update_athlete(athlete_id.into_inner(), json_string.as_str()).await {
+        Ok(msg) => {
+            HttpResponse::Ok().body(msg)
+        }
+        Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Athlete: {}", e))
+    }
+}
+
+#[delete("/athlete")]
+async fn delete_athlete(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    athlete_id: web::Query<AthleteID>,
+) -> impl Responder {
+
+    match data.delete_athlete(athlete_id.into_inner()).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         }

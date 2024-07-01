@@ -78,6 +78,10 @@ impl AchievementStorage for InMemoryDB {
         }
     }
 
+    async fn delete_athlete(&self, _athlete_id: AthleteID) -> Result<String, Box<dyn Error>>{
+        todo!("Implement method")
+    }
+
     async fn update_athlete(&self, athlete_id: AthleteID, json_string: &str) -> Result<String, Box<dyn Error>> {
         // TODO: Implement check if key is updated and then update key also
         let mut athlete = self.get_athlete(&athlete_id).await.ok_or(ItemNotFound::new("Key not found", "404"))?;
@@ -273,17 +277,6 @@ impl TimePlanStorage for InMemoryDB {
                     None => return Err(Box::from("Discipline information not found"))
                 };
 
-                let group_pwds: HashMap<String, String> = match time_table_map.get("Passwords") {
-                    Some(pwds) => match pwds {
-                        Value::Object(group_passwords) => group_passwords
-                            .into_iter()
-                            .map(|(k, v)| (k.clone(), v.to_string().replace("\"", "")))
-                            .collect(),
-                        _ => return Err(Box::from("Group passwords in invalid format"))
-                    },
-                    None => return Err(Box::from("Group passwords not found"))
-                };
-
                 match time_table_map.get("Groups") {
                     Some(group_value) => {
                         if let Value::Object(group_map) = group_value {
@@ -327,11 +320,11 @@ impl TimePlanStorage for InMemoryDB {
 
 #[async_trait]
 impl AuthenticateStorage for InMemoryDB {
-    async fn get_role_and_group(&self, login_info: LoginInfo) -> Option<Role>{
+    async fn get_role_and_group(&self, _login_info: LoginInfo) -> Option<Role>{
         !todo!()
     }
 
-    async fn store_role(&self, role: Role) -> Result<String, Box<dyn Error>>{
+    async fn store_role(&self, _role: Role) -> Result<String, Box<dyn Error>>{
         !todo!()
     }
 }

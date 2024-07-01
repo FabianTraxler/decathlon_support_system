@@ -222,6 +222,19 @@ impl AthleteID {
         }
     }
 
+    pub fn name(&self) -> String {
+        match self.name.clone(){
+            Some(name) => name,
+            None => "".to_string()
+        }
+    }
+
+    pub fn surname(&self) -> String {
+        match self.surname.clone(){
+            Some(surname) => surname,
+            None => "".to_string()
+        }    }
+
     pub fn from_athlete(athlete: &Athlete) -> Self {
         AthleteID {
             name: Some(athlete.name.clone()),
