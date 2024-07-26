@@ -447,6 +447,19 @@ export function decode_athlete_tries(athlete_result: AthleteHeightResults): Athl
         } else if (last_attempt.length == 3) { // already had three tries but skipped the last one
             next_height = (athlete_result.start_height || 0) + tries.length * (athlete_result.height_increase || 0);
             current_try = last_attempt.length + 1
+            if (last_attempt == "///"){ // skipped last height completely
+                for (let i = tries.length - 2; i >= 0; i--){
+                    if(tries[i].includes("X") && !tries[i].includes("O")){ // had one missed attempt in latest jumped height and did not succeed afterwards
+                        current_try = tries.length + 1
+                        break
+                    }
+                    if (tries[i].includes("O")){ // succeeded on last jumped height
+                        current_try = 1
+                        break
+                    }
+                }
+
+            }
         } else {
             alert("Error loading athlete result")
         }
