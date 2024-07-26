@@ -1,11 +1,13 @@
 import { AthleteDistanceResults, AthleteID, Discipline, StartingOrder } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
 import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./discipline";
-import { get_group_achievements, save_distance_achievement } from "@/app/lib/achievement_edit/api_calls";
+import { get_group_achievements, save_distance_achievement, skip_distance_discipline } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { setTimeout } from "timers";
 import { NavigationContext } from "../navigation";
 import { LoadingAnimation } from "@/app/lib/loading";
+import AthleteEditPopup from "./athlete_edit_popup";
+import { skip } from "node:test";
 
 // TODO: Add "revert" functionality and back-arrow only get one level back to current disciline and not to HOME if in input mode
 
@@ -37,9 +39,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
     useEffect(() => {
         const get_discipline_results = function (athletes: Athlete[]) {
             let athlete_results: Map<string, AthleteDistanceResults> = new Map()
-    
+
             let discipline_unit = "m"//TODO: Check if we can get this value from somewhere else than hardcoding it
-    
+
             athletes.forEach(athlete => {
                 let athlete_result: AthleteDistanceResults = {
                     name: athlete.name,
@@ -47,7 +49,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                     starting_number: athlete.starting_number,
                     age_group: "",
                     discipline_name: discipline.name,
-                    discipline_unit: discipline_unit, 
+                    discipline_unit: discipline_unit,
                     full_name: () => athlete.name + "_" + athlete.surname
                 }
                 let achievement_map: Map<string, AchievementValue> = new Map(Object.entries(athlete.achievements));
@@ -75,13 +77,27 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 }
                 athlete_results.set(athlete_result.full_name(), athlete_result)
             })
-    
+
             // Get current starting order and try from results on load
             let current_try = 1
             let default_starting_order: AthleteDistanceResults[] = []
             if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
-                default_starting_order = disciplineState.discipline.starting_order.Default.filter(athlete => athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number).map(athlete => { 
-                    return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number)
+                default_starting_order = disciplineState.discipline.starting_order.Default.filter(athlete => {
+                    let athlete_result = athlete_results.get(athlete.name + "_" + athlete.surname)
+                    if (!athlete_result?.starting_number){
+                        return false
+                    }
+                    if (athlete_result.first_try && athlete_result.second_try && athlete_result.third_try){
+                        return false
+                    }
+                    return true
+                }).map(athlete => {
+                    let athlete_result = athlete_results.get(athlete.name + "_" + athlete.surname)
+                    if(athlete_result){
+                        return athlete_result
+                    }else {
+                        return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, undefined)
+                    }
                 })
                 let try_order: AthleteDistanceResults[] = []
                 let not_done = [1, 2, 3].some(try_number => { // Check all tries
@@ -272,7 +288,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 
     if (selectedAthlete) {
         return (
-            <DistanceInput athlete={selectedAthlete} try_completed={save_athlete_try}></DistanceInput>
+            <DistanceInput athlete={selectedAthlete} save_athlete_try={save_athlete_try} try_completed={try_completed}></DistanceInput>
         )
     } else {
         return (
@@ -331,8 +347,10 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 
 }
 
-function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_completed: (athlete: AthleteID, try_number: number, new_value: number | string) => void }) {
+function DistanceInput({ athlete, save_athlete_try, try_completed }:
+    { athlete: AthleteID, save_athlete_try: (athlete: AthleteID, try_number: number, new_value: number | string) => void, try_completed: (new_results: Map<string, AthleteDistanceResults>) => void }) {
     const { state } = useContext(AthleteResults)
+    const [showAthleteEdit, setShowAthleteEdit] = useState(false)
     const athlete_result = state.results.get(athlete.full_name())
     let try_value: number | string = ""
     if (athlete_result) {
@@ -350,7 +368,44 @@ function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_com
     return (
         <div className="grid grid-rows-8 h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md">
             <div className="flex flex-row items-center justify-between text-xl sm:text-4xl p-2 bg-slate-700 text-slate-100 rounded-md">
-                <div>{athlete.name} {athlete.surname}</div>
+                <div onClick={_ => setShowAthleteEdit(true)} className="flex hover:cursor-pointer active:text-slate-400 fill-slate-100 active:fill-slate-400">
+                    <div>
+                        {athlete.name} {athlete.surname}
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" className="fit pl-2 h-6 fill-inherit">
+                        <path d="M224 256c70.7 0 128-57.3 128-128S294.7 0 224 0 96 57.3 96 128s57.3 128 128 128zm89.6 32h-16.7c-22.2 10.2-46.9 16-72.9 16s-50.6-5.8-72.9-16h-16.7C60.2 288 0 348.2 0 422.4V464c0 26.5 21.5 48 48 48h274.9c-2.4-6.8-3.4-14-2.6-21.3l6.8-60.9 1.2-11.1 7.9-7.9 77.3-77.3c-24.5-27.7-60-45.5-99.9-45.5zm45.3 145.3l-6.8 61c-1.1 10.2 7.5 18.8 17.6 17.6l60.9-6.8 137.9-137.9-71.7-71.7-137.9 137.8zM633 268.9L595.1 231c-9.3-9.3-24.5-9.3-33.8 0l-37.8 37.8-4.1 4.1 71.8 71.7 41.8-41.8c9.3-9.4 9.3-24.5 0-33.9z" />
+                    </svg>
+                </div>
+                {showAthleteEdit &&
+                    <AthleteEditPopup
+                        athlete={athlete}
+                        onclose={() => { setShowAthleteEdit(false) }}
+                        skipTry={() => {
+                            let old_state = { ...state }
+                            save_athlete_try(athlete, state.current_try, "-1")
+                            if (state == old_state) {
+                                try_completed(state.results)
+                            }
+                        }}
+                        skipDiscipline={() => {
+                            // Remove athlete from default order
+                            if (athlete_result){
+                                const index = state.default_order.indexOf(athlete as AthleteDistanceResults);
+                                if (index > -1) { 
+                                    state.default_order.splice(index, 1); 
+                                }
+                            }
+                            // Set all tries to -1
+                            if (!skip_distance_discipline(athlete_result)) {
+                                let athlete_result = new AthleteDistanceResults(athlete, state.discipline.name, "m")
+                                skip_distance_discipline(athlete_result)
+                            }
+
+                            try_completed(state.results)
+                        }}
+                        resign={() => { }}
+                    ></AthleteEditPopup>
+                }
                 <div>{athlete_result?.best_try != -1 && athlete_result?.best_try} m</div>
             </div>
             {[1, 2, 3].map(try_number => {
@@ -374,7 +429,7 @@ function DistanceInput({ athlete, try_completed }: { athlete: AthleteID, try_com
                         try_value={try_value}
                         current_try={selectedTry.try_number == try_number}
                         setSelectedTry={setSelectedTry}
-                        save_value={(try_number: number, new_value: number | string) => try_completed(athlete, try_number, new_value)}>
+                        save_value={(try_number: number, new_value: number | string) => save_athlete_try(athlete, try_number, new_value)}>
                     </Try>
                 )
             })}

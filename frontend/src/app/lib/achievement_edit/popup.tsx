@@ -91,7 +91,7 @@ export function PopUp({ children, onClose, title }: { children?: React.ReactNode
 
     return (
         <div
-            className="fixed left-0 top-0 z-[1055] h-full w-full overflow-y-auto overflow-x-hidden outline-none bg-slate-500 bg-opacity-45">
+            className="text-black fixed left-0 top-0 z-[1055] h-full w-full overflow-y-auto overflow-x-hidden outline-none bg-slate-500 bg-opacity-45">
             <div className="flex w-full h-full items-center justify-center">
 
                 <div

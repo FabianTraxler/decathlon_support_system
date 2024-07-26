@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { DistanceAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 import { convert_from_integral_fractional, convert_to_integral_fractional } from "@/app/lib/parsing";
+import { nan } from "zod";
 
 type AchievementState = {
     [key: string]: number | string,
@@ -12,11 +13,11 @@ type AchievementState = {
 
 
 export function DistanceResult({ achievement, athleteName, onSubmit }: { achievement?: DistanceAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
-    let final_result: number | string = NaN;
+    let final_result: number | string = "";
     let unit = ""
-    let first_try: number | string = NaN
-    let second_try: number | string = NaN
-    let third_try: number | string = NaN
+    let first_try: number | string = ""
+    let second_try: number | string = ""
+    let third_try: number | string = ""
     if (achievement) {
         if (achievement.final_result) {
             final_result = convert_from_integral_fractional(achievement.final_result)
@@ -60,10 +61,10 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
         } as AchievementValue
 
         let changable_values = {
-            final_result: formData.get("final_result"),
-            first_try: formData.get("first_try"),
-            second_try: formData.get("second_try"),
-            third_try: formData.get("third_try")
+            final_result: convert_X_to_number(formData.get("final_result")),
+            first_try: convert_X_to_number(formData.get("first_try")),
+            second_try: convert_X_to_number(formData.get("second_try")),
+            third_try: convert_X_to_number(formData.get("third_try"))
         }
 
         fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Distance?.name}`, {
@@ -103,9 +104,9 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
     const handle_onChange = function (e: React.ChangeEvent<HTMLInputElement>) {
         let new_state = { ...achievementState }
         let try_name = e.target.name
-        let new_value = parseFloat(e.target.value)
+        let new_value = e.target.value
 
-        new_state[try_name] = new_value;
+        new_state[try_name] = new_value || "";
 
         let first_try = 0;
         if (typeof new_state.first_try == "number"){
@@ -138,7 +139,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
             <form id="time_form" onSubmit={form_submit}>
                 <div className="mb-2">
                     <label>Endergebnis [{unit}]: </label>
-                    <input type="number" step="0.01" name="final_result" readOnly
+                    <input  name="final_result" readOnly
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none bg-slate-400 w-16 text-center"
                         value={achievementState.final_result}></input>
                 </div>
@@ -146,7 +147,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
                     <label>1. Versuch [{unit}]: </label>
                     <input
                         onChange={handle_onChange}
-                        type="number" step="0.01" name="first_try"
+                        name="first_try"
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.first_try}
                     ></input>
@@ -156,7 +157,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
                     <label>2. Versuch [{unit}]: </label>
                     <input
                         onChange={handle_onChange}
-                        type="number" step="0.01" name="second_try"
+                        name="second_try"
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none  shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.second_try}
                     ></input>
@@ -166,7 +167,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
                     <label>3. Versuch [{unit}]: </label>
                     <input
                         onChange={handle_onChange}
-                        type="number" step="0.01" name="third_try"
+                        name="third_try"
                         className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.third_try}
                     ></input>
@@ -184,4 +185,16 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
             </form>
         </div>
     )
+}
+
+
+function convert_X_to_number(value: FormDataEntryValue | null){
+    if (value == "X") {
+        return "-1.0"
+    } else if (value == ""){
+        return nan
+    }
+    else {
+        return value
+    } 
 }

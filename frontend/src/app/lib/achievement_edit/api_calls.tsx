@@ -105,6 +105,27 @@ function update_distance_achievement(athlete: AthleteDistanceResults, callback_f
   })
 }
 
+export function skip_distance_discipline(athlete?: AthleteDistanceResults): boolean{
+  if (athlete){
+    if (!athlete.first_try) {
+      athlete.first_try = -1
+    }
+    if (!athlete.second_try) {
+      athlete.second_try = -1
+    }
+    if (!athlete.third_try) {
+      athlete.third_try = -1
+    }
+    if (!athlete.best_try) {
+      athlete.best_try = -1
+    }
+    save_distance_achievement(athlete, () => {})
+    return true
+  }
+  console.error("No athlete selected")
+  return false
+}
+
 
 export function save_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void, after_removed: boolean = false) {
   let achievement: AchievementValue = {
@@ -186,6 +207,7 @@ export function update_height_achievement(athlete_height_result: AthleteHeightRe
   })
 }
 
+
 function update_height_achievement_dict(achievement_dict: HeightAchievement, athlete: AthleteHeightResults): HeightAchievement {
   if (athlete.start_height) {
     achievement_dict["start_height"] = athlete.start_height
@@ -201,4 +223,14 @@ function update_height_achievement_dict(achievement_dict: HeightAchievement, ath
   }
 
   return achievement_dict
+}
+
+export function skip_height_discipline(athlete?: AthleteHeightResults){
+  if (athlete){
+    if (athlete.tries){
+      athlete.tries += "-XXX"
+    } 
+    save_height_achievement(athlete, () => {})
+  }
+  console.error("No athlete selected")
 }

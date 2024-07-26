@@ -1,9 +1,10 @@
-export function convert_to_integral_fractional(number_string: string | undefined): { integral: number, fractional: number } {
-    let value = {
-        "integral": -1,
-        "fractional": 0
-    }
+export function convert_to_integral_fractional(number_string: string | undefined): { integral: number, fractional: number } | undefined {
+
     if (number_string) {
+        let value = {
+            "integral": -1,
+            "fractional": 0
+        }
         if (number_string.includes(".")) {
             value = {
                 "integral": (Number.isNaN(parseInt(number_string.split(".")[0]))) ? -1 : parseInt(number_string.split(".")[0]),
@@ -20,9 +21,10 @@ export function convert_to_integral_fractional(number_string: string | undefined
                 "fractional": 0
             }
         }
+        return value
     }
+    return undefined
 
-    return value
 }
 
 export function convert_from_integral_fractional(integral_fraction: { integral: number, fractional: number }): number | string {
