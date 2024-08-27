@@ -17,11 +17,12 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
                     let minutes = Math.floor(full_seconds / 60)
                     let seconds = full_seconds % 60
                     achievement_string = minutes + ":" + seconds + "," + achievement_value.final_result?.fractional
+                    achievement_unit = "min"
                 }
             } else {
                 achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
+                achievement_unit = "s"
             }
-            achievement_unit = achievement_value.unit
         }
 
     } else if (achievement_type == "Distance") {

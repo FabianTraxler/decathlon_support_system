@@ -16,7 +16,7 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
     useEffect(() => {
         if (currentState.achievement_string != achievement_string && !currentState.isUploaded) {
             let timer = setTimeout(() => {
-                if (!/^[0-9,.]*$/.test(currentState.achievement_string)){
+                if (!/^[0-9,.:]*$/.test(currentState.achievement_string)){
                     return
                 }
                 let final_result = convert_to_integral_fractional(currentState.achievement_string)
@@ -24,6 +24,15 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                 let new_achievement: AchievementValue;
                 let changed_value;
                 if (achievement_type == "Time") {
+                    if (name == "1500 Meter Lauf" && currentState.achievement_string.includes(":")){
+                        let final_result_string = currentState.achievement_string.replace(".", ",")
+                        let min = parseInt(final_result_string.split(":")[0])
+                        let sec = parseInt(final_result_string.split(":")[1].split(",")[0])
+                        let full_sec = min * 60 + sec;
+                        final_result_string = full_sec.toString() + "," + final_result_string.split(",")[1]
+                        final_result = convert_to_integral_fractional(final_result_string)
+                    }
+
                     new_achievement = {
                         Time: {
                             name: name,
