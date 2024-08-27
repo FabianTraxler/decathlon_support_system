@@ -65,7 +65,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
             group_name = row["GRP"]
         group_skipped_disciplines = skipped_disciplines.get(group_name, [])
 
-        if not isinstance(row["Name"], str) or row["Name"].strip() == "":
+        if (not isinstance(row["Name"], str) or row["Name"].strip() == "") and (not isinstance(row["NAME"], str) or row["NAME"].strip() == ""):
             continue
         achievements = {}
         for (short_name, long_name, discipline_type) in disciplines:
@@ -401,8 +401,8 @@ def upload_athlete(name: str, surname: str,
         upload_achievements = achievements
 
     post_body = {
-        "name": name,
-        "surname": surname,
+        "name": name.strip(),
+        "surname": surname.strip(),
         "gender": gender,
         "achievements": upload_achievements,
         "competition_type": competition_type,
@@ -418,8 +418,8 @@ def upload_athlete(name: str, surname: str,
         post_body = {
             "athlete_ids": [
                 {
-                    "name": name,
-                    "surname": surname
+                    "name": name.strip(),
+                    "surname": surname.strip()
                 }
             ]
         }
