@@ -20,20 +20,26 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
             athlete_result.start_height_set = true;
             athlete_result.tries = "";
 
-            save_height_achievement(athlete_result, () => {
-                state.results.set(athlete_result.full_name(), athlete_result)
-                let all_athletes_set = true;
-                state.results.forEach(athlete => {
-                    if(athlete.starting_number != undefined && !athlete.start_height_set){
-                        all_athletes_set = false
-                    }
+            try{
+                save_height_achievement(athlete_result, () => {
+                    state.results.set(athlete_result.full_name(), athlete_result)
+                    let all_athletes_set = true;
+                    state.results.forEach(athlete => {
+                        if(athlete.starting_number != undefined && !athlete.start_height_set){
+                            all_athletes_set = false
+                        }
+                    })
+                    update_state({
+                        ...state,
+                        results: state.results,
+                        all_athletes_start_height_set: all_athletes_set
+                    })
                 })
-                update_state({
-                    ...state,
-                    results: state.results,
-                    all_athletes_start_height_set: all_athletes_set
-                })
-            })
+            }
+            catch(err){
+                console.log(err)
+            }
+
         } else {
             console.error("Error updating starting height")
         }

@@ -153,7 +153,7 @@ export function save_height_achievement(athlete_height_result: AthleteHeightResu
         // Delete current achievement and create new one
         delete_and_create_new_height_achievement(athlete_height_result, callback_fn)
       } else {
-        update_height_achievement(athlete_height_result, callback_fn)
+          update_height_achievement(athlete_height_result, callback_fn)
       }
     }
   }).catch(e => {
@@ -204,6 +204,8 @@ export function update_height_achievement(athlete_height_result: AthleteHeightRe
     } else {
       throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
     }
+  }).catch( e =>{
+          alert(`Not updated: ${e}`)
   })
 }
 

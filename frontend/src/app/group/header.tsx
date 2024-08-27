@@ -20,9 +20,9 @@ export default function Header({ homescreen }: { homescreen: boolean }) {
 
   // TODO: Add Loading Animation on Click to logout and Back-Arrow
   return (
-    <div className="w-full">
+    <div className="w-full  h-[8%]">
       {homescreen &&
-        <div className="flex flex-row justify-end w-full p-3 pr-6 pl-6 text-4xl">
+        <div className="flex flex-row items-center justify-end w-full pr-6 pl-6 text-4xl h-full">
           <div onClick={(_) => { setSigningOut(true); signOut() }}
             className="h-fit stroke-black stroke-2 active:stroke-slate-200 active:stroke-3 hover:stroke-3 hover:cursor-pointer flex items-bottom">
             {signingOut ?
@@ -43,7 +43,7 @@ export default function Header({ homescreen }: { homescreen: boolean }) {
         </div>
       }
       {(!homescreen && nav.history.length > 0) &&
-        <div className="flex flex-row justify-between w-full h-[5%] p-3 pr-6 pl-6 text-4xl">
+        <div className="flex flex-row items-center justify-between w-full pr-6 pl-6 text-4xl h-full">
           <div onClick={handleBackArrow} className="active:font-bold hover:font-bold hover:cursor-pointer hover:text-slate-400 font-bold">
             <span>&#8592;</span>
           </div>

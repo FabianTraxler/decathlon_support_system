@@ -1,15 +1,11 @@
-import { AthleteDistanceResults, AthleteID, Discipline, StartingOrder } from "@/app/lib/interfaces";
+import { AthleteDistanceResults, AthleteID, Discipline } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
 import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./discipline";
 import { get_group_achievements, save_distance_achievement, skip_distance_discipline } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
-import { setTimeout } from "timers";
 import { NavigationContext } from "../navigation";
 import { LoadingAnimation } from "@/app/lib/loading";
 import AthleteEditPopup from "./athlete_edit_popup";
-import { skip } from "node:test";
-
-// TODO: Add "revert" functionality and back-arrow only get one level back to current disciline and not to HOME if in input mode
 
 
 interface DistanceDisciplineState {
@@ -383,7 +379,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         skipTry={() => {
                             let old_state = { ...state }
                             save_athlete_try(athlete, state.current_try, "-1")
-                            if (state == old_state) {
+                            if (state.current_order.length == old_state.current_order.length) {
                                 try_completed(state.results)
                             }
                         }}
@@ -403,7 +399,6 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
 
                             try_completed(state.results)
                         }}
-                        resign={() => { }}
                     ></AthleteEditPopup>
                 }
                 <div>{athlete_result?.best_try != -1 && athlete_result?.best_try} m</div>

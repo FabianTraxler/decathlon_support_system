@@ -39,7 +39,14 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         } else {
             alert("Error while saving achievement")
         }
+    }
 
+    const handle_skip = function(athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean){
+        let old_state = { ...state }
+        save_athlete_try(athlete, new_value, athlete_still_active)
+        if (old_state.current_order.length == state.current_order.length){
+            try_completed(state.results, false, athlete_still_active, new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, athlete.starting_number || NaN))
+        } 
     }
 
     const increase_height = function (current_height: number, athletes_in_next_height: Set<string>) {
@@ -175,7 +182,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
 
     if (selectedAthlete) {
         return (
-            <HeightInput athlete={selectedAthlete} try_completed={save_athlete_try}></HeightInput>
+            <HeightInput athlete={selectedAthlete} save_try={save_athlete_try} skip_try={handle_skip}></HeightInput>
         )
     } else {
         let first_athlete = state.current_order[0]
