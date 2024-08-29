@@ -26,7 +26,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         if (achievement.start_height) {
             start_height = achievement.start_height?.toString() || ""
         }
-        if (achievement.final_result) {
+        if (achievement.tries) {
             tries = achievement.tries?.toString() || ""
         }
         unit = achievement.unit;
@@ -48,7 +48,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
             Height: {
                 name: achievement?.name || "",
                 unit: achievement?.unit || "",
-                final_result: parseInt(formData.get("final_result")?.toString() || "-1"),
+                final_result: parseInt(formData.get("final_result")?.toString() || ""),
                 height_increase: parseInt(formData.get("height_increase")?.toString() || "-1"),
                 start_height: parseInt(formData.get("start_height")?.toString() || "-1"),
                 tries: formData.get("tries")?.toString() || ""
@@ -77,7 +77,11 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 method: "DELETE",
             }).then(res => {
                 if (res.ok) {
-                    create_new_achievement(athleteName, new_achievement, onSubmit)
+                    if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1){
+                        alert("Invalid values for start height or height incrase --> Achievement deleted")
+                    }else{
+                        create_new_achievement(athleteName, new_achievement, onSubmit)
+                    }
                 } else {
                     throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
                 }
@@ -153,7 +157,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 </div>
 
                 <div className="mb-2">
-                    <label>Versuche [{unit}] (zB.:XO-O-XXX):</label>
+                    <label>Versuche (zB.:XO-O-XXX):</label>
                     <br></br>
                     <textarea name="tries" className="shadow-md rounded-md bg-slate-200 w-32 text-center"
                         value={achievementState.tries}

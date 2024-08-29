@@ -1,5 +1,4 @@
 export function convert_to_integral_fractional(number_string: string | undefined): { integral: number, fractional: number } | undefined {
-
     if (number_string) {
         let value = {
             "integral": -1,

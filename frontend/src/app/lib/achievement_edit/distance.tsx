@@ -192,9 +192,14 @@ function convert_X_to_number(value: FormDataEntryValue | null){
     if (value == "X") {
         return "-1.0"
     } else if (value == ""){
-        return nan
+        return ""
     }
     else {
-        return value
+        if (value?.toString().includes(".") || value?.toString().includes(",")){
+            return value
+        }else{
+            return value + ".00"
+        }
+        
     } 
 }

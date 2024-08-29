@@ -19,7 +19,6 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
         }
 
         let final_result = convert_to_integral_fractional(final_result_string)
-
         let new_achievement = {
             Time: {
                 name: achievement?.name || "",
@@ -28,40 +27,58 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
             }
         } as AchievementValue
 
-        let changable_values = {
-            final_result: new_achievement.Time?.final_result
+        if (final_result){ // value available
+
+    
+            let changable_values = {
+                final_result: new_achievement.Time?.final_result
+            }
+    
+            fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Time?.name}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(changable_values)
+            }).then(res => {
+                if (res.ok) {
+                    onSubmit(new_achievement)
+                } else {
+                    let name = athleteName.split("_")[0];
+                    let surname = athleteName.split("_")[1]
+                    fetch(`/api/achievement?name=${name}&surname=${surname}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify(new_achievement)
+                    }).then(res => {
+                        if (res.ok) {
+                            onSubmit(new_achievement)
+                        } else {
+                            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                        }
+                    })
+                }
+            }).catch(e => {
+                alert(`Not updated: ${e}`)
+            }
+            )
+        }else{ // final result deleted
+            fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Time?.name}`, {
+                method: "Delete",
+            }).then(res => {
+                if(res.ok){
+                    onSubmit(new_achievement)
+                }else{
+                    throw new Error(res.statusText)
+                }
+            }).catch(e => {
+                alert(`Not deleted: ${e}`)
+            }
+            )
         }
 
-        fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Time?.name}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(changable_values)
-        }).then(res => {
-            if (res.ok) {
-                onSubmit(new_achievement)
-            } else {
-                let name = athleteName.split("_")[0];
-                let surname = athleteName.split("_")[1]
-                fetch(`/api/achievement?name=${name}&surname=${surname}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(new_achievement)
-                }).then(res => {
-                    if (res.ok) {
-                        onSubmit(new_achievement)
-                    } else {
-                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-                    }
-                })
-            }
-        }).catch(e => {
-            alert(`Not updated: ${e}`)
-        }
-        )
 
     }
 

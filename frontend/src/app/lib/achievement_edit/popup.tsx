@@ -29,13 +29,13 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
         let achievement_value = achievement.Distance
         if (achievement_value) {
             achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
-            achievement_unit = achievement_value.unit
+            achievement_unit = achievement_value.unit || "m"
         }
     } else if (achievement_type == "Height") {
         let achievement_value = achievement.Height;
         if (achievement_value) {
             achievement_string = achievement_value.final_result ? achievement_value.final_result.toString() : ""
-            achievement_unit = achievement_value.unit
+            achievement_unit = achievement_value.unit || "cm"
         }
     }
     if (!achievement || achievement_string == "undefined,undefined" || achievement_string == "-1" || achievement_string == "-1,0") {
