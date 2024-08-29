@@ -28,7 +28,7 @@ export function HeightInput({ athlete, save_try, skip_try }:
 
         const handle_surrender = function () {
             let new_try_string = update_try_string_with_surrender(athlete_result, state.current_height)
-            save_try(athlete_result, new_try_string, false)
+            skip_try(athlete_result, new_try_string, false)
         }
 
         const handle_height_skip = function () {

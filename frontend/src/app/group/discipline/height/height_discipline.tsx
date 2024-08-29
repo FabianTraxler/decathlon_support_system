@@ -287,7 +287,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 starting_number: athlete.starting_number,
                 age_group: "",
                 discipline_name: discipline.name,
-                discipline_unit: "m", //TODO: Check if we can get this value from somewhere else than hardcoding it
+                discipline_unit: "cm", //TODO: Check if we can get this value from somewhere else than hardcoding it
                 start_height: min_start_height,
                 start_height_set: false,
                 height_increase: height_increase,

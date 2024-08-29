@@ -46,7 +46,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         save_athlete_try(athlete, new_value, athlete_still_active)
         if (old_state.current_order.length == state.current_order.length){
             try_completed(state.results, false, athlete_still_active, new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, athlete.starting_number || NaN))
-        } 
+        }
     }
 
     const increase_height = function (current_height: number, athletes_in_next_height: Set<string>) {
@@ -65,7 +65,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             if (athlete_result) {
                 let athlete_state = decode_athlete_tries(athlete_result)
                 if (athlete_state.still_active && athlete_state.next_height == new_height){
-                    if (!athletes_in_next_height.has(athlete.full_name())) {
+                    if (!athletes_in_next_height.has(athlete.full_name()) && athlete_state.current_try == 1) {
                         new_athletes.add(athlete)
                     }
 
@@ -77,13 +77,13 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                         athletes_for_third_try.push(athlete)
                     }
                 }
-                if ((athlete_result.start_height || 0) > new_height) {
+                if ((athlete_result.start_height || 0) > new_height || athlete_result.current_height > new_height) {
                     athletes_not_yet_in_competition.push(athlete)
                 }
             }
         })
 
-        if (athletes_for_next_height.length == 0 && athletes_for_second_try.length == 0 && athletes_for_second_try.length == 0) {
+        if (athletes_for_next_height.length == 0 && athletes_for_second_try.length == 0 && athletes_for_third_try.length == 0) {
             if (athletes_not_yet_in_competition.length == 0) {
                 finish_discipline()
             } else {
