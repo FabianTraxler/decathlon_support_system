@@ -446,19 +446,28 @@ export function decode_athlete_tries(athlete_result: AthleteHeightResults): Athl
             current_try = last_attempt.length + 1
         } else if (last_attempt.length == 3) { // already had three tries but skipped the last one
             next_height = (athlete_result.start_height || 0) + tries.length * (athlete_result.height_increase || 0);
-            current_try = last_attempt.length + 1
             if (last_attempt == "///"){ // skipped last height completely
                 for (let i = tries.length - 2; i >= 0; i--){
-                    if(tries[i].includes("X") && !tries[i].includes("O")){ // had one missed attempt in latest jumped height and did not succeed afterwards
-                        current_try = tries.length + 1
-                        break
+                    for (let j = tries[i].length - 1; j >= 0; j--){
+                        if(tries[i][j] == "X"){
+                            current_try = j + 2
+                            break
+                        }else if (tries[i][j] == "O"){
+                            current_try = 1
+                            break
+                        }
                     }
-                    if (tries[i].includes("O")){ // succeeded on last jumped height
+                }
+            }else{
+                for (let i = last_attempt.length - 1; i >= 0; i--){
+                    if(last_attempt[i] == "X"){
+                        current_try = i + 2
+                        break
+                    }else if (last_attempt[i] == "O"){
                         current_try = 1
                         break
                     }
                 }
-
             }
         } else {
             alert("Error loading athlete result")

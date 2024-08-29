@@ -90,19 +90,25 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                 increase_height(new_height, new Set())
             }
         } else {
-            let current_try;
+            let current_try = 1;
             if(athletes_for_next_height.length > 0) {
                 current_try = 1
             } else if(athletes_for_second_try.length > 0){
                 current_try = 2
+                athletes_for_next_height = athletes_for_second_try
+                athletes_for_second_try = []
+                athletes_for_third_try = []
             } else if (athletes_for_third_try.length > 0){
                 current_try = 3
+                athletes_for_next_height = athletes_for_third_try
+                athletes_for_second_try = []
+                athletes_for_third_try = []
             }
             update_state({
                 ...state,
                 current_height: new_height,
                 discipline_progress_state: "new_height",
-                current_try: 1,
+                current_try: current_try,
                 current_order: athletes_for_next_height,
                 athletes_in_next_try: athletes_for_second_try,
                 athletes_in_next_next_try: athletes_for_third_try,
