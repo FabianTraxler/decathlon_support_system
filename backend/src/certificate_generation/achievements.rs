@@ -435,6 +435,17 @@ impl DistanceResult {
         if let Some(final_result) = json_value.get("final_result").and_then(Value::as_str) {
             self.final_result = Float::from_str(final_result).ok();
         }
+        if let Some(final_result) = json_value.get("final_result") {
+            match final_result {
+                Value::String(str_value) => {
+                    self.final_result = Float::from_str(str_value).ok();
+                }
+                Value::Object(map) => {
+                    self.final_result = Float::from_map(map).ok();
+                }
+                _ => return Err("Final result not updated. Could not convert final result to string or map")?
+            }
+        }
         Ok(())
     }
 }
