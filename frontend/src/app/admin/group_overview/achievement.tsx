@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 import { InlineEdit } from "@/app/lib/achievement_edit/inline";
+import { long_distance_disciplines } from "@/app/lib/config";
 
 export default function Achievement({ index, name, achievement, achievement_type, athleteName, editMode }:
     { index: number, name: string, achievement?: AchievementValue, achievement_type: string, athleteName: string, editMode: boolean }) {
@@ -13,6 +14,7 @@ export default function Achievement({ index, name, achievement, achievement_type
     useEffect(() => {
         setAchievement(achievement)
     }, [achievement])
+    console.log(long_distance_disciplines)
 
     let achievement_string = "";
     let achievement_unit = "";
@@ -23,7 +25,7 @@ export default function Achievement({ index, name, achievement, achievement_type
         },
         Time: {
             name: name,
-            unit: (name == "1500 Meter Lauf") ? "min" : "s"
+            unit: (long_distance_disciplines.includes(name)) ? "min" : "s"
         },
         Height: {
             name: name,

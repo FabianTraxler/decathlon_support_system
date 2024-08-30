@@ -1,4 +1,5 @@
 import { AchievementValue } from "../athlete_fetching";
+import { long_distance_disciplines } from "../config";
 import { DistanceResult } from "./distance";
 import { HeightResult } from "./height";
 import { TimeResult } from "./time";
@@ -9,18 +10,29 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
     if (achievement_type == "Time") {
         let achievement_value = achievement.Time;
         if (achievement_value) {
-            if (achievement_value.name == "1500 Meter Lauf") {
+            let full_seconds = achievement_value.final_result?.integral || -1;
+            if (full_seconds == -1) {
+                achievement_string = "/"
+            } else if (long_distance_disciplines.includes(achievement_value.name)) {
                 let full_seconds = achievement_value.final_result?.integral || -1;
-                if (full_seconds == -1) {
-                    achievement_string = full_seconds.toString()
-                } else {
-                    let minutes = Math.floor(full_seconds / 60)
-                    let seconds = full_seconds % 60
-                    achievement_string = minutes + ":" + seconds + "," + achievement_value.final_result?.fractional
-                    achievement_unit = "min"
+
+                let minutes = Math.floor(full_seconds / 60)
+                let seconds = (full_seconds % 60).toString()
+                if (seconds && seconds?.length < 2) {
+                    seconds = "0" + seconds.toString()
                 }
+                let fractional_seconds = achievement_value.final_result?.fractional.toString();
+                if (fractional_seconds && fractional_seconds?.length < 2) {
+                    fractional_seconds = "0" + fractional_seconds.toString()
+                }
+                achievement_string = minutes + ":" + seconds + "," + fractional_seconds
+                achievement_unit = "min"
             } else {
-                achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
+                let fractional_seconds = achievement_value.final_result?.fractional.toString();
+                if (fractional_seconds && fractional_seconds?.length < 2) {
+                    fractional_seconds = "0" + fractional_seconds.toString()
+                }
+                achievement_string = achievement_value.final_result?.integral + "," + fractional_seconds
                 achievement_unit = "s"
             }
         }
