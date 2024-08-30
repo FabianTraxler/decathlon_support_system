@@ -1,6 +1,6 @@
 use std::fs::File;
 use printpdf::{IndirectFontRef, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference, PdfPageIndex, TextRenderingMode};
-use crate::certificate_generation::{Athlete, competition_order, CompetitionType, Group};
+use crate::certificate_generation::{athletes, competition_order, Athlete, CompetitionType, Group};
 use crate::certificate_generation::pdf::pdf_generation::{add_logo, add_pdf_page, setup_pdf};
 use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
 
@@ -99,7 +99,10 @@ pub fn all_group_certificates(group: &Group) -> PdfDocumentReference {
     let (mut pdf, mut page, mut layer) = setup_pdf(format!("Ergebnisse {}", group.name()).as_str(),
                                        false);
 
-    for athlete in group.athletes(){
+    let mut athletes = group.athletes().clone();
+    athletes.sort_by(|a, b| a.total_point().cmp(&b.total_point()));
+
+    for athlete in &athletes{
         pdf = match athlete.competition_type() {
             CompetitionType::Decathlon => new_decathlon_certificate(athlete, pdf, page, layer),
             CompetitionType::Heptathlon => new_heptathlon_certificate(athlete, pdf, page, layer),
