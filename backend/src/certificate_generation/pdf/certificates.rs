@@ -100,7 +100,11 @@ pub fn all_group_certificates(group: &Group) -> PdfDocumentReference {
                                        false);
 
     let mut athletes = group.athletes().clone();
-    athletes.sort_by(|a, b| a.total_point().cmp(&b.total_point()));
+    if group.competition_type() == CompetitionType::Decathlon {
+        athletes.sort_by_key(|a: &Athlete| a.total_point());
+    }else {
+        athletes.sort_unstable_by_key(|athlete| (athlete.gender().clone(), athlete.total_point()));
+    }
 
     for athlete in &athletes{
         pdf = match athlete.competition_type() {

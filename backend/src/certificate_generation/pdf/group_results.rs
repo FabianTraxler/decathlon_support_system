@@ -1,25 +1,60 @@
+use crate::certificate_generation::pdf::pdf_generation::{add_logo, setup_pdf, LEFT_PAGE_EDGE};
+use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
+use crate::certificate_generation::{athletes, competition_order, CompetitionType, Group};
+use chrono::Datelike;
+use printpdf::BuiltinFont::HelveticaBold;
+use printpdf::{
+    IndirectFontRef, Line, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference,
+    PdfPageIndex, Point, TextRenderingMode,
+};
 use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::fs::File;
-use printpdf::{IndirectFontRef, Line, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference, PdfPageIndex, Point, TextRenderingMode};
-use printpdf::BuiltinFont::HelveticaBold;
-use crate::certificate_generation::{competition_order, Group};
-use crate::certificate_generation::pdf::pdf_generation::{add_logo, LEFT_PAGE_EDGE, setup_pdf};
-use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
-use chrono::Datelike;
+
+use super::pdf_generation::add_pdf_page;
 
 const DEFAULT_DISCIPLINE_WIDTH: f32 = 11.5;
 const POINTS_WIDTH: f32 = 8.;
 
 pub fn new_group_result(group: &Group) -> PdfDocumentReference {
-    let (pdf, page, layer) = setup_pdf(format!("Ergebniss {}", group.name()).as_str(),
-                                                                                           true);
 
-    let comic_font = pdf.add_external_font(File::open("assets/fonts/comic_sans/regular.TTF")
-        .expect("Comic Sans regular font not available"))
+    if group.competition_type() == CompetitionType::Decathlon {
+        // One result for full group
+        let (pdf, page, layer) = setup_pdf(format!("Ergebniss {}", group.name()).as_str(), true);
+        add_group_result_to_page(group, pdf, page, layer)
+    } else {
+        // Separated result for M and W
+        let w_group = Group::new(
+            format!("{} - {}", group.name(), "W").as_str(),
+            group.athletes().iter().map(|athlete| athlete.clone()).filter(|athlete| athlete.gender() == "W").collect(),
+            group.competition_type()
+        );
+        let (mut pdf, mut page, mut layer) = setup_pdf(format!("Ergebniss {}", w_group.name()).as_str(), true);
+        pdf = add_group_result_to_page(&w_group, pdf, page, layer);
+
+        
+        let m_group = Group::new(
+            format!("{} - {}", group.name(), "M").as_str(),
+            group.athletes().iter().map(|athlete| athlete.clone()).filter(|athlete| athlete.gender() == "M").collect(),
+            group.competition_type()
+        );
+        (page, layer) = add_pdf_page(&pdf, format!("Ergebniss {}", m_group.name()).as_str(), true);
+        add_group_result_to_page(&m_group, pdf, page, layer)
+    }
+}
+
+pub fn add_group_result_to_page(group: &Group, pdf: PdfDocumentReference, page: PdfPageIndex, layer: PdfLayerIndex) -> PdfDocumentReference {
+    let comic_font = pdf
+        .add_external_font(
+            File::open("assets/fonts/comic_sans/regular.TTF")
+                .expect("Comic Sans regular font not available"),
+        )
         .expect("Comic Sans regular  could not be added");
-    let comic_font_bold = pdf.add_external_font(File::open("assets/fonts/comic_sans/bold.ttf")
-        .expect("Comic Sans bold font not available"))
+    let comic_font_bold = pdf
+        .add_external_font(
+            File::open("assets/fonts/comic_sans/bold.ttf")
+                .expect("Comic Sans bold font not available"),
+        )
         .expect("Comic Sans bold  could not be added");
 
     // Add result heading
@@ -52,29 +87,57 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
     alignments.insert("Hepathlon: Speerwurf", 76.);
     alignments.insert("Hepathlon: 1000 Meter Lauf", 76.);
 
-
     let current_layer = setup_new_page(&pdf, page, layer, group, &alignments);
 
     // Add athletes
-    add_group_athletes(current_layer, &comic_font, &comic_font_bold, &alignments, group, &pdf);
+    add_group_athletes(
+        current_layer,
+        &comic_font,
+        &comic_font_bold,
+        &alignments,
+        group,
+        &pdf,
+    );
     pdf
 }
 
-fn setup_new_page(pdf: &PdfDocumentReference, page: PdfPageIndex, layer: PdfLayerIndex, group: &Group, alignments: &HashMap<&str, f32>) -> PdfLayerReference {
+fn setup_new_page(
+    pdf: &PdfDocumentReference,
+    page: PdfPageIndex,
+    layer: PdfLayerIndex,
+    group: &Group,
+    alignments: &HashMap<&str, f32>,
+) -> PdfLayerReference {
     let current_layer = pdf.get_page(page).get_layer(layer);
 
-    let comic_font_bold = pdf.add_external_font(File::open("assets/fonts/comic_sans/bold.ttf")
-        .expect("Comic Sans bold font not available"))
+    let comic_font_bold = pdf
+        .add_external_font(
+            File::open("assets/fonts/comic_sans/bold.ttf")
+                .expect("Comic Sans bold font not available"),
+        )
         .expect("Comic Sans bold  could not be added");
-    let helvetica_font_bold = pdf.add_builtin_font(HelveticaBold)
+    let helvetica_font_bold = pdf
+        .add_builtin_font(HelveticaBold)
         .expect("Builtin Font should be available");
 
     // Write Heading
     current_layer.set_text_rendering_mode(TextRenderingMode::Fill);
     current_layer.begin_text_section();
     let font_size = 18.0;
-    current_layer.use_text(format!("{COMPETITION_NUMBER}. Favoritner Jedermann - Zehnkampf {DATE}"), font_size, Mm(65.0), Mm(195.0), &helvetica_font_bold);
-    current_layer.use_text(format!("{}", group.name()), font_size, Mm(148.5), Mm(185.), &helvetica_font_bold);
+    current_layer.use_text(
+        format!("{COMPETITION_NUMBER}. Favoritner Jedermann - Zehnkampf {DATE}"),
+        font_size,
+        Mm(65.0),
+        Mm(195.0),
+        &helvetica_font_bold,
+    );
+    current_layer.use_text(
+        format!("{}", group.name()),
+        font_size,
+        Mm(148.5),
+        Mm(185.),
+        &helvetica_font_bold,
+    );
     current_layer.end_text_section();
     // Add Logo
     add_logo(pdf.get_page(page).get_layer(layer), true);
@@ -85,7 +148,12 @@ fn setup_new_page(pdf: &PdfDocumentReference, page: PdfPageIndex, layer: PdfLaye
     current_layer
 }
 
-fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, alignments: &HashMap<&str, f32>, group: &Group) {
+fn add_group_result_heading(
+    pdf_layer: &PdfLayerReference,
+    font: &IndirectFontRef,
+    alignments: &HashMap<&str, f32>,
+    group: &Group,
+) {
     let font_size = 10.0;
     let y_coord = 175.;
     let mut x_coord = LEFT_PAGE_EDGE;
@@ -101,7 +169,7 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
 
     pdf_layer.use_text("Name", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("name").expect("Value defined before");
-    if competition_disciplines.len() <  6{
+    if competition_disciplines.len() < 6 {
         // Use double space for names if we have less than 6 disciplines
         x_coord += *alignments.get("name").expect("Value defined before");
     }
@@ -110,10 +178,14 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
     x_coord += *alignments.get("birthyear").expect("Value defined before");
 
     pdf_layer.use_text("Summe", font_size, Mm(x_coord), Mm(y_coord), font);
-    x_coord += *alignments.get("total_points").expect("Value defined before");
+    x_coord += *alignments
+        .get("total_points")
+        .expect("Value defined before");
 
     for discipline_name in competition_disciplines {
-        let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
+        let discipline_width = alignments
+            .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
+            .unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
         let short_name = discipline_name
             .replace(" Meter Lauf", "m")
             .replace(" Meter", "m")
@@ -145,8 +217,14 @@ fn add_group_result_heading(pdf_layer: &PdfLayerReference, font: &IndirectFontRe
     });
 }
 
-fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, font_bold: &IndirectFontRef,
-                      alignments: &HashMap<&str, f32>, group: &Group, pdf: &PdfDocumentReference) {
+fn add_group_athletes(
+    mut pdf_layer: PdfLayerReference,
+    font: &IndirectFontRef,
+    font_bold: &IndirectFontRef,
+    alignments: &HashMap<&str, f32>,
+    group: &Group,
+    pdf: &PdfDocumentReference,
+) {
     let font_size = 10.0;
     let line_height = font_size * 0.5;
     let initial_y_coord = 170.;
@@ -154,59 +232,88 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
     let competition_type = group.competition_type();
     let competition_disciplines = competition_order(&competition_type);
     let mut max_name_char_len = 20;
-    if competition_disciplines.len() < 6{
+    if competition_disciplines.len() < 6 {
         max_name_char_len = 40;
     }
+    let mut athletes: Vec<athletes::Athlete> = group.athletes().clone();
 
-    let mut athletes = group.athletes().clone();
     athletes.sort_by_key(|a| Reverse(a.total_point()));
+
 
     let mut y_coord = initial_y_coord;
     for (i, athlete) in athletes.iter().enumerate() {
         let mut x_coord = LEFT_PAGE_EDGE;
         let mut num_lines = 1.;
 
-        pdf_layer.use_text((i + 1).to_string(), font_size, Mm(x_coord), Mm(y_coord), font_bold);
+        pdf_layer.use_text(
+            (i + 1).to_string(),
+            font_size,
+            Mm(x_coord),
+            Mm(y_coord),
+            font_bold,
+        );
         x_coord += *alignments.get("place").expect("Value defined before");
 
         let gender = match athlete.gender().as_ref() {
             "Staffel" => "S".to_string(),
-            ref x => x.to_string()
+            ref x => x.to_string(),
         };
         pdf_layer.use_text(gender, font_size, Mm(x_coord), Mm(y_coord), font);
         x_coord += *alignments.get("sex").expect("Value defined before");
-
 
         let athlete_name = athlete.full_name();
         // Split in multiple lines if text larger than 20 chars
         let mut athlete_part = athlete_name.as_str();
         while athlete_part.len() > max_name_char_len {
             let name_line = &athlete_part[..max_name_char_len];
-            pdf_layer.use_text(name_line, font_size, Mm(x_coord), Mm(y_coord - line_height * (num_lines - 1.)), &font);
+            pdf_layer.use_text(
+                name_line,
+                font_size,
+                Mm(x_coord),
+                Mm(y_coord - line_height * (num_lines - 1.)),
+                &font,
+            );
 
             athlete_part = &athlete_part[max_name_char_len..];
             num_lines += 1.;
         }
-        pdf_layer.use_text(athlete_part, font_size, Mm(x_coord), Mm(y_coord - line_height * (num_lines - 1.)), &font);
+        pdf_layer.use_text(
+            athlete_part,
+            font_size,
+            Mm(x_coord),
+            Mm(y_coord - line_height * (num_lines - 1.)),
+            &font,
+        );
         x_coord += *alignments.get("name").expect("Value defined before");
-        if competition_disciplines.len() <  6{
+        if competition_disciplines.len() < 6 {
             // Use double space for names if we have less than 6 disciplines
             x_coord += *alignments.get("name").expect("Value defined before");
         }
 
         let birthyear = match athlete.birth_date() {
             Some(date) => date.year().to_string()[2..4].to_string(),
-            None => "".to_string()
+            None => "".to_string(),
         };
         pdf_layer.use_text(birthyear, font_size, Mm(x_coord), Mm(y_coord), &font);
         x_coord += *alignments.get("birthyear").expect("Value defined before");
 
-        pdf_layer.use_text(athlete.total_point().to_string(), font_size, Mm(x_coord), Mm(y_coord), font_bold);
-        x_coord += *alignments.get("total_points").expect("Value defined before");
+        pdf_layer.use_text(
+            athlete.total_point().to_string(),
+            font_size,
+            Mm(x_coord),
+            Mm(y_coord),
+            font_bold,
+        );
+        x_coord += *alignments
+            .get("total_points")
+            .expect("Value defined before");
 
         for discipline_name in &competition_disciplines {
-            let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
-            let (achievement_string, points_string) = match athlete.get_achievement(discipline_name) {
+            let discipline_width = alignments
+                .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
+                .unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
+            let (achievement_string, points_string) = match athlete.get_achievement(discipline_name)
+            {
                 Some(achievement) => {
                     if achievement.final_result() == "" {
                         ("".to_string(), "".to_string())
@@ -215,19 +322,43 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
                         (fmt_final_result, achievement.points(&athlete).to_string())
                     }
                 }
-                None => ("".to_string(), "".to_string())
+                None => ("".to_string(), "".to_string()),
             };
 
-            pdf_layer.use_text(achievement_string, font_size, Mm(x_coord), Mm(y_coord), font);
+            pdf_layer.use_text(
+                achievement_string,
+                font_size,
+                Mm(x_coord),
+                Mm(y_coord),
+                font,
+            );
             x_coord += discipline_width;
-            pdf_layer.use_text(points_string, font_size, Mm(x_coord), Mm(y_coord), font_bold);
+            pdf_layer.use_text(
+                points_string,
+                font_size,
+                Mm(x_coord),
+                Mm(y_coord),
+                font_bold,
+            );
             x_coord += POINTS_WIDTH;
         }
         pdf_layer.set_outline_thickness(0.5);
         pdf_layer.add_line(Line {
             points: vec![
-                (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(y_coord - 1.  - line_height * (num_lines - 1.))), false),
-                (Point::new(Mm(x_coord - 1.), Mm(y_coord - 1.  - line_height * (num_lines - 1.))), false),
+                (
+                    Point::new(
+                        Mm(LEFT_PAGE_EDGE - 1.),
+                        Mm(y_coord - 1. - line_height * (num_lines - 1.)),
+                    ),
+                    false,
+                ),
+                (
+                    Point::new(
+                        Mm(x_coord - 1.),
+                        Mm(y_coord - 1. - line_height * (num_lines - 1.)),
+                    ),
+                    false,
+                ),
             ],
             is_closed: true,
         });
@@ -238,7 +369,12 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
             add_vertical_lines(&pdf_layer, alignments, group, y_coord + line_height - 1.);
 
             // Get new page
-            let (pdf_page_index, pdf_layer_index) = crate::certificate_generation::pdf::pdf_generation::add_pdf_page(pdf, "New result page", true);
+            let (pdf_page_index, pdf_layer_index) =
+                crate::certificate_generation::pdf::pdf_generation::add_pdf_page(
+                    pdf,
+                    "New result page",
+                    true,
+                );
 
             pdf_layer = setup_new_page(&pdf, pdf_page_index, pdf_layer_index, group, &alignments);
             y_coord = initial_y_coord;
@@ -248,8 +384,12 @@ fn add_group_athletes(mut pdf_layer: PdfLayerReference, font: &IndirectFontRef, 
     add_vertical_lines(&pdf_layer, alignments, group, y_coord + line_height - 1.);
 }
 
-fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, f32>, group: &Group,
-                      bottom_y_coord: f32) {
+fn add_vertical_lines(
+    pdf_layer: &PdfLayerReference,
+    alignments: &HashMap<&str, f32>,
+    group: &Group,
+    bottom_y_coord: f32,
+) {
     // Add Vertical lines and closing line to current page
     let mut x_coord = LEFT_PAGE_EDGE;
 
@@ -267,7 +407,7 @@ fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, 
             });
             x_coord += alignment_width;
 
-            if col_key == "name" && competition_disciplines.len() <  6{
+            if col_key == "name" && competition_disciplines.len() < 6 {
                 // Use double space for names if we have less than 6 disciplines
                 x_coord += *alignments.get("name").expect("Value defined before");
             }
@@ -275,7 +415,9 @@ fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, 
     }
 
     for discipline_name in competition_order(&group.competition_type()) {
-        let discipline_width = alignments.get(format!("{}: {}", group.competition_type(), discipline_name).as_str()).unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
+        let discipline_width = alignments
+            .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
+            .unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
         pdf_layer.add_line(Line {
             points: vec![
                 (Point::new(Mm(x_coord - 1.), Mm(179.)), false),
@@ -304,7 +446,10 @@ fn add_vertical_lines(pdf_layer: &PdfLayerReference, alignments: &HashMap<&str, 
     // Add horizontal closing line
     pdf_layer.add_line(Line {
         points: vec![
-            (Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(bottom_y_coord)), false),
+            (
+                Point::new(Mm(LEFT_PAGE_EDGE - 1.), Mm(bottom_y_coord)),
+                false,
+            ),
             (Point::new(Mm(x_coord - 1.), Mm(bottom_y_coord)), false),
         ],
         is_closed: true,
