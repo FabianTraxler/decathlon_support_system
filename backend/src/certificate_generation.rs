@@ -206,7 +206,7 @@ impl Display for Float {
         if self.integral == -1 {
             write!(f, "")
         }else{
-            write!(f, "{},{:0<2}", self.integral, self.fractional)
+            write!(f, "{},{:0>2}", self.integral, self.fractional)
         }
     }
 }

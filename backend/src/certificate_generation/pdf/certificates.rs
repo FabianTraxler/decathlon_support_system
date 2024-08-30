@@ -4,7 +4,7 @@ use crate::certificate_generation::{athletes, competition_order, Athlete, Compet
 use crate::certificate_generation::pdf::pdf_generation::{add_logo, add_pdf_page, setup_pdf};
 use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
 
-const AGE_GROUPS_WO_POINTS:[&'static str; 4] = ["M-U4", "W-U4", "M-U6", "W-U6"];
+const AGE_GROUPS_WO_POINTS:[&'static str; 6] = ["M-U4", "W-U4", "M-U6", "W-U6", "W-U8", "M-U8"];
 
 fn add_name(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athlete: &Athlete) {
     // Define font metrics

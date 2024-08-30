@@ -1,7 +1,9 @@
+use crate::certificate_generation::{preprocess_json, Athlete, AthleteID, Float};
 use serde::{Deserialize, Serialize};
-use std::error::Error;
 use serde_json::Value;
-use crate::certificate_generation::{Athlete, AthleteID, Float, preprocess_json};
+use std::error::Error;
+
+use super::CompetitionType;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub enum Achievement {
@@ -15,7 +17,7 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => r.name.clone(),
             Achievement::Height(r) => r.name.clone(),
-            Achievement::Time(r) => r.name.clone()
+            Achievement::Time(r) => r.name.clone(),
         }
     }
 
@@ -23,7 +25,7 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => r.update_values(json_string)?,
             Achievement::Height(r) => r.update_values(json_string)?,
-            Achievement::Time(r) => r.update_values(json_string)?
+            Achievement::Time(r) => r.update_values(json_string)?,
         }
         Ok(())
     }
@@ -40,7 +42,7 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => format!("{}", r.final_result()),
             Achievement::Height(r) => format!("{}", Float::from_i32(r.final_result())),
-            Achievement::Time(r) => format!("{}", r.final_result())
+            Achievement::Time(r) => format!("{}", r.final_result()),
         }
     }
 
@@ -48,7 +50,7 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => r.fmt_final_result(),
             Achievement::Height(r) => r.fmt_final_result(),
-            Achievement::Time(r) => r.fmt_final_result()
+            Achievement::Time(r) => r.fmt_final_result(),
         }
     }
 
@@ -56,7 +58,7 @@ impl Achievement {
         match self {
             Achievement::Distance(r) => format!("{}", r.unit),
             Achievement::Height(r) => format!("{}", r.unit),
-            Achievement::Time(r) => format!("{}", r.unit) // TODO Change to min if more than 3min
+            Achievement::Time(r) => format!("{}", r.unit), // TODO Change to min if more than 3min
         }
     }
 
@@ -92,7 +94,6 @@ impl AchievementID {
         }
     }
 
-
     pub fn athlete_id(&self) -> Option<AthleteID> {
         match &self.athlete_id {
             Some(athlete_id) => Some(athlete_id.clone()),
@@ -111,7 +112,6 @@ impl AchievementID {
     }
 }
 
-
 #[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HeightResult {
     name: String,
@@ -128,7 +128,7 @@ impl HeightResult {
 
         match result {
             Ok(result) => Ok(result),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
@@ -142,40 +142,36 @@ impl HeightResult {
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
         if self.final_result() < 0 {
             0
-        } else {
+        } else if *athlete.competition_type() == CompetitionType::Decathlon {
             let a: f32;
             let b: f32;
             let c: f32;
             let mut m: f32 = self.final_result() as f32;
             match self.name.as_str() {
-                "Hochsprung" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 1.84523;
-                            b = 75.;
-                            c = 1.348;
-                        }
-                        _ => {
-                            a = 0.8465;
-                            b = 75.;
-                            c = 1.42;
-                        }
+                "Hochsprung" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 1.84523;
+                        b = 75.;
+                        c = 1.348;
                     }
-                }
-                "Stabhochsprung" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 0.44125;
-                            b = 100.;
-                            c = 1.35;
-                        }
-                        _ => {
-                            a = 0.2797;
-                            b = 100.;
-                            c = 1.35;
-                        }
+                    _ => {
+                        a = 0.8465;
+                        b = 75.;
+                        c = 1.42;
                     }
-                }
+                },
+                "Stabhochsprung" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 0.44125;
+                        b = 100.;
+                        c = 1.35;
+                    }
+                    _ => {
+                        a = 0.2797;
+                        b = 100.;
+                        c = 1.35;
+                    }
+                },
                 _ => {
                     a = 0.;
                     b = 0.;
@@ -184,20 +180,47 @@ impl HeightResult {
                 }
             }
             (a * (m - b).powf(c)) as u32
+        } else {
+            // Youth disciplines
+            let a: f32;
+            let b: f32;
+            let c: f32;
+            let mut m: f32 = self.final_result() as f32;
+            match self.name.as_str() {
+                "Hochsprung" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 855.310049;
+                        b = 62.;
+                        c = 1.;
+                    }
+                    _ => {
+                        a = 690.05175;
+                        b = 65.;
+                        c = 1.;
+                    }
+                },
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * ((m - b) / 100.).powf(c)) as u32
         }
     }
 
     pub fn final_result(&self) -> i32 {
         match &self.final_result {
             Some(value) => *value,
-            None => self.compute_final_result()
+            None => self.compute_final_result(),
         }
     }
 
     pub fn fmt_final_result(&self) -> (String, String) {
         let result = match &self.final_result {
             Some(value) => *value,
-            None => self.compute_final_result()
+            None => self.compute_final_result(),
         };
 
         let m_result = result as f64 / 100.; // convert from cm to m
@@ -210,7 +233,9 @@ impl HeightResult {
 
         for (i, height) in self.tries.split("-").enumerate() {
             if height.contains("O") {
-                jumped_height = self.start_height + i32::try_from(i).expect("Enumeration should be convertible") * self.height_increase;
+                jumped_height = self.start_height
+                    + i32::try_from(i).expect("Enumeration should be convertible")
+                        * self.height_increase;
             }
         }
 
@@ -221,7 +246,9 @@ impl HeightResult {
         let json_value: Value = serde_json::from_str(json_string)?;
 
         if let Some(_) = json_value.get("start_height").and_then(Value::as_i64) {
-            return Err("Start height not updated. Please create new achievement for that kind of change")?;
+            return Err(
+                "Start height not updated. Please create new achievement for that kind of change",
+            )?;
         }
         if let Some(_) = json_value.get("height_increase").and_then(Value::as_i64) {
             return Err("Height increase not updated. Please create new achievement for that kind of change")?;
@@ -261,21 +288,22 @@ impl DistanceResult {
         // Change Float fields to represent Float struct to enable json parsing
         let json_string = preprocess_json(json_string);
 
-        let result: Result<Self, serde_json::error::Error> = serde_json::from_str(json_string.as_str());
+        let result: Result<Self, serde_json::error::Error> =
+            serde_json::from_str(json_string.as_str());
 
         match result {
             Ok(mut result) => {
                 result.final_result = Some(result.final_result());
                 Ok(result)
             }
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
         if self.final_result().to_f32() < 0. {
             0
-        } else {
+        } else if *athlete.competition_type() == CompetitionType::Decathlon {
             let a: f32;
             let b: f32;
             let c: f32;
@@ -349,13 +377,91 @@ impl DistanceResult {
                 }
             }
             (a * (m - b).powf(c)) as u32
+        } else {
+            // Youth disciplines
+            let mut a: f32;
+            let b: f32;
+            let c: f32;
+            let m: f32;
+            match self.name.as_str() {
+                "Weitsprung" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 220.628792;
+                            b = 180.;
+                            c = 1.;
+                            if m < 180. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 180.85908;
+                            b = 190.;
+                            c = 1.;
+                            if m < 190. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
+                "Schlagball" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 22.;
+                            b = 100.;
+                            c = 0.9;
+                            if m < 500. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 18.;
+                            b = 800.;
+                            c = 0.9;
+                            if m < 800. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
+                "Vortex" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 15.9803;
+                            b = 380.;
+                            c = 1.04;
+                            if m < 380. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 10.14;
+                            b = 700.;
+                            c = 1.08;
+                            if m < 700. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * ((m - b) / 100.).powf(c)) as u32
         }
     }
 
     pub fn final_result(&self) -> Float {
-        self.final_result.clone().unwrap_or_else(|| {
-            self.compute_best_result()
-        })
+        self.final_result
+            .clone()
+            .unwrap_or_else(|| self.compute_best_result())
     }
 
     pub fn tries(&self) -> Vec<&Option<Float>> {
@@ -376,18 +482,19 @@ impl DistanceResult {
         let best_result = all_results.iter().max();
 
         match best_result {
-            Some(result) => {
-                match result {
-                    Some(result) => {
-                        if result.integral == -1 {
-                            return self.final_result.clone().unwrap_or_else(|| Float::new(0, 0));
-                        }
-                        result.clone()
+            Some(result) => match result {
+                Some(result) => {
+                    if result.integral == -1 {
+                        return self
+                            .final_result
+                            .clone()
+                            .unwrap_or_else(|| Float::new(0, 0));
                     }
-                    None => Float::new(0, 0)
+                    result.clone()
                 }
-            }
-            None => Float::new(0, 0)
+                None => Float::new(0, 0),
+            },
+            None => Float::new(0, 0),
         }
     }
 
@@ -443,7 +550,11 @@ impl DistanceResult {
                 Value::Object(map) => {
                     self.final_result = Float::from_map(map).ok();
                 }
-                _ => return Err("Final result not updated. Could not convert final result to string or map")?
+                _ => {
+                    return Err(
+                        "Final result not updated. Could not convert final result to string or map",
+                    )?
+                }
             }
         }
         Ok(())
@@ -462,79 +573,72 @@ impl TimeResult {
         // Change Float fields to represent Float struct to enable json parsing
         let json_string = preprocess_json(json_string);
 
-        let result: Result<Self, serde_json::error::Error> = serde_json::from_str(json_string.as_str());
+        let result: Result<Self, serde_json::error::Error> =
+            serde_json::from_str(json_string.as_str());
 
         match result {
             Ok(result) => Ok(result),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
     pub fn get_points(&self, athlete: &Athlete) -> u32 {
         if self.final_result().to_f32() < 0. {
             0
-        } else {
+        } else if *athlete.competition_type() == CompetitionType::Decathlon {
             let a: f32;
             let b: f32;
             let c: f32;
             let mut m: f32 = self.final_result().to_f32();
             match self.name.as_str() {
-                "100 Meter Lauf" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 17.857;
-                            b = 21.;
-                            c = 1.81;
-                        }
-                        _ => {
-                            a = 25.4347;
-                            b = 18.;
-                            c = 1.81;
-                        }
+                "100 Meter Lauf" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 17.857;
+                        b = 21.;
+                        c = 1.81;
                     }
-                }
-                "400 Meter Lauf" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 1.34285;
-                            b = 91.7;
-                            c = 1.81;
-                        }
-                        _ => {
-                            a = 1.53775;
-                            b = 82.;
-                            c = 1.81;
-                        }
+                    _ => {
+                        a = 25.4347;
+                        b = 18.;
+                        c = 1.81;
                     }
-                }
-                "110 Meter Hürden" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 5.5;
-                            b = 31.5;
-                            c = 1.85;
-                        }
-                        _ => {
-                            a = 5.74352;
-                            b = 28.5;
-                            c = 1.92;
-                        }
+                },
+                "400 Meter Lauf" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 1.34285;
+                        b = 91.7;
+                        c = 1.81;
                     }
-                }
-                "1500 Meter Lauf" => {
-                    match athlete.gender().as_str() {
-                        "W" => {
-                            a = 0.02883;
-                            b = 535.;
-                            c = 1.88;
-                        }
-                        _ => {
-                            a = 0.03768;
-                            b = 480.;
-                            c = 1.85;
-                        }
+                    _ => {
+                        a = 1.53775;
+                        b = 82.;
+                        c = 1.81;
                     }
-                }
+                },
+                "110 Meter Hürden" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 5.5;
+                        b = 31.5;
+                        c = 1.85;
+                    }
+                    _ => {
+                        a = 5.74352;
+                        b = 28.5;
+                        c = 1.92;
+                    }
+                },
+                "1500 Meter Lauf" => match athlete.gender().as_str() {
+                    "W" => {
+                        a = 0.02883;
+                        b = 535.;
+                        c = 1.88;
+                    }
+                    _ => {
+                        a = 0.03768;
+                        b = 480.;
+                        c = 1.85;
+                    }
+                },
                 _ => {
                     a = 0.;
                     b = 0.;
@@ -543,6 +647,68 @@ impl TimeResult {
                 }
             }
             (a * (b - m).powf(c)) as u32
+        } else {
+            // Youth disciplines
+            let mut a: f32;
+            let b: f32;
+            let c: f32;
+            let m: f32;
+            match self.name.as_str() {
+                "60 Meter Lauf" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 19.742424;
+                            b = 1417.;
+                            c = 2.1;
+                            if m > 1417. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 17.686955;
+                            b = 1397.;
+                            c = 2.1;
+                            if m > 1397. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
+                "60 Meter Hürden" => {
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 20.0479;
+                            b = 1700.;
+                            c = 1.835;
+                            if m > 1700. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 20.5173;
+                            b = 1550.;
+                            c = 1.92;
+                            if m > 1550. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
+                "1200 Meter Cross Lauf" => {
+                    m = self.final_result().to_f32();
+                    let points = (-6.67 * m + 2400.) as u32;
+                    return points;
+                }
+                _ => {
+                    a = 0.;
+                    b = 0.;
+                    c = 1.;
+                    m = 0.;
+                }
+            }
+            (a * ((b - m) / 100.).powf(c)) as u32
         }
     }
 
@@ -553,13 +719,26 @@ impl TimeResult {
     pub fn fmt_final_result(&self) -> (String, String) {
         let final_result = self.final_result();
 
-        if ["100 Meter Lauf", "110 Meter Hürden", "400 Meter Lauf", "60 Meter Lauf", "60 Meter Hürden", "100 Meter Hürden"].contains(&self.name.as_str()) {
+        if [
+            "100 Meter Lauf",
+            "110 Meter Hürden",
+            "400 Meter Lauf",
+            "60 Meter Lauf",
+            "60 Meter Hürden",
+            "100 Meter Hürden",
+        ]
+        .contains(&self.name.as_str())
+        {
             (format!("{}", final_result), "s".to_string())
         } else {
             // convert to min:ss
             let minutes = final_result.integral / 60;
-            let seconds = (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
-            (format!("{}:{}", minutes, Float::from_f64(seconds)), "min".to_string())
+            let seconds =
+                (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
+            (
+                format!("{}:{}", minutes, Float::from_f64(seconds)),
+                "min".to_string(),
+            )
         }
     }
 
@@ -580,14 +759,17 @@ impl TimeResult {
                 Value::Object(map) => {
                     self.final_result = Float::from_map(map)?;
                 }
-                _ => return Err("Final result not updated. Could not convert final result to string or map")?
+                _ => {
+                    return Err(
+                        "Final result not updated. Could not convert final result to string or map",
+                    )?
+                }
             }
         }
 
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -608,7 +790,6 @@ mod tests {
 
         assert_eq!(achievement.final_result(), Float::new(1, 30));
     }
-
 
     #[test]
     fn get_time_results() {
