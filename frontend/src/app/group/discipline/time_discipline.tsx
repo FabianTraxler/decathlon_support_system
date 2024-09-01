@@ -16,8 +16,8 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                 athlete_starting_numbers.set(athlete.name + "_" + athlete.surname, athlete.starting_number)
             })
 
-            let new_starting_order: { name: string, athletes: AthleteTimeResult[] }[] = []
             if (typeof discipline.starting_order != "string" && discipline.starting_order.Track) {
+                let new_starting_order: { name: string, athletes: AthleteTimeResult[] }[] = []
                 new_starting_order = discipline.starting_order.Track.map(run => {
                     let athletes = run.athletes.map(athlete => {
                         return {
@@ -31,15 +31,34 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                         athletes: athletes
                     }
                 })
+
+
+                setDiscipline({
+                    ...current_discipline,
+                    starting_order: {
+                        Track: new_starting_order
+                    }
+                })
+            } else {
+                // No order --> only one mass start
+                let new_starting_order: AthleteTimeResult[] = athletes.map(athlete => {
+                    return {
+                        ...athlete,
+                        age_group: "",
+                        starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
+                        full_name: () => athlete.name + "_" + athlete.surname
+                    }
+                })
+
+
+                setDiscipline({
+                    ...current_discipline,
+                    starting_order: {
+                        Default: new_starting_order
+                    }
+                })
             }
 
-
-            setDiscipline({
-                ...current_discipline,
-                starting_order: {
-                    Track: new_starting_order
-                }
-            })
 
         }
         get_group_achievements(group_name, get_athlete_starting_numbers)
@@ -56,7 +75,8 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                 <BeforeStartInfoBox
                     ready={true}
                     discipline={current_discipline}
-                    start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}></BeforeStartInfoBox>
+                    start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}>
+                </BeforeStartInfoBox>
             }
             {
                 current_discipline.state == "Active" &&
@@ -69,9 +89,16 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                                 finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
                             ></StartingOrderSummary>
                             :
-                            <div className="flex justify-center items-center h-full w-full">
-                                <LoadingAnimation></LoadingAnimation>
-                            </div>
+                            ((typeof current_discipline.starting_order != "string" && current_discipline.starting_order.Default) ?
+                                <MassStartStartingOrderSummary
+                                    athletes={current_discipline.starting_order.Default}
+                                    finishDiscipline={() => finish_discipline(group_name, current_discipline, setDiscipline)}
+                                ></MassStartStartingOrderSummary>
+                                :
+                                <div className="flex justify-center items-center h-full w-full">
+                                    <LoadingAnimation></LoadingAnimation>
+                                </div>
+                            )
                     }
                 </div>
             }
@@ -305,6 +332,48 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                     <span>Disziplin abschließen</span>
                 </div>
             }
+        </div >
+    )
+}
+
+
+function MassStartStartingOrderSummary({ athletes, finishDiscipline }:
+    { athletes: AthleteTimeResult[], finishDiscipline: () => void }) {
+
+
+    return (
+        <div className="p-1 h-full overflow-scroll ">
+            <div className="border rounded-md mt-2 p-4 sm:p-6 ">
+                <div className="flex flex-row justify-between font-bold text-xl sm:text-4xl">
+                    <span>Massenstart</span>
+                </div>
+                <table className="w-full table-auto border-collapse text-[1rem] sm:text-[1.2rem] 2xl:text-sm mt-2" >
+                    <thead >
+                        <tr>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {athletes.map((athlete) => {
+                            return (
+                                <tr>
+                                    <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number || ""}</td>
+                                    <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 13)}{athlete.name.length > 13 && "..."}</td>
+                                    <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 13)}{athlete.surname.length > 13 && "..."}</td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            <div className="text-center border rounded-md shadow-md p-3 mt-3 bg-stw_green shadow-slate-900"
+                onClick={finishDiscipline}
+            >
+                <span>Disziplin abschließen</span>
+            </div>
         </div >
     )
 }
