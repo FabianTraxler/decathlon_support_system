@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { AthleteID, AthleteTimeResult, Discipline, StartingOrder } from "../lib/interfaces";
 import TrackOverview, { TimeOverview } from "./runs";
 import { convert_date, convert_from_integral_fractional, convert_to_integral_fractional } from "../lib/parsing";
-import { german_discipline_states } from "../lib/config";
+import { german_discipline_states, long_distance_disciplines } from "../lib/config";
 import { LoadingAnimation } from "../lib/loading";
 import { AchievementValue, Athlete, fetch_group_athletes } from "../lib/athlete_fetching";
 import { InlineEdit } from "../lib/achievement_edit/inline";
@@ -208,14 +208,14 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                                                     let achievement: AchievementValue = {
                                                         Time: {
                                                             name: groupState.selected_discipline?.name || "",
-                                                            unit: (groupState.selected_discipline?.name == "1500 Meter Lauf") ? "min" : "s"
+                                                            unit: (long_distance_disciplines.includes(groupState.selected_discipline?.name || "")) ? "min" : "s"
                                                         },
                                                     }
                                                     if (athlete.final_result) {
                                                         achievement = {
                                                             Time: {
                                                                 name: groupState.selected_discipline?.name || "",
-                                                                unit: (groupState.selected_discipline?.name == "1500 Meter Lauf") ? "min" : "s",
+                                                                unit: (long_distance_disciplines.includes(groupState.selected_discipline?.name || "")) ? "min" : "s",
                                                                 final_result: convert_to_integral_fractional(athlete.final_result.toString())
                                                             },
                                                         }

@@ -14,7 +14,6 @@ export default function Achievement({ index, name, achievement, achievement_type
     useEffect(() => {
         setAchievement(achievement)
     }, [achievement])
-    console.log(long_distance_disciplines)
 
     let achievement_string = "";
     let achievement_unit = "";

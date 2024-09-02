@@ -469,10 +469,7 @@ impl DistanceResult {
     }
 
     pub fn fmt_final_result(&self) -> (String, String) {
-        let mut result = self.final_result();
-        if result.fractional < 10 {
-            result.fractional *= 10;
-        }
+        let result: Float = self.final_result();
         (format!("{}", result), "m".to_string())
     }
 

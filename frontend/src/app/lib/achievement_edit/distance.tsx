@@ -195,8 +195,12 @@ function convert_X_to_number(value: FormDataEntryValue | null){
         return ""
     }
     else {
-        if (value?.toString().includes(".") || value?.toString().includes(",")){
-            return value
+        if (value?.toString().includes(".")){
+            let value_parts = value?.toString().split(".")
+            return value_parts[0] + "." + value_parts[1].padEnd(2, "0")
+        }else if (value?.toString().includes(",")) {
+            let value_parts = value?.toString().split(",")
+            return value_parts[0] + "," + value_parts[1].padEnd(2, "0")
         }else{
             return value + ".00"
         }

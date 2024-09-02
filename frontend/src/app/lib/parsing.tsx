@@ -33,7 +33,7 @@ export function convert_from_integral_fractional(integral_fraction: { integral: 
     } else {
         final_number = integral_fraction.integral.toString() || ""
         final_number += "."
-        final_number += integral_fraction.fractional.toString() || ""
+        final_number += integral_fraction.fractional.toString().padStart(2, "0") || ""
 
         return parseFloat(final_number)
     }

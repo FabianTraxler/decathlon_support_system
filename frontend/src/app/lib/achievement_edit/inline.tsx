@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AchievementValue } from "../athlete_fetching";
 import { convert_achievement_to_string } from "./popup";
 import { convert_to_integral_fractional } from "../parsing";
+import { long_distance_disciplines, unit_mapping } from "../config";
 
 export function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit }:
     { index: string, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
@@ -19,7 +20,16 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                 if (!/^[0-9,.:]*$/.test(currentState.achievement_string)) {
                     return
                 }
-                let new_achievement: AchievementValue;
+                let new_achievement: AchievementValue = {
+                    Time: {
+                        name: name,
+                        unit: achievement_unit,
+                        final_result: {
+                            fractional: 0,
+                            integral: -1
+                        }
+                    }
+                }
 
                 if (currentState.achievement_string == "") {
                     fetch(`/api/achievement?athlete_name=${athleteName}&name=${name}`, {
@@ -38,7 +48,7 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
 
                     let changed_value;
                     if (achievement_type == "Time") {
-                        if (name == "1500 Meter Lauf" && currentState.achievement_string.includes(":")) {
+                        if (long_distance_disciplines.includes(name) && currentState.achievement_string.includes(":")) {
                             let final_result_string = currentState.achievement_string.replace(".", ",")
                             let min = parseInt(final_result_string.split(":")[0])
                             let sec = parseInt(final_result_string.split(":")[1].split(",")[0])
@@ -140,15 +150,17 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
         })
     }
 
+    let display_unit = unit_mapping.get(achievement_unit) || achievement_unit
+
     return (
         <td className={'group items-center jusitfy-center border border-slate-800 text-right group-active:bg-slate-400 ' + (currentState.isUploaded ? "bg-green-200" : "bg-yellow-200")}>
             <div className="flex justify-center items-center">
                 <input onChange={handleOnChange}
                     id={index.toString()}
-                    className='p-1 min-w-12 max-w-24 2xl:w-14 h-full text-right rounded-md shadow-xl group'
+                    className='p-1 min-w-12 max-w-24  h-full text-right rounded-md shadow-xl group'
                     defaultValue={achievement_string}>
                 </input>
-                {achievement_unit}
+                {display_unit}
             </div>
         </td>
     )

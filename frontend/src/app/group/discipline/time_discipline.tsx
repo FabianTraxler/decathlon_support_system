@@ -358,7 +358,7 @@ function MassStartStartingOrderSummary({ athletes, finishDiscipline }:
                     <tbody>
                         {athletes.map((athlete) => {
                             return (
-                                <tr>
+                                <tr key={athlete.starting_number}>
                                     <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number || ""}</td>
                                     <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 13)}{athlete.name.length > 13 && "..."}</td>
                                     <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 13)}{athlete.surname.length > 13 && "..."}</td>

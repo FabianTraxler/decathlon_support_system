@@ -2,6 +2,7 @@ import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_
 import { AchievementValue } from "@/app/lib/athlete_fetching";
 import { useContext, useState } from "react";
 import { AchievementContext } from "./athletes";
+import { long_distance_disciplines } from "@/app/lib/config";
 
 
 export default function AchievementDisplay({ athlete_number, name, type, achievement, athlete_name }: { athlete_number: number, name: string, type: string, achievement?: AchievementValue, athlete_name: string }) {
@@ -14,7 +15,7 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
         },
         Time: {
             name: name,
-            unit: (name == "1500 Meter Lauf") ? "min" : "s"
+            unit: (long_distance_disciplines.includes(name)) ? "min" : "s"
         },
         Height: {
             name: name,

@@ -1,6 +1,7 @@
 import { FormEvent } from "react";
 import { AchievementValue, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { convert_to_integral_fractional } from "@/app/lib/parsing";
+import { long_distance_disciplines } from "../config";
 
 
 export function TimeResult({ achievement, athleteName, onSubmit }: { achievement?: TimeAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
@@ -10,7 +11,7 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
         let formData = new FormData(form_event.target as HTMLFormElement);
         let final_result_string = formData.get("final_result")?.toString() || ""
 
-        if (unit_format == "mm:ss,sss"){
+        if (unit_format == "mm:ss,ss" && final_result_string.includes(":")){
             final_result_string = final_result_string.replace(".", ",")
             let min = parseInt(final_result_string.split(":")[0])
             let sec = parseInt(final_result_string.split(":")[1].split(",")[0])
@@ -90,10 +91,10 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
             final_result += ","
             final_result += achievement.final_result?.fractional.toString() || ""
         }
-        if (achievement.name == "1500 Meter Lauf"){
-            unit = "mm:ss,sss"
+        if (long_distance_disciplines.includes(achievement.name)){
+            unit = "mm:ss,ss"
         } else{
-            unit = "ss,sss"
+            unit = "ss,ss"
         }
     }
 

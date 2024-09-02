@@ -67,4 +67,12 @@ export const discipline_mapping: DisciplineMap = {
 export const german_discipline_states: Map<string, string> =  new Map([
     ["BeforeStart", "Ausstehend"], 
     ["Active", "Aktiv"], 
-    ["Finished", "Abgeschlossen"]])
+    ["Finished", "Abgeschlossen"]
+])
+
+export const unit_mapping: Map<string, string> = new Map([
+    ["s", "ss,ss"], 
+    ["min", "min:ss,ss"], 
+    ["cm", "cm"],
+    ["m", "mm,cmcm"]
+])

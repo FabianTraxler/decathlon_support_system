@@ -4,6 +4,7 @@ import { InlineEdit } from "../lib/achievement_edit/inline";
 import { Run } from "./group";
 import { convert_to_integral_fractional } from "../lib/parsing";
 import { AthleteTimeResult } from "../lib/interfaces";
+import { long_distance_disciplines } from "../lib/config";
 
 export default function TrackOverview({ runs, discipline_name, updateAthleteResults }:
     { runs: Run[], discipline_name: string, updateAthleteResults: (results: Map<string, Athlete>) => void }) {
@@ -60,14 +61,14 @@ export default function TrackOverview({ runs, discipline_name, updateAthleteResu
                                             let achievement: AchievementValue = {
                                                 Time: {
                                                     name: discipline_name,
-                                                    unit: (discipline_name == "1500 Meter Lauf") ? "min" : "s"
+                                                    unit: (long_distance_disciplines.includes(discipline_name)) ? "min" : "s"
                                                 },
                                             }
                                             if (athlete.final_result) {
                                                 achievement = {
                                                     Time: {
                                                         name: discipline_name,
-                                                        unit: (discipline_name == "1500 Meter Lauf") ? "min" : "s",
+                                                        unit: (long_distance_disciplines.includes(discipline_name)) ? "min" : "s",
                                                         final_result: convert_to_integral_fractional(athlete.final_result.toString())                                                    },
                                                 }
                                             }

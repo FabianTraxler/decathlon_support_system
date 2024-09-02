@@ -40,7 +40,7 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
     } else if (achievement_type == "Distance") {
         let achievement_value = achievement.Distance
         if (achievement_value) {
-            achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional
+            achievement_string = achievement_value.final_result?.integral + "," + achievement_value.final_result?.fractional.toString().padStart(2,"0")
             achievement_unit = achievement_value.unit || "m"
         }
     } else if (achievement_type == "Height") {
@@ -50,7 +50,7 @@ export function convert_achievement_to_string(achievement: AchievementValue, ach
             achievement_unit = achievement_value.unit || "cm"
         }
     }
-    if (!achievement || achievement_string == "undefined,undefined" || achievement_string == "-1" || achievement_string == "-1,0") {
+    if (!achievement || achievement_string == "undefined,undefined" || achievement_string == "-1" || achievement_string == "-1,0" || achievement_string == "-1,00") {
         achievement_string = ""
         achievement_unit = ""
     }
