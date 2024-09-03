@@ -134,7 +134,7 @@ impl TimeGroup {
                                     let day = date_info.get(&day_name)
                                         .ok_or(Box::from("Day not found in dates") as Box<dyn Error>)?;
 
-                                    let date_str = format!("{day} {time}:00 +0100");
+                                    let date_str = format!("{day} {time}:00 +0200");
 
                                     match DateTime::parse_from_str(date_str.as_str(), "%d.%m.%Y %H:%M:%S %z") {
                                         Ok(parsed) => Utc.from_utc_datetime(&parsed.naive_utc()),
