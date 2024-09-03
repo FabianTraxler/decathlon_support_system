@@ -6,6 +6,7 @@ import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 import { PopUp } from '@/app/lib/achievement_edit/popup';
+import { AthleteID, Discipline } from '@/app/lib/interfaces';
 
 export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(false);
@@ -31,6 +32,163 @@ export default function Athletes({ group_name }: { group_name: string }) {
 
   )
 }
+
+
+function GroupAthletes({ group_name }: { group_name: string }) {
+  const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
+  const [disciplineEdit, setDisciplineEdit] = useState<{discipline: string, athlete_order: string[]}>({discipline: "", athlete_order: []})
+  const [sorted, setSorted] = useState({ name: "#", ascending: true })
+
+  const discipline_edit_mode = function (selected_discipline: string) {
+    if(selected_discipline != disciplineEdit.discipline){
+      let athlete_order: string[] = []
+      fetch(`/api/discipline?group_name=${group_name}&discipline_name=${selected_discipline}`)
+      .then(res => {
+        if (res.ok) {
+          return res.json()
+        } else {
+          throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+        }
+      })
+      .then(res => {
+        let discipline: Discipline = res;
+        let starting_order = discipline.starting_order;
+        if(typeof starting_order != "string"){
+          if(starting_order.Track){
+            let runs = starting_order.Track
+            runs.forEach(run => {
+              run.athletes.forEach(athlete => 
+                athlete_order.push(athlete.name + "_" + athlete.surname)
+              )
+            })
+          }else if(starting_order.Default){
+            starting_order.Default.forEach(athlete => 
+              athlete_order.push(athlete.name + "_" + athlete.surname)
+            )
+          }
+        }
+        setDisciplineEdit({
+          discipline: selected_discipline,
+          athlete_order: athlete_order
+        })
+      })
+      .catch(e => {
+        console.error(e)
+      })
+
+
+    }else{
+      setDisciplineEdit({
+        discipline: "",
+        athlete_order: []
+      })
+    }
+  }
+
+  useEffect(() => {
+    const getData = function () {
+      if (group_name.startsWith("Gruppe")) {
+        fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+        })
+      } else if (group_name.startsWith("U")) {
+        var disciplines: [string, string, string][] = [];
+        if (group_name == "U16") {
+          disciplines = hepathlon_disciplines;
+        } else if (group_name == "U14") {
+          disciplines = pentathlon_disciplines;
+        } else {
+          disciplines = triathlon_discplines
+        }
+        fetch_group_athletes(group_name, (athletes: Athlete[]) => {
+          set_athleteState({ athletes: sortAthletes(athletes), disciplines: disciplines })
+        })
+
+      } else {
+        fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
+          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+        })
+      }
+    }
+
+    getData()
+
+    const interval = setInterval(() => getData(), 2000)
+
+    return () => clearInterval(interval)
+  }, [group_name])
+
+  const sortColumn = function (col_name: string) {
+    if (sorted.name == col_name) {
+      setSorted({ name: col_name, ascending: !sorted.ascending })
+    } else {
+      setSorted({ name: col_name, ascending: false })
+    }
+  }
+
+  const sortAthletes = function(athletes: Athlete[]): Athlete[]{
+    if (disciplineEdit.discipline == "") {
+      athletes.sort((a, b) => sort_athletes(a, b, sorted));
+    } else {
+      // sort athletes like the discipline athlete order for easier manual input
+      athletes.sort((a,b) => disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname) - disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname))
+    }
+    return athletes
+  }
+
+  athleteState.athletes = sortAthletes(athleteState.athletes);
+
+
+  return (
+    <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
+      <thead>
+        <tr>
+          <th onClick={() => sortColumn("#")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>#</span>
+            {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Gender</span>
+            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          <th onClick={() => sortColumn("Name")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Name</span>
+            {sorted.name != "Name" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "Name" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "Name" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          <th onClick={() => sortColumn("JG")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>JG</span>
+            {sorted.name != "JG" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          <th onClick={() => sortColumn("Summe")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Summe</span>
+            {sorted.name != "Summe" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "Summe" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "Summe" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          {athleteState.disciplines.map((info) => {
+            return <th key={info[0]} onClick={(_) => {
+              discipline_edit_mode(info[0])
+            }}
+              className="border hover:cursor-pointer hover:bg-slate-400 border-slate-600 p-1 pl-2 pr-2">{info[2]}
+              <span className='pl-2 '>&#9998;</span></th>
+
+          })}
+          <th className="border border-slate-600 p-1 pl-2 pr-2">Urkunde</th>
+        </tr>
+      </thead>
+      <tbody>
+        {athleteState.athletes.map((athlete, i) => {
+          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
+            disciplineEdit={disciplineEdit.discipline}></AthleteTableRow>
+        })}
+      </tbody>
+    </table>
+  )
+}
+
 
 function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
@@ -231,107 +389,4 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
   )
 }
 
-
-function GroupAthletes({ group_name }: { group_name: string }) {
-  const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
-  const [disciplineEdit, setDisciplineEdit] = useState("")
-  const [sorted, setSorted] = useState({ name: "#", ascending: true })
-
-  const discipline_edit_mode = function (selected_discipline: string) {
-    let new_discipline = (selected_discipline != disciplineEdit) ? selected_discipline : "";
-    setDisciplineEdit(new_discipline)
-  }
-
-  useEffect(() => {
-    const getData = function () {
-      if (group_name.startsWith("Gruppe")) {
-        fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: athletes, disciplines: decathlon_disciplines })
-        })
-      } else if (group_name.startsWith("U")) {
-        var disciplines: [string, string, string][] = [];
-        if (group_name == "U16") {
-          disciplines = hepathlon_disciplines;
-        } else if (group_name == "U14") {
-          disciplines = pentathlon_disciplines;
-        } else {
-          disciplines = triathlon_discplines
-        }
-        fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: athletes, disciplines: disciplines })
-        })
-
-      } else {
-        fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: athletes, disciplines: decathlon_disciplines })
-        })
-      }
-    }
-
-    getData()
-
-    const interval = setInterval(() => getData(), 2000)
-
-    return () => clearInterval(interval)
-  }, [group_name])
-
-  const sortColumn = function (col_name: string) {
-    if (sorted.name == col_name) {
-      setSorted({ name: col_name, ascending: !sorted.ascending })
-    } else {
-      setSorted({ name: col_name, ascending: false })
-    }
-  }
-
-  athleteState.athletes.sort((a, b) => sort_athletes(a, b, sorted));
-
-  return (
-    <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
-      <thead>
-        <tr>
-          <th onClick={() => sortColumn("#")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>#</span>
-            {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
-          </th>
-          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Gender</span>
-            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
-          </th>
-          <th onClick={() => sortColumn("Name")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Name</span>
-            {sorted.name != "Name" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Name" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Name" && !sorted.ascending) && <span>&#x25be;</span>}
-          </th>
-          <th onClick={() => sortColumn("JG")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>JG</span>
-            {sorted.name != "JG" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
-          </th>
-          <th onClick={() => sortColumn("Summe")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Summe</span>
-            {sorted.name != "Summe" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Summe" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Summe" && !sorted.ascending) && <span>&#x25be;</span>}
-          </th>
-          {athleteState.disciplines.map((info) => {
-            return <th key={info[0]} onClick={(_) => {
-              discipline_edit_mode(info[0])
-            }}
-              className="border hover:cursor-pointer hover:bg-slate-400 border-slate-600 p-1 pl-2 pr-2">{info[2]}
-              <span className='pl-2 '>&#9998;</span></th>
-
-          })}
-          <th className="border border-slate-600 p-1 pl-2 pr-2">Urkunde</th>
-        </tr>
-      </thead>
-      <tbody>
-        {athleteState.athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
-            disciplineEdit={disciplineEdit}></AthleteTableRow>
-        })}
-      </tbody>
-    </table>
-  )
-}
 
