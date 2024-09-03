@@ -2,6 +2,7 @@ use crate::certificate_generation::pdf::pdf_generation::{add_logo, setup_pdf, LE
 use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
 use crate::certificate_generation::{athletes, competition_order, CompetitionType, Group};
 use chrono::Datelike;
+use printpdf::rectangle::Rect;
 use printpdf::BuiltinFont::HelveticaBold;
 use printpdf::{
     IndirectFontRef, Line, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference,
@@ -17,7 +18,6 @@ const DEFAULT_DISCIPLINE_WIDTH: f32 = 11.5;
 const POINTS_WIDTH: f32 = 8.;
 
 pub fn new_group_result(group: &Group) -> PdfDocumentReference {
-
     if group.competition_type() == CompetitionType::Decathlon {
         // One result for full group
         let (pdf, page, layer) = setup_pdf(format!("Ergebniss {}", group.name()).as_str(), true);
@@ -26,24 +26,39 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
         // Separated result for M and W
         let w_group = Group::new(
             format!("{} - {}", group.name(), "W").as_str(),
-            group.athletes().iter().map(|athlete| athlete.clone()).filter(|athlete| athlete.gender() == "W").collect(),
-            group.competition_type()
+            group
+                .athletes()
+                .iter()
+                .map(|athlete| athlete.clone())
+                .filter(|athlete| athlete.gender() == "W")
+                .collect(),
+            group.competition_type(),
         );
-        let (mut pdf, mut page, mut layer) = setup_pdf(format!("Ergebniss {}", w_group.name()).as_str(), true);
+        let (mut pdf, mut page, mut layer) =
+            setup_pdf(format!("Ergebniss {}", w_group.name()).as_str(), true);
         pdf = add_group_result_to_page(&w_group, pdf, page, layer);
 
-        
         let m_group = Group::new(
             format!("{} - {}", group.name(), "M").as_str(),
-            group.athletes().iter().map(|athlete| athlete.clone()).filter(|athlete| athlete.gender() == "M").collect(),
-            group.competition_type()
+            group
+                .athletes()
+                .iter()
+                .map(|athlete| athlete.clone())
+                .filter(|athlete| athlete.gender() == "M")
+                .collect(),
+            group.competition_type(),
         );
         (page, layer) = add_pdf_page(&pdf, format!("Ergebniss {}", m_group.name()).as_str(), true);
         add_group_result_to_page(&m_group, pdf, page, layer)
     }
 }
 
-pub fn add_group_result_to_page(group: &Group, pdf: PdfDocumentReference, page: PdfPageIndex, layer: PdfLayerIndex) -> PdfDocumentReference {
+pub fn add_group_result_to_page(
+    group: &Group,
+    pdf: PdfDocumentReference,
+    page: PdfPageIndex,
+    layer: PdfLayerIndex,
+) -> PdfDocumentReference {
     let comic_font = pdf
         .add_external_font(
             File::open("assets/fonts/comic_sans/regular.TTF")
@@ -157,9 +172,49 @@ fn add_group_result_heading(
     let font_size = 10.0;
     let y_coord = 175.;
     let mut x_coord = LEFT_PAGE_EDGE;
-
+    
     let competition_type = group.competition_type();
     let competition_disciplines = competition_order(&competition_type);
+
+    // Add background color
+    x_coord += *alignments.get("place").expect("Value defined before");
+    x_coord += *alignments.get("sex").expect("Value defined before");
+    x_coord += *alignments.get("name").expect("Value defined before");
+    if competition_disciplines.len() < 6 {
+        // Use double space for names if we have less than 6 disciplines
+        x_coord += *alignments.get("name").expect("Value defined before");
+    }
+    x_coord += *alignments.get("birthyear").expect("Value defined before");
+    x_coord += *alignments
+        .get("total_points")
+        .expect("Value defined before");
+
+    for discipline_name in &competition_disciplines {
+        let discipline_width = alignments
+            .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
+            .unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
+        x_coord += discipline_width;
+        x_coord += POINTS_WIDTH;
+    }
+
+    pdf_layer.set_fill_color(printpdf::Color::Rgb(
+        printpdf::color::Rgb::new(74./256., 181./256., 226./256., None))
+    );
+    let background_color = Rect::new(
+        Mm(LEFT_PAGE_EDGE - 1.),
+        Mm(174.),
+        Mm(x_coord - 1.),
+        Mm(179.),
+    )
+    .with_mode(printpdf::path::PaintMode::Fill);
+    pdf_layer.add_rect(background_color);
+
+
+    pdf_layer.set_fill_color(printpdf::Color::Rgb(
+        printpdf::color::Rgb::new(0.,0.,0., None))
+    );
+
+    x_coord = LEFT_PAGE_EDGE;
 
     pdf_layer.use_text("#", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("place").expect("Value defined before");
@@ -215,6 +270,8 @@ fn add_group_result_heading(
         ],
         is_closed: true,
     });
+
+
 }
 
 fn add_group_athletes(
@@ -239,9 +296,11 @@ fn add_group_athletes(
 
     athletes.sort_by_key(|a| Reverse(a.total_point()));
 
-
     let mut y_coord = initial_y_coord;
     for (i, athlete) in athletes.iter().enumerate() {
+        if athlete.starting_number().is_none() {
+            continue;
+        }
         let mut x_coord = LEFT_PAGE_EDGE;
         let mut num_lines = 1.;
 
