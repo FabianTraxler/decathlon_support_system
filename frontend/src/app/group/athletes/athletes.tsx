@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AchievementValue, Athlete, fetch_group_athletes } from "@/app/lib/athlete_fetching";
 import AchievementDisplay from "./achievement";
 import { createContext } from 'react';
-import { decathlon_disciplines, discipline_mapping } from "@/app/lib/config";
+import { discipline_mapping } from "@/app/lib/config";
 import Title_Footer_Layout from "../subpage_layout";
 import { LoadingAnimation } from "@/app/lib/loading";
 
@@ -13,7 +13,7 @@ interface OverviewAthlete extends Athlete {
 export const AchievementContext = createContext({ updateAchievement: (athlete_id: number, achievement_name: string, achievement: AchievementValue) => { } });
 
 export default function Athletes({ group_name }: { group_name: string }) {
-    const [athletes, setAthletes] = useState<OverviewAthlete[]>([])
+    const [athletesState, setAthletesState] = useState<{ athletes: OverviewAthlete[], loaded: boolean }>({ athletes: [], loaded: false })
 
     const setOverviewAthletes = function (athletes: Athlete[]) {
         let overview_athletes = athletes
@@ -24,7 +24,8 @@ export default function Athletes({ group_name }: { group_name: string }) {
                 overview_athlete.searched = true;
                 return overview_athlete
             })
-        setAthletes(overview_athletes)
+        overview_athletes.sort(function (a, b) { return b.starting_number - a.starting_number })
+        setAthletesState({ loaded: true, athletes: overview_athletes })
     }
 
     useEffect(() => {
@@ -32,11 +33,11 @@ export default function Athletes({ group_name }: { group_name: string }) {
     }, [group_name])
 
     const updateAchievement = function (athlete_id: number, achievement_name: string, achievement: AchievementValue) {
-        athletes[athlete_id].achievements.set(achievement_name, achievement)
+        athletesState.athletes[athlete_id].achievements.set(achievement_name, achievement)
     }
 
     const onSearch = function (search_term: string) {
-        let new_highlighted_athletes: OverviewAthlete[] = athletes.map(athlete => {
+        let new_highlighted_athletes: OverviewAthlete[] = athletesState.athletes.map(athlete => {
             if (athlete.name.toLocaleLowerCase().includes(search_term.toLocaleLowerCase()) ||
                 athlete.surname.toLocaleLowerCase().includes(search_term.toLocaleLowerCase())
             ) {
@@ -47,7 +48,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
             return athlete
         })
 
-        setAthletes(new_highlighted_athletes)
+        setAthletesState({ ...athletesState, athletes: new_highlighted_athletes })
     }
 
     return (
@@ -83,12 +84,12 @@ export default function Athletes({ group_name }: { group_name: string }) {
             </div>
 
             {
-                athletes.length > 0 ?
+                athletesState.athletes.length > 0 ?
                     <AchievementContext.Provider value={{ updateAchievement }}>
                         <div className="grid row-span-6 items-top overflow-scroll overscroll-contain m-1 mt-3 border rounded-md">
                             <div>
                                 {
-                                    athletes.map((athlete, index) => {
+                                    athletesState.athletes.map((athlete, index) => {
                                         return athlete.searched
                                             ? (
                                                 <AthleteOverview key={athlete.starting_number} athlete={athlete} athlete_number={index}></AthleteOverview>
@@ -100,7 +101,14 @@ export default function Athletes({ group_name }: { group_name: string }) {
                         </div>
                     </AchievementContext.Provider>
                     :
-                    <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
+                    athletesState.loaded ?
+                        <div className="h-full flex items-center justify-center">
+                            <div className="text-xl font-bold text-center">
+                                Keine Athlet:innen mit Startnummer vorhanden!
+                            </div>
+                        </div>
+                        :
+                        <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
             }
 
         </Title_Footer_Layout>
