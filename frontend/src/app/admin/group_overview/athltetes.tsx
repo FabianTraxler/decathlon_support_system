@@ -70,6 +70,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   return (
     <tr key={full_name}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
+      <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.gender}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear() || ""}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
@@ -292,6 +293,11 @@ function GroupAthletes({ group_name }: { group_name: string }) {
             {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
             {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
             {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
+          </th>
+          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Gender</span>
+            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
+            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
+            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("Name")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Name</span>
             {sorted.name != "Name" && <span>&#x25b4;&#x25be;</span>}

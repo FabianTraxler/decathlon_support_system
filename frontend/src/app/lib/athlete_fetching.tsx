@@ -157,7 +157,7 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
       else if (a.total_points > b.total_points) return_value = 1
       else return_value = 0
       break;
-    case "gender":
+    case "Gender":
         if (a.gender < b.gender) return_value = -1
         else if (a.gender > b.gender) return_value = 1
         else return_value = 0
