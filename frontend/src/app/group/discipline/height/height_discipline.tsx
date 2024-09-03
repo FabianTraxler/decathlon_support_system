@@ -87,6 +87,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                 finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
                     setDisciplineState({
                         ...disciplineState,
+                        loaded: true,
                         discipline: discipline
                     })
                 })
@@ -105,6 +106,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
         finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
             setDisciplineState({
                 ...disciplineState,
+                loaded: true,
                 discipline: discipline,
             })
         })
@@ -291,7 +293,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 start_height: min_start_height,
                 start_height_set: false,
                 height_increase: height_increase,
-                still_active: true,
+                still_active: false,
                 current_height: min_start_height,
                 current_try: 1,
                 full_name: () => athlete.name + "_" + athlete.surname
@@ -325,7 +327,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 } else if (achievement.start_height) {
                     athlete_result.current_height = achievement.start_height
                     athlete_result.current_try = 1
-                    if (achievement.start_height < current_height) {
+                    if (achievement.start_height < current_height && achievement.start_height != -1) {
                         current_height = achievement.start_height
                     }
                 }
