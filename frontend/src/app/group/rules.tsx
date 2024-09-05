@@ -161,6 +161,30 @@ function DisciplineRuleOverview({ discipline, onClose }: { discipline: Disciplin
                             <div>{discipline_rule_text.start_height}</div>
                         </div>
                     }
+                    {
+                        discipline_rule_text.hurdle_height &&
+                        <div>
+                            <div className="font-bold">Hürden Höhen:</div>
+                            {discipline_rule_text.hurdle_height.split("\n").map((text, i) => {
+                                let subheader = !text.startsWith(" -")
+                                return (
+                                    <div key={i} className={"mb-1 " + (subheader && "underline")}>{text}</div>
+                                )
+                            })}
+                        </div>
+                    }
+                    {
+                        discipline_rule_text.hurdle_distance &&
+                        <div>
+                            <div className="font-bold">Hürden Abstand:</div>
+                            {discipline_rule_text.hurdle_distance.split("\n").map((text, i) => {
+                                let subheader = !text.startsWith(" -")
+                                return (
+                                    <div key={i} className={"mb-1 " + (subheader && "underline")}>{text}</div>
+                                )
+                            })}
+                        </div>
+                    }
                     <div>
 
                     </div>

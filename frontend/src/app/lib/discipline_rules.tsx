@@ -3,11 +3,12 @@ type DisciplineRule = {
     info: string,
     weights?: string,
     start_height?: string,
-    hurdle_height?: string
+    hurdle_height?: string,
+    hurdle_distance?: string
 }
 
 type Rules = {
-    [index:string]: DisciplineRule
+    [index: string]: DisciplineRule
 }
 
 export const general_rules = {
@@ -33,7 +34,7 @@ export const discipline_rules: Rules = {
     },
     "Hochsprung": {
         "image": "high-jump.svg",
-        "info": "Es gibt je Höhe drei Versuche, wobei ein gültiger mit 'O' oder einem Hackerl, ein Fehlversuch mit 'X' und ein ausgelassener Versuch mit '-' gekennzeichnet wird. Die beste Leistung wird am Ende des Bewerbs in eine extra Spalte eingetragen (entfällt bei Nutzung der App).\nNach dem Einspringen soll jede:r Springer:in die Anfangshöhe bekanntgeben, welche im Protokoll/App vermerkt wird.\nAls Fehlversuch wird gewertet, wenn der/die Wettkämpfer:in mit irgendeinem Körperteil die Matte berührt. Wenn die Matte nicht berührt wurde und die Latte nicht abgeworfen wurde, dann darf der Versuch sofort wiederholt werden (Zeitlimit für den gesamten Versuch: 60s)",
+        "info": "Es gibt je Höhe drei Versuche, wobei ein gültiger mit 'O' oder einem Hackerl, ein Fehlversuch mit 'X' und ein ausgelassener Versuch mit '-' oder '/' gekennzeichnet wird. Die beste Leistung wird am Ende des Bewerbs in eine extra Spalte eingetragen (entfällt bei Nutzung der App).\nNach dem Einspringen soll jede:r Springer:in die Anfangshöhe bekanntgeben, welche im Protokoll/App vermerkt wird.\nAls Fehlversuch wird gewertet, wenn der/die Wettkämpfer:in mit irgendeinem Körperteil die Matte berührt. Wenn die Matte nicht berührt wurde und die Latte nicht abgeworfen wurde, dann darf der Sprung sofort wiederholt werden (Zeitlimit für den gesamten Versuch: 60s)",
         "start_height": "80cm für alle Athlet:innen. Steigerung 4cm (keine Ausnahmen, auch wenn nur noch ein:e Athlet:in im Bewerb ist)"
     },
     "400 Meter Lauf": {
@@ -43,7 +44,8 @@ export const discipline_rules: Rules = {
     "110 Meter Hürden": {
         "image": "hurdles.svg",
         "info": "App: Die Laufreihenfolge kann digital verändert werden, welche dann direkt bei der Zeitnehmung im Ziel sichtbar ist.\nProtokolle: Es gibt drei Protokolle (Starter, Zeitnehmung, Gruppenbetreuer) und etwaige Änderungswünsche in der Bahnverteilung müssen in allen Protokollen vermerkt werden.",
-        "hurdle_height": "AK-M: 91cm\nAK-W & M40/M50: 76cm\nM60 & W40/W50/W60: 54cm"
+        "hurdle_height": "Anzahl: 10 Hürden \n - AK-M: 91cm\n - AK-W & M40/M50: 76cm\n - M60 & W40/W50/W60: 54cm",
+        "hurdle_distance": " - Anlauf: 13,72m \n - Abstand: 9,14m \n - Auslauf: 14,02m"
     },
     "Diskuswurf": {
         "image": "disc-throw.svg",
@@ -52,7 +54,7 @@ export const discipline_rules: Rules = {
     },
     "Stabhochsprung": {
         "image": "pole-vault.svg",
-        "info": "Es gibt je Höhe drei Versuche, wobei ein gültiger mit 'O' oder einem Hackerl, ein Fehlversuch mit 'X' und ein ausgelassener Versuch mit '-' gekennzeichnet wird. Die beste Leistung wird am Ende des Bewerbs in eine extra Spalte eingetragen (entfällt bei Nutzung der App).\nNach dem Einspringen soll jede:r Springer:in die Anfangshöhe bekanntgeben, welche im Protokoll/App vermerkt wird.\n Als Fehlversuch gilt, wenn der/die Wettkämpfer:in mit irgendeinem Körperteil oder mit dem Stab den Boden oder die Matte jenseits der senkrechten Ebene über der Oberkante tes Einstichkastens berührt (Null-Linie).\n Das Abfangen der Stande wird ausschließlich bei der Anfangshöhe (120cm) akzeptiert.",
+        "info": "Es gibt je Höhe drei Versuche, wobei ein gültiger mit 'O' oder einem Hackerl, ein Fehlversuch mit 'X' und ein ausgelassener Versuch mit '-' oder '/' gekennzeichnet wird. Die beste Leistung wird am Ende des Bewerbs in eine extra Spalte eingetragen (entfällt bei Nutzung der App).\nNach dem Einspringen soll jede:r Springer:in die Anfangshöhe bekanntgeben, welche im Protokoll/App vermerkt wird.\n Als Fehlversuch gilt, wenn der/die Wettkämpfer:in mit irgendeinem Körperteil oder mit dem Stab den Boden oder die Matte jenseits der senkrechten Ebene über der Oberkante tes Einstichkastens berührt (Null-Linie).\n Das Abräumen der Latte mit der Stange wird ausschließlich bei der Anfangshöhe (120cm) akzeptiert und wird danach als ungültiger Versuch gewertet.",
         "start_height": "120cm für alle Athlet:innen. Steigerung 20cm (keine Ausnahmen, auch wenn nur noch ein:e Athlet:in im Bewerb ist)"
 
     },
@@ -77,6 +79,9 @@ export const discipline_rules: Rules = {
     "60 Meter Hürden": {
         "image": "hurdles.svg",
         "info": "App: Die Laufreihenfolge kann digital verändert werden, welche dann direkt bei der Zeitnehmung im Ziel sichtbar ist.\nProtokolle: Es gibt drei Protokolle (Starter, Zeitnehmung, Gruppenbetreuer) und etwaige Änderungswünsche in der Bahnverteilung müssen in allen Protokollen vermerkt werden.",
+        "hurdle_height": "Anzahl: 4 Hürden \n - W & M: 60 oder 64cm",
+        "hurdle_distance": " - Anlauf: 13,00m \n - Abstand: 11,50m \n - Auslauf: 12,50m"
+
     },
     "60 Meter Lauf": {
         "image": "sprint.svg",

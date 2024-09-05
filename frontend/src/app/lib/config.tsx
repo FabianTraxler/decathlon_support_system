@@ -74,5 +74,5 @@ export const unit_mapping: Map<string, string> = new Map([
     ["s", "ss,ss"], 
     ["min", "min:ss,ss"], 
     ["cm", "cm"],
-    ["m", "mm,cmcm"]
+    ["m", "m"]
 ])
