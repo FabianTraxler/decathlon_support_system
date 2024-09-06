@@ -93,7 +93,8 @@ impl Athlete {
                         age if age < 40 => age_group += "",
                         age if age < 50 => age_group += "40",
                         age if age < 60 => age_group += "50",
-                        _ => age_group += "60"
+                        age if age < 70 => age_group += "60",
+                        _ => age_group += "70"
                     }
                 }
                 age_group

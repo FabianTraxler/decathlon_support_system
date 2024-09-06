@@ -146,7 +146,9 @@ impl HeightResult {
             let a: f32;
             let b: f32;
             let c: f32;
-            let mut m: f32 = self.final_result() as f32;
+            let age_factor: f32 = get_age_factor(athlete, self.name.as_str());
+
+            let mut leistung: f32 = self.final_result() as f32;
             match self.name.as_str() {
                 "Hochsprung" => match athlete.gender().as_str() {
                     "W" => {
@@ -176,10 +178,10 @@ impl HeightResult {
                     a = 0.;
                     b = 0.;
                     c = 1.;
-                    m = 0.;
+                    leistung = 0.;
                 }
             }
-            (a * (m - b).powf(c)) as u32
+            (a * ((leistung * age_factor) - b).powf(c)) as u32
         } else {
             // Youth disciplines
             let a: f32;
@@ -307,10 +309,13 @@ impl DistanceResult {
             let a: f32;
             let b: f32;
             let c: f32;
-            let m: f32;
+            let leistung: f32;
+
+            let age_factor: f32 = get_age_factor(athlete, self.name.as_str());
+
             match self.name.as_str() {
                 "Weitsprung" => {
-                    m = self.final_result().to_f32() * 100.;
+                    leistung = self.final_result().to_f32() * 100.;
                     match athlete.gender().as_str() {
                         "W" => {
                             a = 0.188807;
@@ -325,7 +330,7 @@ impl DistanceResult {
                     }
                 }
                 "Kugelstoß" => {
-                    m = self.final_result().to_f32();
+                    leistung = self.final_result().to_f32();
                     match athlete.gender().as_str() {
                         "W" => {
                             a = 56.0211;
@@ -340,7 +345,7 @@ impl DistanceResult {
                     }
                 }
                 "Diskuswurf" => {
-                    m = self.final_result().to_f32();
+                    leistung = self.final_result().to_f32();
                     match athlete.gender().as_str() {
                         "W" => {
                             a = 12.3311;
@@ -355,7 +360,7 @@ impl DistanceResult {
                     }
                 }
                 "Speerwurf" => {
-                    m = self.final_result().to_f32();
+                    leistung = self.final_result().to_f32();
                     match athlete.gender().as_str() {
                         "W" => {
                             a = 15.9803;
@@ -373,10 +378,10 @@ impl DistanceResult {
                     a = 0.;
                     b = 0.;
                     c = 1.;
-                    m = 0.;
+                    leistung = 0.;
                 }
             }
-            (a * (m - b).powf(c)) as u32
+            (a * ((leistung * age_factor) - b).powf(c)) as u32
         } else {
             // Youth disciplines
             let mut a: f32;
@@ -586,7 +591,10 @@ impl TimeResult {
             let a: f32;
             let b: f32;
             let c: f32;
-            let mut m: f32 = self.final_result().to_f32();
+            
+            let age_factor: f32 = get_age_factor(athlete, self.name.as_str());
+            
+            let mut leistung: f32 = self.final_result().to_f32();
             match self.name.as_str() {
                 "100 Meter Lauf" => match athlete.gender().as_str() {
                     "W" => {
@@ -640,10 +648,10 @@ impl TimeResult {
                     a = 0.;
                     b = 0.;
                     c = 1.;
-                    m = 0.;
+                    leistung = 0.;
                 }
             }
-            (a * (b - m).powf(c)) as u32
+            (a * (b - (leistung * age_factor)).powf(c)) as u32
         } else {
             // Youth disciplines
             let mut a: f32;
@@ -766,6 +774,140 @@ impl TimeResult {
 
         Ok(())
     }
+}
+
+
+fn get_age_factor(athlete: &Athlete, discipline_name: &str) -> f32{
+    let age_group = athlete.age_group();
+
+    let age_discipline_factor = match age_group.as_str() {
+        "M" => 1.0,
+        "M40" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.9578,
+                "400 Meter Lauf" => 0.9354,
+                "1500 Meter Lauf" => 0.9519,
+                "110 Meter Hürden" => 0.9463,
+                "Weitsprung" => 1.0899,
+                "Hochsprung" => 1.0486,
+                "Stabhochsprung" => 1.0773,
+                "Kugelstoß" => 1.1137,
+                "Diskuswurf" => 1.1014,
+                "Speerwurf" => 1.0863,
+                _ => 1.0
+            }
+        },
+        "M50" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.8996,
+                "400 Meter Lauf" => 0.8754,
+                "1500 Meter Lauf" => 0.8731,
+                "110 Meter Hürden" => 0.8965,
+                "Weitsprung" => 1.2286,
+                "Hochsprung" => 1.1617,
+                "Stabhochsprung" => 1.2272,
+                "Kugelstoß" => 1.1721,
+                "Diskuswurf" => 1.0218,
+                "Speerwurf" => 1.2278,
+                _ => 1.0
+            }
+        },
+        "M60" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.8414,
+                "400 Meter Lauf" => 0.8154,
+                "1500 Meter Lauf" => 0.8379,
+                "110 Meter Hürden" => 0.9463,
+                "Weitsprung" => 1.4078,
+                "Hochsprung" => 1.3025,
+                "Stabhochsprung" => 1.4236,
+                "Kugelstoß" => 1.2482,
+                "Diskuswurf" => 1.0628,
+                "Speerwurf" => 1.4140,
+                _ => 1.0
+            }
+        },
+        "M70" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.7782,
+                "400 Meter Lauf" => 0.7460,
+                "1500 Meter Lauf" => 0.7079,
+                "110 Meter Hürden" => 0.7665,
+                "Weitsprung" => 1.6482,
+                "Hochsprung" => 1.4832,
+                "Stabhochsprung" => 1.6949,
+                "Kugelstoß" => 1.2806,
+                "Diskuswurf" => 1.2781,
+                "Speerwurf" => 1.6801,
+                _ => 1.0
+            }
+        },
+        "W" => 1.0,
+        "W40" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.9548,
+                "400 Meter Lauf" => 0.9391,
+                "1500 Meter Lauf" => 0.9457,
+                "110 Meter Hürden" => 0.9508,
+                "Weitsprung" => 1.1101,
+                "Hochsprung" => 1.1036,
+                "Stabhochsprung" => 1.1451,
+                "Kugelstoß" => 1.1100,
+                "Diskuswurf" => 1.1150,
+                "Speerwurf" => 1.1475,
+                _ => 1.0
+            }
+        },
+        "W50" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.8844,
+                "400 Meter Lauf" => 0.8575,
+                "1500 Meter Lauf" => 0.8627,
+                "110 Meter Hürden" => 0.8630,
+                "Weitsprung" => 1.2538,
+                "Hochsprung" => 1.2256,
+                "Stabhochsprung" => 1.2961,
+                "Kugelstoß" => 1.2607,
+                "Diskuswurf" => 1.3128,
+                "Speerwurf" => 1.3147,
+                _ => 1.0
+            }
+        },
+        "W60" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.8140,
+                "400 Meter Lauf" => 0.7715,
+                "1500 Meter Lauf" => 0.7759,
+                "110 Meter Hürden" => 0.7607,
+                "Weitsprung" => 1.4400,
+                "Hochsprung" => 1.3779,
+                "Stabhochsprung" => 1.4932,
+                "Kugelstoß" => 1.5015,
+                "Diskuswurf" => 1.5961,
+                "Speerwurf" => 1.6118,
+                _ => 1.0
+            }
+        },
+        "W70" => {
+            match discipline_name {
+                "100 Meter Lauf" => 0.7396,
+                "400 Meter Lauf" => 0.6602,
+                "1500 Meter Lauf" => 0.6635,
+                "110 Meter Hürden" => 0.6362,
+                "Weitsprung" => 1.6943,
+                "Hochsprung" => 1.5795,
+                "Stabhochsprung" => 1.7854,
+                "Kugelstoß" => 1.8559,
+                "Diskuswurf" => 2.0542,
+                "Speerwurf" => 2.0992,
+                _ => 1.0
+            }
+        },
+        _ => 1.0
+    };
+
+
+    age_discipline_factor
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use std::fs::File;
 use printpdf::{IndirectFontRef, Mm, PdfDocumentReference, PdfLayerIndex, PdfLayerReference, PdfPageIndex, TextRenderingMode};
-use crate::certificate_generation::{athletes, competition_order, Athlete, CompetitionType, Group};
+use crate::certificate_generation::{competition_order, Athlete, CompetitionType, Group};
 use crate::certificate_generation::pdf::pdf_generation::{add_logo, add_pdf_page, setup_pdf};
 use crate::certificate_generation::pdf::{COMPETITION_NUMBER, DATE};
 
