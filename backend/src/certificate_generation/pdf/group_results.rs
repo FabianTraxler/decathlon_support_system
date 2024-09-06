@@ -75,7 +75,7 @@ pub fn add_group_result_to_page(
     // Add result heading
     let mut alignments: HashMap<&str, f32> = HashMap::new();
     alignments.insert("place", 6.);
-    alignments.insert("sex", 8.);
+    alignments.insert("sex", 10.);
     alignments.insert("name", 38.);
     alignments.insert("birthyear", 7.);
     alignments.insert("total_points", 13.);
@@ -146,8 +146,12 @@ fn setup_new_page(
         Mm(195.0),
         &helvetica_font_bold,
     );
+    let mut group_name = group.name().to_string();
+    if group_name.len() == 1{
+        group_name = format!("AK {}", group_name);
+    }
     current_layer.use_text(
-        format!("{}", group.name()),
+        format!("{}", group_name),
         font_size,
         Mm(148.5),
         Mm(185.),
@@ -219,7 +223,7 @@ fn add_group_result_heading(
     pdf_layer.use_text("#", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("place").expect("Value defined before");
 
-    pdf_layer.use_text("Sex", font_size, Mm(x_coord), Mm(y_coord), font);
+    pdf_layer.use_text("AG", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("sex").expect("Value defined before");
 
     pdf_layer.use_text("Name", font_size, Mm(x_coord), Mm(y_coord), font);
@@ -232,7 +236,7 @@ fn add_group_result_heading(
     pdf_layer.use_text("JG", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("birthyear").expect("Value defined before");
 
-    pdf_layer.use_text("Summe", font_size, Mm(x_coord), Mm(y_coord), font);
+    pdf_layer.use_text("Punkte", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments
         .get("total_points")
         .expect("Value defined before");
@@ -313,7 +317,7 @@ fn add_group_athletes(
         );
         x_coord += *alignments.get("place").expect("Value defined before");
 
-        let gender = match athlete.gender().as_ref() {
+        let gender = match athlete.age_group().as_ref() {
             "Staffel" => "S".to_string(),
             ref x => x.to_string(),
         };
