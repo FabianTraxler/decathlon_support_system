@@ -6,11 +6,12 @@ use crate::database::db_errors::ItemNotFound;
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
-use aws_sdk_dynamodb::types::AttributeValue;
+use aws_sdk_dynamodb::types::{AttributeValue, Capacity, KeysAndAttributes};
 use aws_sdk_dynamodb::Client;
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
+use log::error;
 
 pub struct DynamoDB {
     client: Client,
@@ -310,24 +311,38 @@ impl AchievementStorage for DynamoDB {
             .table_name("group_store")
             .key("name", AttributeValue::S(athlete_name))
             .send();
-
-        let all_athletes = self.client.scan().table_name("athlete_store").send();
-
+        
         match item.await {
             Ok(item) => {
                 let item_map = item.item()?;
                 let group_store: GroupStore =
                     serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
+
+                let mut group_athletes_keys = KeysAndAttributes::builder();
+                for athlete_id in &group_store.athlete_ids{
+                    group_athletes_keys = group_athletes_keys.keys(HashMap::from([(
+                        "athlete_id".to_string(),
+                        AttributeValue::S(
+                            athlete_id.full_name().clone()
+                        ),
+                    )]));
+                };
+
+                let athlete_result = self.client
+                .batch_get_item()
+                .request_items(
+                    "athlete_store",
+                    group_athletes_keys.build().ok()?,
+                )
+                .send().await.ok()?;
+
+                let athlete_items = athlete_result.responses()?.get("athlete_store")?; 
                 let mut athletes = Vec::new();
-                for athlete_data in all_athletes.await.ok()?.items() {
-                    let athlete_name = athlete_data.get(&"name".to_string())?.as_s().ok()?;
-                    let athlete_surname = athlete_data.get(&"surname".to_string())?.as_s().ok()?;
-                    let athlete_id = AthleteID::new(athlete_name, athlete_surname);
-                    if group_store.athlete_ids.contains(&athlete_id) {
-                        let athlete: Athlete =
-                            serde_dynamo::from_item(athlete_data.clone()).ok()?;
-                        athletes.push(athlete);
-                    }
+
+                for athlete_data in athlete_items{
+                    let athlete: Athlete =
+                             serde_dynamo::from_item(athlete_data.clone()).ok()?;
+                         athletes.push(athlete);
                 }
 
                 Some(Group::new(
@@ -336,7 +351,10 @@ impl AchievementStorage for DynamoDB {
                     group_store.competition_type,
                 ))
             }
-            Err(_) => None,
+            Err(e) => {
+                error!("Group not found {}", e);
+                None
+            }
         }
     }
 
