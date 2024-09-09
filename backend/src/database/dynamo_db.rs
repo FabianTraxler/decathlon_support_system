@@ -6,7 +6,7 @@ use crate::database::db_errors::ItemNotFound;
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
-use aws_sdk_dynamodb::types::{AttributeValue, Capacity, KeysAndAttributes};
+use aws_sdk_dynamodb::types::{AttributeValue, KeysAndAttributes};
 use aws_sdk_dynamodb::Client;
 use serde_json::Value;
 use std::collections::HashMap;
@@ -304,12 +304,12 @@ impl AchievementStorage for DynamoDB {
     }
 
     async fn get_group(&self, group_id: &GroupID) -> Option<Group> {
-        let athlete_name = group_id.name.clone()?;
+        let group_name = group_id.name.clone()?;
         let item = self
             .client
             .get_item()
             .table_name("group_store")
-            .key("name", AttributeValue::S(athlete_name))
+            .key("name", AttributeValue::S(group_name))
             .send();
         
         match item.await {
@@ -317,6 +317,14 @@ impl AchievementStorage for DynamoDB {
                 let item_map = item.item()?;
                 let group_store: GroupStore =
                     serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
+                
+                if group_store.athlete_ids.len() == 0 {
+                    return Some(Group::new(
+                        group_store.name.as_str(),
+                        Vec::new(),
+                        group_store.competition_type,
+                    ))
+                }
 
                 let mut group_athletes_keys = KeysAndAttributes::builder();
                 for athlete_id in &group_store.athlete_ids{
@@ -853,6 +861,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -868,6 +877,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -883,6 +893,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -898,6 +909,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -913,6 +925,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -928,6 +941,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -943,6 +957,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -958,6 +973,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -973,6 +989,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -988,6 +1005,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1003,6 +1021,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1018,6 +1037,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
         ];
 
@@ -1040,6 +1060,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1055,6 +1076,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1070,6 +1092,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
         ];
 
@@ -1092,6 +1115,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1107,6 +1131,7 @@ mod tests {
                 CompetitionType::Decathlon,
                 None,
                 None,
+                None
             ),
             Athlete::new(
                 "Person",
@@ -1120,6 +1145,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None,
             ),
@@ -1181,6 +1207,7 @@ mod tests {
             CompetitionType::Decathlon,
             None,
             None,
+            None
         );
         let athlete_key = AthleteID::new("Insert", "Test");
 
@@ -1209,6 +1236,7 @@ mod tests {
             CompetitionType::Decathlon,
             None,
             None,
+            None
         );
         let athlete_key = AthleteID::new("Fabian", "Traxler");
 
@@ -1334,6 +1362,7 @@ mod tests {
             CompetitionType::Decathlon,
             None,
             None,
+            None
         );
         let athlete_key = AthleteID::new("Achievement", "Test");
 

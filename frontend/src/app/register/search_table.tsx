@@ -104,17 +104,29 @@ export default function AthleteTable({ athletes, searchQuery }:
                             {(sorted.name == "age_group" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "age_group" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
-                        <th onClick={() => sortColumn("gender")} className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                        <th onClick={() => sortColumn("Gender")} className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
                             <span className='pr-1'>Geschlecht</span>
-                            {sorted.name != "gender" && <span>&#x25b4;&#x25be;</span>}
-                            {(sorted.name == "gender" && sorted.ascending) && <span>&#x25b4;</span>}
-                            {(sorted.name == "gender" && !sorted.ascending) && <span>&#x25be;</span>}
+                            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
+                            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
+                            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
                         <th onClick={() => sortColumn("JG")} className="hidden 2xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
                             <span className='pr-1'>Geburtstag</span>
                             {sorted.name != "JG" && <span>&#x25b4;&#x25be;</span>}
                             {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
+                        </th>
+                        <th onClick={() => sortColumn("T-Shirt")} className="hidden 2xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                            <span className='pr-1'>T-Shirt</span>
+                            {sorted.name != "T-Shirt" && <span>&#x25b4;&#x25be;</span>}
+                            {(sorted.name == "T-Shirt" && sorted.ascending) && <span>&#x25b4;</span>}
+                            {(sorted.name == "T-Shirt" && !sorted.ascending) && <span>&#x25be;</span>}
+                        </th>
+                        <th onClick={() => sortColumn("Bezahlt")} className="hidden 2xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                            <span className='pr-1'>Online Bezahlt</span>
+                            {sorted.name != "Bezahlt" && <span>&#x25b4;&#x25be;</span>}
+                            {(sorted.name == "Bezahlt" && sorted.ascending) && <span>&#x25b4;</span>}
+                            {(sorted.name == "Bezahlt" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
 
                     </tr>
@@ -132,9 +144,6 @@ export default function AthleteTable({ athletes, searchQuery }:
     )
 }
 
-function years_in_ms(years: number): number {
-    return years * 3.154e+10
-}
 
 function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athlete, selected: boolean, groupAvailable: boolean }) {
     const full_name = athlete.name + "_" + athlete.surname;
@@ -146,29 +155,29 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
         birth_day = date.getDate() + "." + date.getMonth() + "." + date.getFullYear();
 
         let today = new Date()
-        let age = today.valueOf() - date.valueOf()
-        if ( age < years_in_ms(16) || athlete.group_name?.includes("U")) {
-            if(age < years_in_ms(4)) {
+        let age = today.getFullYear() - date.getFullYear()
+        if ( age < 16 || athlete.group_name?.includes("U")) {
+            if(age < 4) {
                 age_group = "U4"
-            } else if (age < years_in_ms(8)) {
+            } else if (age < 6) {
                 age_group = "U6"
-            }else if (age < years_in_ms(10)) {
+            }else if (age < 8) {
                 age_group = "U8"
-            }else if (age < years_in_ms(12)) {
+            }else if (age < 10) {
                 age_group = "U10"
-            }else if (age < years_in_ms(14)) {
+            }else if (age < 12) {
                 age_group = "U12"
-            }else if (age < years_in_ms(16)) {
+            }else if (age < 14) {
                 age_group = "U14"
             }else {
                 age_group = "U16"
             }
         } else {
-            if(age < years_in_ms(40)) {
+            if(age < 40) {
                 age_group = "AK"
-            } else if (age < years_in_ms(50)) {
+            } else if (age < 50) {
                 age_group = athlete.gender + "40"
-            }else if (age < years_in_ms(60)) {
+            }else if (age < 60) {
                 age_group = athlete.gender + "50"
             }else {
                 age_group = athlete.gender + "60"
@@ -192,6 +201,8 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{age_group}</td>
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.gender}</td>
             <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2'>{birth_day}</td>
+            <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.t_shirt}</td>
+            <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.paid ? <span>&#9989;</span>: <span>&#10060;</span>}</td>
         </tr>
     )
 }

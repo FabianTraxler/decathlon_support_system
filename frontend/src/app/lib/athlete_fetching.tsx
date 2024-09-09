@@ -7,7 +7,9 @@ export interface Athlete {
   total_points: number,
   gender: string,
   group_name?: string,
-  competition_type: string
+  competition_type: string,
+  t_shirt?: string,
+  paid?: boolean
 }
 
 export interface AchievementValue {
@@ -178,6 +180,20 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
         else return_value = 0
       }
       break;
+    case "T-Shirt":
+        if (!a.t_shirt) return_value = 1
+        else if (!b.t_shirt) return_value = -1
+        else if (a.t_shirt < b.t_shirt) return_value = -1
+        else if (a.t_shirt > b.t_shirt) return_value = 1
+        else return_value = 0
+        break;
+    case "Bezahlt":
+        if (!a.paid) return_value = 1
+        else if (!b.paid) return_value = -1
+        else if (a.paid < b.paid) return_value = -1
+        else if (a.paid > b.paid) return_value = 1
+        else return_value = 0
+        break;
     default:
       return_value = 0
       break;

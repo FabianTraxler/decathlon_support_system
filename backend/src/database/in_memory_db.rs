@@ -27,7 +27,7 @@ unsafe impl Send for InMemoryDB {}
 unsafe impl Sync for InMemoryDB {}
 
 impl InMemoryDB {
-    pub fn new() -> Self {
+    pub fn _new() -> Self {
         InMemoryDB {
             athlete_store: Mutex::new(HashMap::new()),
             group_store: Mutex::new(HashMap::new()),
@@ -321,11 +321,11 @@ impl TimePlanStorage for InMemoryDB {
 #[async_trait]
 impl AuthenticateStorage for InMemoryDB {
     async fn get_role_and_group(&self, _login_info: LoginInfo) -> Option<Role>{
-        !todo!()
+        None
     }
 
     async fn store_role(&self, _role: Role) -> Result<String, Box<dyn Error>>{
-        !todo!()
+        Err(Box::from("Not implemented"))
     }
 }
 
@@ -375,6 +375,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -384,6 +385,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -395,6 +397,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -404,6 +407,7 @@ mod tests {
                 "W",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -415,6 +419,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -424,6 +429,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -435,6 +441,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -444,6 +451,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -455,6 +463,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -464,6 +473,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -475,6 +485,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -484,6 +495,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -502,6 +514,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -512,6 +525,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -521,6 +535,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -539,6 +554,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
             Athlete::new(
@@ -548,6 +564,7 @@ mod tests {
                 "M",
                 HashMap::new(),
                 CompetitionType::Decathlon,
+                None,
                 None,
                 None
             ),
@@ -559,6 +576,7 @@ mod tests {
                 HashMap::new(),
                 CompetitionType::Decathlon,
                 None,
+                None,
                 None
             ),
         ];
@@ -568,8 +586,8 @@ mod tests {
 
     #[actix_rt::test]
     async fn insert_and_access_athlete() {
-        let db = InMemoryDB::new();
-        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon, None, None);
+        let db = InMemoryDB::_new();
+        let new_athlete = Athlete::new("fabian_traxler", "Traxler", None, "M", HashMap::new(), CompetitionType::Decathlon, None, None, None);
         let athlete_key = AthleteID::new("fabian_traxler", "Traxler");
 
         db.write_athlete(athlete_key.clone(), new_athlete.clone()).await.expect("Write should not fail in this test");
@@ -585,7 +603,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn insert_and_access_group() {
-        let db = InMemoryDB::new();
+        let db = InMemoryDB::_new();
         let athletes = get_athletes();
         for athlete in &athletes {
             match db.write_athlete(AthleteID::from_athlete(&athlete), athlete.clone()).await {
@@ -610,7 +628,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn access_age_group() {
-        let db = InMemoryDB::new();
+        let db = InMemoryDB::_new();
         let athletes = get_athletes();
         for athlete in &athletes {
             let athlete_key = AthleteID::from_athlete(&athlete);

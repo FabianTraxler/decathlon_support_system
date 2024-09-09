@@ -98,7 +98,7 @@ impl PDF {
         Ok(PDF { content: doc })
     }
 
-    pub fn write_pdf(self, path: &str) -> Result<(), Box<dyn Error>> {
+    pub fn _write_pdf(self, path: &str) -> Result<(), Box<dyn Error>> {
         let parent = Path::new(path).parent();
         match parent {
             Some(value) => fs::create_dir_all(value)?,
@@ -153,6 +153,7 @@ mod tests {
             CompetitionType::Decathlon,
             Some(12),
             Some(123),
+            None
         )
     }
 
@@ -165,7 +166,7 @@ mod tests {
         athletes.push(get_athlete());
         let group = Group::new("Gruppe 1", athletes, CompetitionType::Decathlon);
         let pdf = PDF::new_group_result(&group);
-        let pdf_write_result = pdf.write_pdf("tests/output/write_group_result.pdf");
+        let pdf_write_result = pdf._write_pdf("tests/output/write_group_result.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -190,9 +191,10 @@ mod tests {
             CompetitionType::Decathlon,
             Some(2),
             Some(123),
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("tests/output/write_decathlon_certificate.pdf");
+        let pdf_write_result = pdf._write_pdf("tests/output/write_decathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -217,9 +219,10 @@ mod tests {
             CompetitionType::Triathlon,
             None,
             None,
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("tests/output/write_triathlon_certificate.pdf");
+        let pdf_write_result = pdf._write_pdf("tests/output/write_triathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
@@ -244,9 +247,10 @@ mod tests {
             CompetitionType::Pentathlon,
             None,
             None,
+            None
         );
         let pdf = PDF::new_certificate(&athlete);
-        let pdf_write_result = pdf.write_pdf("tests/output/write_pentathlon_certificate.pdf");
+        let pdf_write_result = pdf._write_pdf("tests/output/write_pentathlon_certificate.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),

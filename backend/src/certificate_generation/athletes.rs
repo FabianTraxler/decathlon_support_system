@@ -22,7 +22,11 @@ pub struct Athlete {
     #[serde(skip_serializing_if = "Option::is_none")]
     starting_number: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    total_points: Option<u32>
+    total_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    t_shirt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    paid: Option<bool>
 }
 
 impl Athlete {
@@ -34,7 +38,8 @@ impl Athlete {
         achievements: HashMap<String, Achievement>,
         competition_type: CompetitionType,
         starting_number: Option<u16>,
-        total_points: Option<u32>
+        total_points: Option<u32>,
+        t_shirt: Option<String>
     ) -> Self {
         Athlete {
             name: name.trim().to_string(),
@@ -44,7 +49,9 @@ impl Athlete {
             achievements,
             competition_type,
             starting_number,
-            total_points
+            total_points,
+            t_shirt,
+            paid: None
         }
     }
 
@@ -56,7 +63,6 @@ impl Athlete {
 
         Ok(athlete)
     }
-
     pub fn name(&self) -> &str {
         &self.name
     }

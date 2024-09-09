@@ -98,7 +98,13 @@ function AddAthlete({ groupName }: { groupName: string }) {
         let form = e.target as HTMLFormElement;
         var formData = new FormData(form);
 
-        setFormState("uploading")
+
+        let parsing_error = [false, ""];
+        let special_characters = /[!@#$%^&*()}^__+\=\[\]{};':"\\|,.<>\/?]+/;
+
+        let birth_date = parseInt(formData.get("birth_date")?.toString() || "1990");
+        let current_year = new Date().getFullYear();
+        let age = current_year - birth_date;
 
         let values: [string, string | number | {}][] = [];
 
@@ -106,6 +112,12 @@ function AddAthlete({ groupName }: { groupName: string }) {
             let string_val = val.toString();
 
             if (string_val != "") {
+                if(key == "name" || key == "surname"){
+                    // Check for wrong characters
+                    if (special_characters.test(string_val)){
+                        parsing_error = [true, "Name enthält ungültige Zeichen - Bitte keine Sonderzeichen eingeben"]
+                    }
+                }
                 if (/^[0-9]*$/.test(string_val)) {
                     values.push([key, parseInt(string_val)])
                 } else {
@@ -116,12 +128,19 @@ function AddAthlete({ groupName }: { groupName: string }) {
                     let comptetion_name = "Decathlon"
                     if (string_val.includes("U")) {
                         let age_group = parseInt(string_val.replace("U", ""))
+                        if(string_val == "U4/U6"){
+                            age_group = 6
+                        }
                         if (age_group <= 12) {
                             comptetion_name = "Triathlon"
                         } else if (age_group <= 14) {
                             comptetion_name = "Pentathlon"
                         } else if (age_group <= 16) {
                             comptetion_name = "Heptathlon"
+                        }
+
+                        if ((age_group - age <= 0 || age_group - age > 2) && (age_group != 6 || age >= 6)){
+                            parsing_error = [true, "Falsche Altersklasse ausgewählt für angegebenen Jahrgang"]
                         }
                     }
                     values.push(["competition_type", comptetion_name])
@@ -133,28 +152,35 @@ function AddAthlete({ groupName }: { groupName: string }) {
             }
         })
 
-        values.push(["achievements", {}])
+        if (parsing_error[0]){
+            alert(parsing_error[1]);
+            //reload_athletes()
+        }else{
+            setFormState("uploading")
 
-        let api_url = `/api/group_athlete`
+            values.push(["achievements", {}])
 
-        fetch(api_url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(Object.fromEntries(values || []))
-        }).then(res => {
-            if (res.ok) {
-                setFormState("uploaded")
-                setTimeout(() => setFormState("ready"), 1000)
-                reload_athletes()
-            } else {
-                throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-            }
-        }).catch((e) => {
-            setTimeout(() => setFormState("ready"), 500)
-            alert(e)
-        })
+            let api_url = `/api/group_athlete`
+    
+            fetch(api_url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(Object.fromEntries(values || []))
+            }).then(res => {
+                if (res.ok) {
+                    setFormState("uploaded")
+                    setTimeout(() => setFormState("ready"), 500)
+                    reload_athletes()
+                } else {
+                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                }
+            }).catch((e) => {
+                setTimeout(() => setFormState("ready"), 500)
+                alert(e)
+            })
+        }
 
     }
 
