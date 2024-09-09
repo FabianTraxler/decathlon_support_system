@@ -8,6 +8,7 @@ import requests
 from datetime import datetime
 import numpy as np
 import json
+from tqdm import tqdm
 
 
 def parse_args() -> Namespace:
@@ -58,7 +59,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                    ('Speer', "Speerwurf", "Distance"),
                    (('1500m', '1500sec'), "1500 Meter Lauf", "Time")]
 
-    for _, row in results.iterrows():
+    for _, row in tqdm(results.iterrows(), total=len(results)):
         if isinstance(row["GRP"], int):
             group_name = f"Gruppe {row['GRP']}"
         else:
@@ -94,7 +95,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                 }
             elif discipline_type == "Height":
                 if isinstance(final_result, float):
-                    final_result = int(final_result * 100)
+                    final_result = int(round(final_result * 100, 0))
                 elif isinstance(final_result, Dict):
                     final_result = -1
                 discipline[discipline_type] = {
@@ -118,7 +119,8 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                 birth_day = datetime.strptime(datetime_str, '%Y-%m-%d')
             birthday_timestamp = int(datetime.timestamp(birth_day))
         else:
-            birthday_timestamp = None
+            birth_day = datetime.strptime("1.1.1990", '%d.%m.%Y')
+            birthday_timestamp = int(datetime.timestamp(birth_day))
         group_name = f"Gruppe {row['GRP']}"
 
         gender = row["Sex2"]
@@ -127,7 +129,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
         else:
             gender = "Staffel"
 
-        if config["starting_number"]:
+        if config["starting_number"] and len(group_skipped_disciplines) != 10:
             starting_number = row["NR"]
             try:
                 int(starting_number)
@@ -145,7 +147,7 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                                         group_name,
                                         "Decathlon",
                                         config)
-        time.sleep(0.03)
+        time.sleep(0.1)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -173,7 +175,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                        ('Kugel', "Kugelstoß", "Distance")],
     }
 
-    for _, row in results.iterrows():
+    for _, row in tqdm(results.iterrows(), total=len(results)):
         if row["GRP"] == "J5K":
             group_name = "U14"
             competition_type = "Pentathlon"
@@ -187,6 +189,9 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
         if not isinstance(row["Name"], str) and np.isnan(row["Name"]):
             continue
+        elif not isinstance(row["NAME"], str) or row["NAME"].strip() == "":
+            continue
+        
         achievements = {}
         for (short_name, long_name, discipline_type) in disciplines[competition_type]:
             if long_name in group_skipped_disciplines: continue  # skip achievement
@@ -266,7 +271,7 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
                                         group_name,
                                         competition_type,
                                         config)
-        time.sleep(0.03)
+        time.sleep(0.1)
 
         if not upload_success:
             print(f"Athlete: {row['VORNAME']} not uploaded")
@@ -283,7 +288,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
                    ('Weit', "Weitsprung", "Distance"),
                    ('Schlagball', "Schlagball", "Distance")]
 
-    for _, row in results.iterrows():
+    for _, row in tqdm(results.iterrows(), total=len(results)):
         if not isinstance(row["Nummer"], int) and not isinstance(row["Nummer"], float):
             continue
 
@@ -375,7 +380,7 @@ def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines
                                         group_name,
                                         "Triathlon",
                                         config)
-        time.sleep(0.03)
+        time.sleep(0.1)
 
         if not upload_success:
             print(f"Athlete: {row['Name']} not uploaded")
@@ -497,6 +502,9 @@ def simulate_in_progress(timetable: Dict, selected_time: Dict) -> Tuple[Dict, bo
                         all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Finished")
                     elif min == selected_time["min"]:
                         all_ok = all_ok & update_discipline_state(group_name=group, name=name, state="Active")
+                        skipped_disciplines[group].append(name)
+                    else:
+                        skipped_disciplines[group].append(name)
                 else:
                     # not finished because selected is time is before start time
                     skipped_disciplines[group].append(name)
@@ -535,7 +543,7 @@ def main(args: Namespace):
         "simulate_in_progress": args.in_progress,
         "selected_time": {
             "day": "Samstag",
-            "h": 9,
+            "h": 11,
             "min": 30
         }
     }

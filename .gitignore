@@ -25,3 +25,4 @@ Cargo.lock
 .vscode/
 .certs/
 .env
+*xls#
