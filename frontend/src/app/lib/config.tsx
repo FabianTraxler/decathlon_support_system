@@ -71,8 +71,8 @@ export const german_discipline_states: Map<string, string> =  new Map([
 ])
 
 export const unit_mapping: Map<string, string> = new Map([
-    ["s", "ss,ss"], 
-    ["min", "min:ss,ss"], 
+    ["s", "s"], 
+    ["min", "min:s"], 
     ["cm", "cm"],
     ["m", "m"]
 ])

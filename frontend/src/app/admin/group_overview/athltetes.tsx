@@ -41,42 +41,47 @@ function GroupAthletes({ group_name }: { group_name: string }) {
 
   const discipline_edit_mode = function (selected_discipline: string) {
     if(selected_discipline != disciplineEdit.discipline){
-      let athlete_order: string[] = []
-      fetch(`/api/discipline?group_name=${group_name}&discipline_name=${selected_discipline}`)
-      .then(res => {
-        if (res.ok) {
-          return res.json()
-        } else {
-          throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-        }
-      })
-      .then(res => {
-        let discipline: Discipline = res;
-        let starting_order = discipline.starting_order;
-        if(typeof starting_order != "string"){
-          if(starting_order.Track){
-            let runs = starting_order.Track
-            runs.forEach(run => {
-              run.athletes.forEach(athlete => 
+      if (group_name.startsWith("G") || group_name.startsWith("U")){
+        let athlete_order: string[] = []
+        fetch(`/api/discipline?group_name=${group_name}&discipline_name=${selected_discipline}`)
+        .then(res => {
+          if (res.ok) {
+            return res.json()
+          } else {
+            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+          }
+        })
+        .then(res => {
+          let discipline: Discipline = res;
+          let starting_order = discipline.starting_order;
+          if(typeof starting_order != "string"){
+            if(starting_order.Track){
+              let runs = starting_order.Track
+              runs.forEach(run => {
+                run.athletes.forEach(athlete => 
+                  athlete_order.push(athlete.name + "_" + athlete.surname)
+                )
+              })
+            }else if(starting_order.Default){
+              starting_order.Default.forEach(athlete => 
                 athlete_order.push(athlete.name + "_" + athlete.surname)
               )
-            })
-          }else if(starting_order.Default){
-            starting_order.Default.forEach(athlete => 
-              athlete_order.push(athlete.name + "_" + athlete.surname)
-            )
+            }
           }
-        }
+          setDisciplineEdit({
+            discipline: selected_discipline,
+            athlete_order: athlete_order
+          })
+        })
+        .catch(e => {
+          console.error(e)
+        })
+      }else{
         setDisciplineEdit({
           discipline: selected_discipline,
-          athlete_order: athlete_order
+          athlete_order: []
         })
-      })
-      .catch(e => {
-        console.error(e)
-      })
-
-
+      }
     }else{
       setDisciplineEdit({
         discipline: "",
@@ -127,7 +132,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
   }
 
   const sortAthletes = function(athletes: Athlete[]): Athlete[]{
-    if (disciplineEdit.discipline == "") {
+    if (disciplineEdit.discipline == "" || disciplineEdit.athlete_order.length == 0) {
       athletes.sort((a, b) => sort_athletes(a, b, sorted));
     } else {
       // sort athletes like the discipline athlete order for easier manual input
@@ -148,7 +153,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
             {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
             {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
           </th>
-          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Gender</span>
+          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Klasse</span>
             {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
             {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
             {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
@@ -194,8 +199,12 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
   const [popupOpen, setPopupOpen] = useState(false)
   var achievements = new Map(Object.entries(athlete.achievements));
-  const birthdate = new Date(athlete.birth_date * 1000);;
+  const birthdate = new Date(athlete.birth_date * 1000);
+  let age_group_number: number | string = Math.floor((new Date().getFullYear() - birthdate.getUTCFullYear()) / 10 ) * 10;
+  age_group_number = age_group_number < 40 ? "" : age_group_number
   const full_name = athlete.name + "_" + athlete.surname;
+  const age_group = athlete.gender + age_group_number
+
   const athlete_certificate_print = function (onStop: () => void) {
     fetch(`/api/certificate?name=${athlete.name}&surname=${athlete.surname}`)
       .then(response => {
@@ -223,12 +232,10 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
       });
   }
 
-
-
   return (
     <tr key={full_name}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
-      <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.gender}</td>
+      <td className='border border-slate-800 p-1 pl-2 pr-2'>{age_group}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear() || ""}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
