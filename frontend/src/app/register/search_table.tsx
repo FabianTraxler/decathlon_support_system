@@ -73,13 +73,14 @@ export default function AthleteTable({ athletes, searchQuery }:
                 <thead>
                     <tr>
                         <th onClick={() => sortColumn("#")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
-                            <span className='pr-1'>Startnummer</span>
+                            <span className='hidden sm:inline pr-1'>Startnummer</span>
+                            <span className='sm:hidden pr-1'>#</span>
                             {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
                             {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
                         {group_available &&
-                            <th onClick={() => sortColumn("Gruppe")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                            <th onClick={() => sortColumn("Gruppe")} className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
                                 <span className='pr-1'>Gruppe</span>
                                 {sorted.name != "Gruppe" && <span>&#x25b4;&#x25be;</span>}
                                 {(sorted.name == "Gruppe" && sorted.ascending) && <span>&#x25b4;</span>}
@@ -105,7 +106,7 @@ export default function AthleteTable({ athletes, searchQuery }:
                             {(sorted.name == "age_group" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
                         <th onClick={() => sortColumn("Gender")} className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
-                            <span className='pr-1'>Geschlecht</span>
+                            <span className='pr-1'>Sex</span>
                             {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
                             {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
@@ -116,14 +117,14 @@ export default function AthleteTable({ athletes, searchQuery }:
                             {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
-                        <th onClick={() => sortColumn("T-Shirt")} className="hidden 2xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
-                            <span className='pr-1'>T-Shirt</span>
+                        <th onClick={() => sortColumn("T-Shirt")} className="hidden xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                            <span className='pr-1'>Shirt</span>
                             {sorted.name != "T-Shirt" && <span>&#x25b4;&#x25be;</span>}
                             {(sorted.name == "T-Shirt" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "T-Shirt" && !sorted.ascending) && <span>&#x25be;</span>}
                         </th>
-                        <th onClick={() => sortColumn("Bezahlt")} className="hidden 2xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
-                            <span className='pr-1'>Online Bezahlt</span>
+                        <th onClick={() => sortColumn("Bezahlt")} className="hidden xl:table-cell border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer">
+                            <span className='pr-1'>Bezahlt</span>
                             {sorted.name != "Bezahlt" && <span>&#x25b4;&#x25be;</span>}
                             {(sorted.name == "Bezahlt" && sorted.ascending) && <span>&#x25b4;</span>}
                             {(sorted.name == "Bezahlt" && !sorted.ascending) && <span>&#x25be;</span>}
@@ -194,15 +195,15 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
                 <StartingNumberInput key={full_name} athlete={athlete}></StartingNumberInput>
             </td>
             {groupAvailable &&
-                <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.group_name}</td>
+                <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2'>{athlete.group_name}</td>
             }
             <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.name}</td>
             <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.surname}</td>
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{age_group}</td>
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.gender}</td>
             <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2'>{birth_day}</td>
-            <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.t_shirt}</td>
-            <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.paid ? <span>&#9989;</span>: <span>&#10060;</span>}</td>
+            <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.t_shirt}</td>
+            <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.paid ? <span>&#9989;</span>: <span>&#10060;</span>}</td>
         </tr>
     )
 }
