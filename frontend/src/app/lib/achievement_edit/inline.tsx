@@ -8,7 +8,7 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
     { index: string, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
     let [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
 
-    if (achievement_string == "-") {
+    if (achievement_string == "-" || achievement_string == "/") { 
         achievement_string = ""
     }
 

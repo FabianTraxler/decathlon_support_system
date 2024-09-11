@@ -64,18 +64,19 @@ function convert_order_to_order_with_results(discipline_name: string, start_orde
 
 export default function GroupDisciplines({ group_name }: { group_name: string }) {
     const [groupState, setGroupState] = useState<
-        { selected_discipline: TimeDisciplineResults | undefined, all_disciplines: Map<string, TimeDisciplineResults>, selected_run: string }
-    >({ selected_discipline: undefined, all_disciplines: new Map(), selected_run: "" });
+        { selected_discipline: TimeDisciplineResults | undefined, all_disciplines: Map<string, TimeDisciplineResults>, selected_run: string, reload_run_order: boolean }
+    >({ selected_discipline: undefined, all_disciplines: new Map(), selected_run: "", reload_run_order: false });
 
     const handleRunClick = function (run_name: string) {
         if (groupState.selected_run == run_name) {
-            setGroupState({...groupState, selected_run: ""})
+            setGroupState({ ...groupState, selected_run: "" })
         } else {
-            setGroupState({...groupState, selected_run: run_name})
+            setGroupState({ ...groupState, selected_run: run_name })
         }
     }
 
     const get_data = function (group_name: string, selected_discipline: Discipline | undefined) {
+        setGroupState({ ...groupState, reload_run_order: true })
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
             let athlete_map = new Map();
             athletes.forEach(athelte => {
@@ -113,11 +114,11 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                     }
                     all_disciplines.set(discipline.name, time_discipline_results)
                 });
-                setGroupState({ selected_discipline: active_discipline, all_disciplines: all_disciplines, selected_run: "" })
+                setGroupState({ selected_discipline: active_discipline, all_disciplines: all_disciplines, selected_run: "", reload_run_order: false })
             })
             .catch((e) => {
                 console.error(e)
-                setGroupState({ selected_discipline: undefined, all_disciplines: new Map(), selected_run: "" })
+                setGroupState({ selected_discipline: undefined, all_disciplines: new Map(), selected_run: "", reload_run_order: false })
             })
     }
 
@@ -126,16 +127,16 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
     }, [group_name])
 
     const update_local_athlete_results = function (achievement: AchievementValue, athlete: AthleteTimeResult, run_id: number, track_number: number) {
-        if(achievement.Time?.final_result){
+        if (achievement.Time?.final_result) {
             athlete.final_result = convert_from_integral_fractional(achievement.Time?.final_result)
         }
-        let new_state = {...groupState}
+        let new_state = { ...groupState }
         let selected_discipline = new_state.selected_discipline
         let all_disciplines = new_state.all_disciplines
-        if(selected_discipline){
+        if (selected_discipline) {
             selected_discipline.runs[run_id].athletes[track_number] = athlete;
             all_disciplines.set(selected_discipline.name, selected_discipline)
-            setGroupState({...groupState, selected_discipline: selected_discipline, all_disciplines: all_disciplines})
+            setGroupState({ ...groupState, selected_discipline: selected_discipline, all_disciplines: all_disciplines })
         }
 
     }
@@ -150,23 +151,31 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
     }
 
     return (
-        <div className="w-[80%]">
-            <div className='flex justify-between text-4xl p-4  mt-5'>
+        <div className="w-[90%] sm:w-[80%]">
+            <div className='flex justify-between text-xl sm:text-4xl p-4  mt-5'>
                 <div>
                     <span>Ausgewählte Disziplin: </span>
-                    <span className="font-bold">{groupState.selected_discipline?.name}</span>
+                    <span className="block sm:inline font-bold">{groupState.selected_discipline?.name}</span>
                 </div>
 
-                <div className="float-right h-10 w-10 hover:cursor-pointer hover:fill-slate-500"
+                <div className="float-right h-8 w-8 sm:h-10 sm:w-10 hover:cursor-pointer hover:fill-slate-500"
                     onClick={() => get_data(group_name, groupState.selected_discipline)}
                 >
-                    <svg className="h-full fill-inherit" height="10px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 489.645 489.645">
-                        <g id="SVGRepo_iconCarrier">
-                            <g>
-                                <path d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z"></path>
-                            </g>
-                        </g></svg>
+                    {
+                        groupState.reload_run_order ?
+                            <div className="h-full w-full">
+                                <LoadingAnimation></LoadingAnimation>
+                            </div>
+                            :
+                            <svg className="h-full fill-inherit" height="10px" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 489.645 489.645">
+                                <g id="SVGRepo_iconCarrier">
+                                    <g>
+                                        <path d="M460.656,132.911c-58.7-122.1-212.2-166.5-331.8-104.1c-9.4,5.2-13.5,16.6-8.3,27c5.2,9.4,16.6,13.5,27,8.3 c99.9-52,227.4-14.9,276.7,86.3c65.4,134.3-19,236.7-87.4,274.6c-93.1,51.7-211.2,17.4-267.6-70.7l69.3,14.5 c10.4,2.1,21.8-4.2,23.9-15.6c2.1-10.4-4.2-21.8-15.6-23.9l-122.8-25c-20.6-2-25,16.6-23.9,22.9l15.6,123.8 c1,10.4,9.4,17.7,19.8,17.7c12.8,0,20.8-12.5,19.8-23.9l-6-50.5c57.4,70.8,170.3,131.2,307.4,68.2 C414.856,432.511,548.256,314.811,460.656,132.911z"></path>
+                                    </g>
+                                </g></svg>
+                    }
+
                 </div>
             </div>
             {groupState.selected_discipline &&
@@ -197,8 +206,8 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                                                 <tr>
                                                     {run.name != "Massenstart" && <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>}
                                                     <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
-                                                    {run.name != "Massenstart" && <th className="border border-slate-600 p-1 pl-2 pr-2">AK</th>}
-                                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
+                                                    {run.name != "Massenstart" && <th className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2">AK</th>}
+                                                    <th className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
                                                     <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
                                                     <th className="border border-slate-600 p-1 pl-2 pr-2">Zeit</th>
                                                 </tr>
@@ -226,10 +235,10 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                                                             key={athlete.full_name() + "_" + groupState.selected_discipline?.name || ""}>
                                                             {run.name != "Massenstart" && <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>}
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
-                                                            {run.name != "Massenstart" && <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>}
-                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
+                                                            {run.name != "Massenstart" && <td className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>}
+                                                            <td className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
-                                                            <InlineEdit index={athlete.full_name() + "_" + groupState.selected_discipline?.name || "" } name={groupState.selected_discipline?.name || ""} athleteName={athlete.full_name()}
+                                                            <InlineEdit index={athlete.full_name() + "_" + groupState.selected_discipline?.name || ""} name={groupState.selected_discipline?.name || ""} athleteName={athlete.full_name()}
                                                                 achievement_type="Time" achievement={achievement}
                                                                 onSubmit={(achievement) => update_local_athlete_results(achievement, athlete, run_id, track_number)}
                                                             ></InlineEdit>
@@ -248,13 +257,13 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
             }
 
             <div>
-                <div className='text-4xl p-4  mt-5 '>Alle Laufdisziplinen:</div>
+                <div className='text-xl sm:text-4xl p-4  mt-5 '>Alle Laufdisziplinen:</div>
 
-                <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm rounded-lg">
+                <table className="table-auto border-collapse w-full text-[0.8rem] 2xl:text-sm rounded-lg">
                     <thead>
                         <tr>
                             <th className="border border-slate-600 p-1 pl-2 pr-2">Name</th>
-                            <th className="border border-slate-600 p-1 pl-2 pr-2">Status</th>
+                            <th className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2">Status</th>
                             <th className="border border-slate-600 p-1 pl-2 pr-2">Ort</th>
                             <th className="border border-slate-600 p-1 pl-2 pr-2">Startzeit</th>
                             <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
@@ -266,7 +275,7 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
 
                                 return <tr key={discipline.name}>
                                     <td className='border border-slate-800 p-1 pl-2 pr-2 text-center font-bold'>{discipline.name}</td>
-                                    <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
+                                    <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
                                     <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
                                     <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date(discipline.start_time)}</td>
                                     <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>

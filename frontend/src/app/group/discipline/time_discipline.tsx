@@ -268,8 +268,8 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
                                                         <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 7)}{athlete.surname.length > 7 && "..."}</td>
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name} </td> 
+                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
                                                     </tr>
                                                 )
                                             })}

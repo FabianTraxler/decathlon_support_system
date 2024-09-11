@@ -2,6 +2,7 @@
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@/app/lib/loading';
+import { german_discipline_states } from '@/app/lib/config';
 
 export default function PrintUtilities() {
   let searchParams = useSearchParams();
@@ -68,7 +69,7 @@ function CurrentDisciplineCard() {
     <div className="flex-col  items-center justify-between border-black border rounded-md w-fit p-2 shadow-xl bg-slate-300">
       <div className='xl:text-l font-bold w-fit'><u>Aktuelle Disziplin:</u></div>
       <div className='w-fit'><b>Name:</b> {disciplineInfo.name}, <b>Start:</b> {start_time}</div>
-      <div className='w-fit'><b>Ort:</b> {disciplineInfo.location}, <b>Status:</b> {disciplineInfo.state}</div>
+      <div className='w-fit'><b>Ort:</b> {disciplineInfo.location}, <b>Status:</b> {german_discipline_states.get(disciplineInfo.state) || ""}</div>
     </div>
   )
 }
