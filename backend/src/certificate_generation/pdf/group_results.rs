@@ -76,6 +76,7 @@ pub fn add_group_result_to_page(
     let mut alignments: HashMap<&str, f32> = HashMap::new();
     alignments.insert("place", 6.);
     alignments.insert("sex", 10.);
+    alignments.insert("age_group_kids", 15.);
     alignments.insert("name", 38.);
     alignments.insert("birthyear", 7.);
     alignments.insert("total_points", 13.);
@@ -182,7 +183,12 @@ fn add_group_result_heading(
 
     // Add background color
     x_coord += *alignments.get("place").expect("Value defined before");
-    x_coord += *alignments.get("sex").expect("Value defined before");
+    if competition_type == CompetitionType::Decathlon {
+        x_coord += *alignments.get("sex").expect("Value defined before");
+    }else{
+        x_coord += *alignments.get("age_group_kids").expect("Value defined before");
+    }
+
     x_coord += *alignments.get("name").expect("Value defined before");
     if competition_disciplines.len() < 6 {
         // Use double space for names if we have less than 6 disciplines
@@ -223,8 +229,13 @@ fn add_group_result_heading(
     pdf_layer.use_text("#", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("place").expect("Value defined before");
 
-    pdf_layer.use_text("AG", font_size, Mm(x_coord), Mm(y_coord), font);
-    x_coord += *alignments.get("sex").expect("Value defined before");
+    if competition_type == CompetitionType::Decathlon {
+        pdf_layer.use_text("AG", font_size, Mm(x_coord), Mm(y_coord), font);
+        x_coord += *alignments.get("sex").expect("Value defined before");
+    }else{
+        pdf_layer.use_text("Klasse", font_size, Mm(x_coord), Mm(y_coord), font);
+        x_coord += *alignments.get("age_group_kids").expect("Value defined before");
+    }
 
     pdf_layer.use_text("Name", font_size, Mm(x_coord), Mm(y_coord), font);
     x_coord += *alignments.get("name").expect("Value defined before");
@@ -322,7 +333,12 @@ fn add_group_athletes(
             ref x => x.to_string(),
         };
         pdf_layer.use_text(gender, font_size, Mm(x_coord), Mm(y_coord), font);
-        x_coord += *alignments.get("sex").expect("Value defined before");
+        if competition_type == CompetitionType::Decathlon {
+            x_coord += *alignments.get("sex").expect("Value defined before");
+        }else{
+            x_coord += *alignments.get("age_group_kids").expect("Value defined before");
+        }
+    
 
         let athlete_name = athlete.full_name();
         // Split in multiple lines if text larger than 20 chars
@@ -459,7 +475,10 @@ fn add_vertical_lines(
     let competition_type = group.competition_type();
     let competition_disciplines = competition_order(&competition_type);
 
-    for col_key in vec!["place", "sex", "name", "birthyear", "total_points"] {
+    for mut col_key in vec!["place", "sex", "name", "birthyear", "total_points"] {
+        if competition_type != CompetitionType::Decathlon && col_key == "sex"{
+            col_key = "age_group_kids";
+        }
         if let Some(alignment_width) = alignments.get(col_key) {
             pdf_layer.add_line(Line {
                 points: vec![
@@ -476,7 +495,6 @@ fn add_vertical_lines(
             }
         }
     }
-
     for discipline_name in competition_order(&group.competition_type()) {
         let discipline_width = alignments
             .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
