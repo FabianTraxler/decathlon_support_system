@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { AthleteID, AthleteTimeResult, Discipline, StartingOrder } from "../lib/interfaces";
-import TrackOverview, { TimeOverview } from "./runs";
 import { convert_date, convert_from_integral_fractional, convert_to_integral_fractional } from "../lib/parsing";
 import { german_discipline_states, long_distance_disciplines } from "../lib/config";
 import { LoadingAnimation } from "../lib/loading";
@@ -9,7 +8,7 @@ import { InlineEdit } from "../lib/achievement_edit/inline";
 
 export interface Run {
     name: string,
-    athletes: AthleteTimeResult[]
+    athletes: (AthleteTimeResult | null)[]
 }
 
 interface TimeDisciplineResults extends Discipline {
@@ -31,7 +30,7 @@ function convert_order_to_order_with_results(discipline_name: string, start_orde
                 athlete_result.final_result = convert_from_integral_fractional(discipline_achievement.Time.final_result)
             }
             single_run.athletes.push(athlete_result)
-            single_run.athletes.sort((a, b) => (a.starting_number || Infinity) - (b.starting_number || Infinity))
+            single_run.athletes.sort((a, b) => (a?.starting_number || Infinity) - (b?.starting_number || Infinity))
         })
         runs.push(single_run)
     } else if (start_order.Track) {
@@ -41,18 +40,23 @@ function convert_order_to_order_with_results(discipline_name: string, start_orde
                 athletes: []
             }
             run.athletes.forEach(athlete_id => {
-                let athlete_result = athlete_results.get(athlete_id.name + "_" + athlete_id.surname)
-                let athlete_time_result: AthleteTimeResult;
-                if (athlete_result) {
-                    athlete_time_result = new AthleteTimeResult(athlete_id.name, athlete_id.surname, athlete_id.age_group, athlete_result.starting_number)
-                    let discipline_achievement = athlete_result.achievements.get(discipline_name)
-                    if (discipline_achievement && discipline_achievement.Time?.final_result) {
-                        athlete_time_result.final_result = convert_from_integral_fractional(discipline_achievement.Time.final_result)
-                    }
+                if (athlete_id == null) {
+                    timing_run.athletes.push(null)
                 } else {
-                    athlete_time_result = new AthleteTimeResult(athlete_id.name, athlete_id.surname, athlete_id.age_group, NaN)
+                    let athlete_result = athlete_results.get(athlete_id.name + "_" + athlete_id.surname)
+                    let athlete_time_result: AthleteTimeResult;
+                    if (athlete_result) {
+                        athlete_time_result = new AthleteTimeResult(athlete_id.name, athlete_id.surname, athlete_id.age_group, athlete_result.starting_number)
+                        let discipline_achievement = athlete_result.achievements.get(discipline_name)
+                        if (discipline_achievement && discipline_achievement.Time?.final_result) {
+                            athlete_time_result.final_result = convert_from_integral_fractional(discipline_achievement.Time.final_result)
+                        }
+                    } else {
+                        athlete_time_result = new AthleteTimeResult(athlete_id.name, athlete_id.surname, athlete_id.age_group, NaN)
+                    }
+                    timing_run.athletes.push(athlete_time_result)
                 }
-                timing_run.athletes.push(athlete_time_result)
+
             })
             runs.push(timing_run)
         })
@@ -214,6 +218,19 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                                             </thead>
                                             <tbody>
                                                 {run.athletes.map((athlete, track_number) => {
+                                                    if (athlete == null) {
+                                                        return (
+                                                            <tr className="bg-slate-50 opacity-45"
+                                                                key={track_number || ""}>
+                                                                {run.name != "Massenstart" && <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>}
+                                                                <td className="border border-slate-600 p-1 pl-2 pr-2 text-center"></td>
+                                                                {run.name != "Massenstart" && <td className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2"></td>}
+                                                                <td className="hidden sm:table-cell border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                                <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                                <td className='group items-center jusitfy-center border border-slate-800 text-right group-active:bg-slate-400 '></td>
+                                                            </tr>
+                                                        )
+                                                    }
                                                     let achievement: AchievementValue = {
                                                         Time: {
                                                             name: groupState.selected_discipline?.name || "",

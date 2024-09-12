@@ -357,9 +357,23 @@ fn add_track_discipline(pdf: &PdfDocumentReference, mut current_layer: PdfLayerR
             for i in 0..6{
                 let run_athletes = match track_run {
                     Some(track_run) => {
-                        let run_names: Vec<String> = track_run.athletes().iter().map(|athlete| athlete.full_name()).collect();
+                        let athletes_tuple = track_run.athletes().clone();
+                        let athletes = vec![athletes_tuple.0, athletes_tuple.1, athletes_tuple.2, athletes_tuple.3, athletes_tuple.4, athletes_tuple.5];
+                        let run_names: Vec<String> = athletes.iter().map(|athlete| {
+                            if let Some(athlete) = athlete{
+                                athlete.full_name()
+                            }else{
+                                "".to_string()
+                            }
+                        }).collect();
                         let mut run_athletes: Vec<Athlete> = all_athletes.iter().cloned().filter(|athlete| run_names.contains(&athlete.full_name())).collect();
-                        run_athletes.sort_by_key(|item| track_run.athletes().iter().position(|x| *x.full_name() == *item.full_name()).unwrap());
+                        run_athletes.sort_by_key(|item| athletes.iter().position(|x| {
+                            if let Some(athlete) = x {
+                                *athlete.full_name() == *item.full_name()
+                            }else{
+                                false
+                            }
+                    }).unwrap());
                         run_athletes
                     },
                     None => {

@@ -10,7 +10,7 @@ export interface Discipline {
 export interface StartingOrder {
     Track?: {
         name: string,
-        athletes: AthleteID[]
+        athletes: (AthleteID|null)[]
     }[],
     Default?: AthleteID[]
 }

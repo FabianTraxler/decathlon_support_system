@@ -21,3 +21,4 @@ async-trait = "0.1.80"
 serde_dynamo = { version = "4.2.14", features = ["aws-sdk-dynamodb+1"]}
 actix-rt = "2.9.0"
 tokio = "1.37.0"
+itertools = "0.13.0"

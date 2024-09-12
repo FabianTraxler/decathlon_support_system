@@ -452,6 +452,27 @@ impl DistanceResult {
                         }
                     }
                 }
+                "Speerwurf" => { // Heptathlon
+                    m = self.final_result().to_f32() * 100.;
+                    match athlete.gender().as_str() {
+                        "W" => {
+                            a = 15.9803;
+                            b = 380.;
+                            c = 1.04;
+                            if m < 380. {
+                                a = 0.
+                            }
+                        }
+                        _ => {
+                            a = 10.14;
+                            b = 700.;
+                            c = 1.08;
+                            if m < 700. {
+                                a = 0.
+                            }
+                        }
+                    }
+                }
                 _ => {
                     a = 0.;
                     b = 0.;

@@ -120,7 +120,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
                                     </div>
                                     {(disciplines.has(day_id) && selectedDay == day_id) &&
-                                        <div className="max-h-[60vh] overflow-scroll">
+                                        <div className="max-h-[60vh] overflow-scroll max-w-[100vw]">
                                             <table className="table-auto border-collapse w-full">
                                                 <thead>
                                                     <tr>
@@ -135,7 +135,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
                                                     {disciplines.get(day_id)?.map((discipline, i) => {
                                                         return <tr key={discipline.name}>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{i + 1}.</td>
-                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center font-bold'>{discipline.name}</td>
+                                                            <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center font-bold'>{discipline.name.replace("Stabhochsprung", "Stabhoch")}</td>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{discipline.location}</td>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{convert_date_to_time(discipline.start_time)}</td>
                                                             <StartingOrderEditButton group_name={group_name} discipline={discipline} updateStartingOrder={(order) => update_starting_order(day_id, i, order)}>

@@ -17,13 +17,17 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
             })
 
             if (typeof discipline.starting_order != "string" && discipline.starting_order.Track) {
-                let new_starting_order: { name: string, athletes: AthleteTimeResult[] }[] = []
+                let new_starting_order: { name: string, athletes: (AthleteTimeResult | null)[] }[] = []
                 new_starting_order = discipline.starting_order.Track.map(run => {
                     let athletes = run.athletes.map(athlete => {
-                        return {
-                            ...athlete,
-                            starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
-                            full_name: () => athlete.name + "_" + athlete.surname
+                        if (athlete == null) {
+                            return null
+                        } else {
+                            return {
+                                ...athlete,
+                                starting_number: athlete_starting_numbers.get(athlete.name + "_" + athlete.surname),
+                                full_name: () => athlete.name + "_" + athlete.surname
+                            }
                         }
                     })
                     return {
@@ -114,7 +118,7 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
 
 
 function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipline }:
-    { starting_order: { name: string, athletes: AthleteTimeResult[] }[], saveStartingOrder: (order: StartingOrder) => void, finishDiscipline: () => void }) {
+    { starting_order: { name: string, athletes: (AthleteTimeResult | null)[] }[], saveStartingOrder: (order: StartingOrder) => void, finishDiscipline: () => void }) {
 
     const [editActive, setEditActive] = useState(false)
     const [openRuns, setOpenRuns] = useState<Set<string>>(new Set([]));
@@ -137,31 +141,45 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
         setLastDraggedOver({ run_index: runIndex, row_index: rowIndex });
     }
 
-    const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number) {
+    const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number, dragStopRowEmpty: boolean) {
         e.preventDefault();
         setLastDraggedOver({ run_index: NaN, row_index: NaN });
         const dragRowIndex = e.dataTransfer.getData('rowIndex');
         const dragRunIndex = e.dataTransfer.getData('runIndex');
+        const startCellEmpty = e.dataTransfer.getData('cell_empty');
 
         if (dragRowIndex !== rowIndex.toString() || dragRunIndex !== runIndex.toString()) {
             let newRun = currentRuns[runIndex]
             const [draggedColumn] = currentRuns[parseInt(dragRunIndex)].athletes.splice(parseInt(dragRowIndex), 1);
-            newRun.athletes.splice(rowIndex, 0, draggedColumn);
 
             let newRuns = [...currentRuns]
+
+            if (dragStopRowEmpty && runIndex != parseInt(dragRunIndex) && startCellEmpty == "false") {
+                // Move empty row to dragged row and run index 
+                const [empty_col] = newRun.athletes.splice(rowIndex, 1, draggedColumn);
+
+                let oldRun = currentRuns[parseInt(dragRunIndex)]
+                oldRun.athletes.splice(parseInt(dragRowIndex), 0, empty_col);
+                newRuns[parseInt(dragRunIndex)] = oldRun
+
+            } else {
+                newRun.athletes.splice(rowIndex, 0, draggedColumn);
+            }
+
             newRuns[runIndex] = newRun
             setcurrentRuns(newRuns);
             setSubmitted("")
         }
     }
 
-    const handleDragStart = function (e: React.DragEvent, runIndex: number, rowIndex: number) {
+    const handleDragStart = function (e: React.DragEvent, runIndex: number, rowIndex: number, cell_empty: boolean) {
         e.dataTransfer.setData('rowIndex', rowIndex.toString());
         e.dataTransfer.setData('runIndex', runIndex.toString());
+        e.dataTransfer.setData('cell_empty', cell_empty.toString());
     }
     const addRun = function () {
         let newRuns = [...currentRuns]
-        newRuns.push({ name: "Lauf " + (newRuns.length + 1).toString(), athletes: [] })
+        newRuns.push({ name: "Lauf " + (newRuns.length + 1).toString(), athletes: [null, null, null, null, null, null] })
         setcurrentRuns(newRuns);
     }
 
@@ -170,7 +188,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
 
         let runs_correct = true;
 
-        let used_runs: { name: string, athletes: AthleteID[] }[] = []
+        let used_runs: { name: string, athletes: (AthleteID | null)[] }[] = []
 
         currentRuns.forEach(run => {
             if (run.athletes.length > 6) {
@@ -194,6 +212,16 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
         }
 
     }
+
+    const deleteRun = function(run_name: string, run_id: number){
+        if (confirm(`${run_name} wirklich löschen?`)){
+            let newRuns = [...currentRuns]
+            newRuns.splice(run_id, 1);
+            setcurrentRuns(newRuns);
+        }
+    }
+
+
     return (
         <div className="p-1 h-full overflow-scroll ">
             <div className={"text-center border rounded-md mb-4 p-3  shadow-slate-900 select-none " + (editActive ? "bg-stw_orange " : "bg-stw_blue shadow-md")}
@@ -220,8 +248,8 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                 <thead >
                                     <tr className={' ' +
                                         ((run_id == lastDraggedOver.run_index) && "  bg-slate-400")}
-                                        onDrop={(e) => handleDragDrop(e, run_id, 0)}
-                                        onDragStart={(e) => handleDragStart(e, run_id, 0)}
+                                        onDrop={(e) => handleDragDrop(e, run_id, 0, false)}
+                                        onDragStart={(e) => handleDragStart(e, run_id, 0, false)}
                                         onDragOver={(e) => handleDragOver(e, run_id, 0)} >
                                         <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
                                         <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
@@ -243,6 +271,13 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                 onClick={() => handleOpenRun(run.name, true)}
                                 onDragOver={() => handleOpenRun(run.name, false)}>
                                 <span>{run.name}</span>
+                                {
+                                    (editActive && run.athletes.every(e => e === null)) &&
+                                    <div
+                                        className="pl-1 pr-1 text-red-500 border border-red-500 shadow-lg rounded-md"
+                                        onClick={() => deleteRun(run.name, run_id)}
+                                    >Delete</div>
+                                }
                                 <div>&gt;</div>
                             </div>
 
@@ -262,16 +297,29 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                     {!editActive &&
                                         <tbody>
                                             {run.athletes.map((athlete, athlete_id) => {
-                                                return (
-                                                    <tr
-                                                        key={athlete_id + "undraggable"}>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name} </td> 
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
-                                                    </tr>
-                                                )
+                                                if (athlete == null) {
+                                                    return (
+                                                        <tr
+                                                            key={athlete_id + "undraggable"}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"> </td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                        </tr>
+                                                    )
+                                                } else {
+                                                    return (
+                                                        <tr
+                                                            key={athlete_id + "undraggable"}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name} </td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
+                                                        </tr>
+                                                    )
+                                                }
                                             })}
                                         </tbody>
                                     }
@@ -279,25 +327,47 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                     {editActive &&
                                         <tbody>
                                             {run.athletes.map((athlete, athlete_id) => {
-                                                return (
-                                                    <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
-                                                        ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
-                                                    }
-                                                        draggable
-                                                        onDrop={(e) => handleDragDrop(e, run_id, athlete_id)}
-                                                        onDragStart={(e) => handleDragStart(e, run_id, athlete_id)}
-                                                        onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
-                                                        key={athlete_id + "draggable"}>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 7)}{athlete.surname.length > 7 && "..."}</td>
-                                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
-                                                            &#9776;
-                                                        </td>
-                                                    </tr>
-                                                )
+                                                if (athlete == null) {
+                                                    return (
+                                                        <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
+                                                            ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
+                                                        }
+                                                            draggable
+                                                            onDrop={(e) => handleDragDrop(e, run_id, athlete_id, true)}
+                                                            onDragStart={(e) => handleDragStart(e, run_id, athlete_id, true)}
+                                                            onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
+                                                            key={athlete_id + "draggable"}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
+                                                                &#9776;
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                } else {
+                                                    return (
+                                                        <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
+                                                            ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
+                                                        }
+                                                            draggable
+                                                            onDrop={(e) => handleDragDrop(e, run_id, athlete_id, false)}
+                                                            onDragStart={(e) => handleDragStart(e, run_id, athlete_id, false)}
+                                                            onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
+                                                            key={athlete_id + "draggable"}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group.substring(0, 3)}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 7)}{athlete.surname.length > 7 && "..."}</td>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
+                                                                &#9776;
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                }
                                             })}
                                         </tbody>
                                     }

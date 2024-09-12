@@ -34,7 +34,7 @@
         "time": "10:15, Sonntag"
       },
       "Speerwurf": {
-        "location": "Speer/Vortex",
+        "location": "Speer",
         "time": "12:30, Sonntag"
       },
       "1500 Meter Lauf": {
@@ -76,7 +76,7 @@
         "time": "10:30, Samstag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "12:45, Samstag"
       },
       "1500 Meter Lauf": {
@@ -118,7 +118,7 @@
         "time": "11:15, Sonntag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "13:30, Sonntag"
       },
       "1500 Meter Lauf": {
@@ -160,7 +160,7 @@
         "time": "11:45, Samstag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "14:00, Samstag"
       },
       "1500 Meter Lauf": {
@@ -202,7 +202,7 @@
         "time": "12:15, Sonntag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "14:30, Sonntag"
       },
       "1500 Meter Lauf": {
@@ -244,7 +244,7 @@
         "time": "13:00, Samstag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "15:30, Samstag"
       },
       "1500 Meter Lauf": {
@@ -286,7 +286,7 @@
         "time": "13:15, Sonntag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "15:30, Sonntag"
       },
       "1500 Meter Lauf": {
@@ -328,7 +328,7 @@
         "time": "14:00, Samstag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer",
         "time": "15:30, Samstag"
       },
       "1500 Meter Lauf": {
@@ -358,7 +358,7 @@
         "time": "13:15, Sonntag"
       },
       "Speerwurf": {
-        "location": "Speer/Diskus",
+        "location": "Speer / Vortex",
         "time": "14:00, Sonntag"
       },
       "1000 Meter Lauf": {
@@ -380,7 +380,7 @@
         "time": "13:15, Sonntag"
       },
       "Vortex": {
-        "location": "Speer/Vortex",
+        "location": "Speer / Vortex",
         "time": "13:45, Sonntag"
       },
       "1200 Meter Cross Lauf": {

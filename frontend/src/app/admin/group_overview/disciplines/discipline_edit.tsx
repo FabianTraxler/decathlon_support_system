@@ -17,7 +17,7 @@ export function StartingOrderEditButton({ discipline, group_name, updateStarting
         <div className='flex justify-center w-full'>
           <span className='flex'>
 
-            {typeof discipline.starting_order == "string" && "-" }
+            {typeof discipline.starting_order == "string" && "-"}
             {discipline.state == "Finished" && "-"}
 
           </span>
@@ -41,9 +41,9 @@ export function StartingOrderEditButton({ discipline, group_name, updateStarting
 }
 
 function EditPopup({ group_name, disciplineName, startingOrder, onClose }: { group_name: string, disciplineName: string, startingOrder: StartingOrder, onClose: (order: StartingOrder) => void }) {
-const saveNewStartingOrder = function(new_order: StartingOrder) {
-  saveStartingOrder(new_order, group_name, onClose)
-}
+  const saveNewStartingOrder = function (new_order: StartingOrder) {
+    saveStartingOrder(new_order, group_name, onClose)
+  }
 
   return (
     <div
@@ -123,36 +123,36 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
   return (
     <div className="relative flex-auto p-4 items-center" data-te-modal-body-ref>
       <div className="max-h-[70vh] overflow-scroll">
-      <table className=" table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
-        <thead>
-          <tr>
-            <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
-            <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
-            <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
-            <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentRows.map((athlete, i) => {
-            return (
-              <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' + (i == lastDraggedOver && " bg-white")}
-                draggable
-                onDrop={(e) => handleDragDrop(e, i)}
-                onDragStart={(e) => handleDragStart(e, i)}
-                onDragOver={(e) => handleDragOver(e, i)}
-                key={i}>
-                <td className="bg-white border border-slate-600 p-1 pl-2 pr-2 text-center">{i + 1}.</td>
-                <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
-                <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
-                <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
-                  &#9776;
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
+        <table className=" table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
+          <thead>
+            <tr>
+              <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
+              <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
+              <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
+              <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentRows.map((athlete, i) => {
+              return (
+                <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' + (i == lastDraggedOver && " bg-white")}
+                  draggable
+                  onDrop={(e) => handleDragDrop(e, i)}
+                  onDragStart={(e) => handleDragStart(e, i)}
+                  onDragOver={(e) => handleDragOver(e, i)}
+                  key={i}>
+                  <td className="bg-white border border-slate-600 p-1 pl-2 pr-2 text-center">{i + 1}.</td>
+                  <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name}</td>
+                  <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname}</td>
+                  <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
+                    &#9776;
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
 
-      </table>
+        </table>
       </div>
 
       <div
@@ -169,7 +169,7 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
 }
 
 function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
-  { StartingOrder: { name: string, athletes: AthleteID[] }[], saveStartingOrder: (order: StartingOrder) => void }) {
+  { StartingOrder: { name: string, athletes: (AthleteID | null)[] }[], saveStartingOrder: (order: StartingOrder) => void }) {
   const [currentRuns, setcurrentRuns] = useState(StartingOrder)
   const [lastDraggedOver, setLastDraggedOver] = useState({ run_index: NaN, row_index: NaN })
   const [submitted, setSubmitted] = useState("")
@@ -197,33 +197,48 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
     }
   }
 
-  const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number) {
+  const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number, dragStopRowEmpty: boolean) {
     e.preventDefault();
     setLastDraggedOver({ run_index: NaN, row_index: NaN });
     const dragRowIndex = e.dataTransfer.getData('rowIndex');
     const dragRunIndex = e.dataTransfer.getData('runIndex');
+    const startCellEmpty = e.dataTransfer.getData('cell_empty');
 
     if (dragRowIndex !== rowIndex.toString() || dragRunIndex !== runIndex.toString()) {
       let newRun = currentRuns[runIndex]
       const [draggedColumn] = currentRuns[parseInt(dragRunIndex)].athletes.splice(parseInt(dragRowIndex), 1);
-      newRun.athletes.splice(rowIndex, 0, draggedColumn);
 
       let newRuns = [...currentRuns]
+
+      if (dragStopRowEmpty && runIndex != parseInt(dragRunIndex) && startCellEmpty == "false") {
+        // Move empty row to dragged row and run index 
+        const [empty_col] = newRun.athletes.splice(rowIndex, 1, draggedColumn);
+
+        let oldRun = currentRuns[parseInt(dragRunIndex)]
+        oldRun.athletes.splice(parseInt(dragRowIndex), 0, empty_col);
+        newRuns[parseInt(dragRunIndex)] = oldRun
+
+      } else {
+        newRun.athletes.splice(rowIndex, 0, draggedColumn);
+      }
+
       newRuns[runIndex] = newRun
+
+
       setcurrentRuns(newRuns);
       setSubmitted("")
     }
   }
 
-  const handleDragStart = function (e: React.DragEvent, runIndex: number, rowIndex: number) {
+  const handleDragStart = function (e: React.DragEvent, runIndex: number, rowIndex: number, cell_empty: boolean) {
     e.dataTransfer.setData('rowIndex', rowIndex.toString());
     e.dataTransfer.setData('runIndex', runIndex.toString());
-
+    e.dataTransfer.setData('cell_empty', cell_empty.toString());
   }
 
   const addRun = function () {
     let newRuns = [...currentRuns]
-    newRuns.push({ name: "Lauf " + newRuns.length.toString(), athletes: [] })
+    newRuns.push({ name: "Lauf " + (newRuns.length + 1).toString(), athletes: [null, null, null, null, null, null] })
     setcurrentRuns(newRuns);
   }
 
@@ -232,7 +247,7 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
 
     let runs_correct = true;
 
-    let used_runs: { name: string, athletes: AthleteID[] }[] = []
+    let used_runs: { name: string, athletes: (AthleteID | null)[] }[] = []
 
     currentRuns.forEach(run => {
       if (run.athletes.length > 6) {
@@ -253,6 +268,14 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
 
   }
 
+  const deleteRun = function (run_name: string, run_id: number) {
+    if (confirm(`${run_name} wirklich löschen?`)) {
+      let newRuns = [...currentRuns]
+      newRuns.splice(run_id, 1);
+      setcurrentRuns(newRuns);
+    }
+  }
+
   return (
     <div className="flex flex-row flex-wrap p-4 justify-between " data-te-modal-body-ref>
       {currentRuns.map((run, run_id) => {
@@ -265,8 +288,8 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
               <thead >
                 <tr className={' ' +
                   ((run_id == lastDraggedOver.run_index) && "  bg-slate-400")}
-                  onDrop={(e) => handleDragDrop(e, run_id, 0)}
-                  onDragStart={(e) => handleDragStart(e, run_id, 0)}
+                  onDrop={(e) => handleDragDrop(e, run_id, 0, false)}
+                  onDragStart={(e) => handleDragStart(e, run_id, 0, false)}
                   onDragOver={(e) => handleDragOver(e, run_id, 0)} >
                   <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
@@ -282,7 +305,16 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
           </div>)
         } else {
           return (<div key={run_id} className='w-fit m-2 max-w-[100%] sm:max-w-[30%]'>
-            <div className='text-center font-bold'>{run.name}</div>
+            <div className="flex justify-center">
+              <div className='text-center font-bold'>{run.name}</div>
+              {
+                (run.athletes.every(e => e === null)) &&
+                <div
+                  className="ml-3 pl-1 pr-1 text-red-500 border border-red-500 shadow-lg rounded-md"
+                  onClick={() => deleteRun(run.name, run_id)}
+                >Delete</div>
+              }
+            </div>
 
             <table className="table-auto border-collapse text-[1rem] sm:text-[0.8rem] 2xl:text-sm " >
               <thead >
@@ -295,24 +327,44 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
                 </tr>
               </thead>
               <tbody>
-                {run.athletes.map((athlete, athlete_id) => {
-                  return (
-                    <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
-                      ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
+                {run.athletes.map((athlete, track_number) => {
+                  if (athlete == null) {
+                    return (<tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
+                      ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
                       draggable
-                      onDrop={(e) => handleDragDrop(e, run_id, athlete_id)}
-                      onDragStart={(e) => handleDragStart(e, run_id, athlete_id)}
-                      onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
-                      key={athlete_id}>
-                      <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
-                      <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
-                      <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 8)}{athlete.name.length > 8 && "..."}</td>
-                      <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 8)}{athlete.surname.length > 8 && "..."}</td>
+                      onDrop={(e) => handleDragDrop(e, run_id, track_number, true)}
+                      onDragStart={(e) => handleDragStart(e, run_id, track_number, true)}
+                      onDragOver={(e) => handleDragOver(e, run_id, track_number)}
+                      key={track_number}>
+                      <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>
+                      <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                      <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
+                      <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
                       <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
                         &#9776;
                       </td>
                     </tr>
-                  )
+                    )
+                  }
+                  else {
+                    return (
+                      <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
+                        ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
+                        draggable
+                        onDrop={(e) => handleDragDrop(e, run_id, track_number, false)}
+                        onDragStart={(e) => handleDragStart(e, run_id, track_number, false)}
+                        onDragOver={(e) => handleDragOver(e, run_id, track_number)}
+                        key={track_number}>
+                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>
+                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group || ""}</td>
+                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 8)}{athlete.name.length > 8 && "..."}</td>
+                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 8)}{athlete.surname.length > 8 && "..."}</td>
+                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">
+                          &#9776;
+                        </td>
+                      </tr>
+                    )
+                  }
                 })}
               </tbody>
             </table>

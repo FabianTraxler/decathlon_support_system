@@ -59,7 +59,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
               let runs = starting_order.Track
               runs.forEach(run => {
                 run.athletes.forEach(athlete => 
-                  athlete_order.push(athlete.name + "_" + athlete.surname)
+                  athlete_order.push(athlete?.name + "_" + athlete?.surname)
                 )
               })
             }else if(starting_order.Default){
