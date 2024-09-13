@@ -1,6 +1,6 @@
 use crate::Storage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
-use actix_web::web::{Query};
+use actix_web::web::Query;
 use crate::api_server::parse_json_body;
 use crate::certificate_generation::{AgeGroupID, GroupID, GroupStore};
 

@@ -227,7 +227,7 @@ def upload_athlete(name: str, surname: str,
 		if response.ok:
 			return True
 		else:
-			time.sleep(1)
+			time.sleep(30)
 			response = requests.put(url,
 									params={
 										"name": group_name,
