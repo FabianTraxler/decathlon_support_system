@@ -11,6 +11,11 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
         let formData = new FormData(form_event.target as HTMLFormElement);
         let final_result_string = formData.get("final_result")?.toString() || ""
 
+        if (!/^[0-9,.:]*$/.test(final_result_string)) {
+            alert("Invalid format: Non digits detected -> not uploaded")
+            return
+        }
+
         if (unit_format == "mm:ss,ss" && final_result_string.includes(":")){
             final_result_string = final_result_string.replace(".", ",")
             let min = parseInt(final_result_string.split(":")[0])
@@ -29,8 +34,10 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
         } as AchievementValue
 
         if (final_result){ // value available
-
-    
+            if(final_result.fractional >= 100){
+                alert("Invalid format: Only 2 decimal values allowed -> not uploaded")
+                return
+            }
             let changable_values = {
                 final_result: new_achievement.Time?.final_result
             }

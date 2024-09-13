@@ -18,6 +18,7 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
         if (currentState.achievement_string != achievement_string && !currentState.isUploaded) {
             let timer = setTimeout(() => {
                 if (!/^[0-9,.:]*$/.test(currentState.achievement_string)) {
+                    alert(`Invalid format: Number (${currentState.achievement_string}) contains non-digits -> not uploaded`)
                     return
                 }
                 let new_achievement: AchievementValue = {
@@ -45,6 +46,14 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                     })
                 } else {
                     let final_result = convert_to_integral_fractional(currentState.achievement_string)
+                    
+                    if(!final_result){
+                        alert(`Invalid format: Number (${currentState.achievement_string}): Not able to convert to number -> not uploaded`)
+                        return
+                    } else if (final_result?.fractional >= 100){
+                        alert(`Invalid format: Number (${currentState.achievement_string}): Only 2 decimal numbers allowed -> not uploaded`)
+                        return
+                    }
 
                     let changed_value;
                     if (achievement_type == "Time") {
@@ -134,7 +143,7 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                     ...prevState,
                     isUploaded: true
                 }))
-            }, 500)
+            }, 1000)
             return () => {
                 clearTimeout(timer);
             };
@@ -142,7 +151,6 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
     })
 
     let handleOnChange = function (e: any) {
-        let id: string = e.target.id;
         let value = e.target.value;
         set_currentState({
             achievement_string: value,

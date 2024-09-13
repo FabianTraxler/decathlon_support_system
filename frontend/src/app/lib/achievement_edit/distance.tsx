@@ -104,7 +104,16 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
     const handle_onChange = function (e: React.ChangeEvent<HTMLInputElement>) {
         let new_state = { ...achievementState }
         let try_name = e.target.name
-        let new_value = e.target.value
+        let new_value = e.target.value.replace(/[^\d.,]/g,'');
+
+        if(new_value.includes(",") && new_value.split(",")[1].length > 2){
+            alert(`Invalid format: Number (${new_value}): Only 2 decimal numbers allowed -> not uploaded`)
+            return
+        } else if(new_value.includes(".") && new_value.split(".")[1].length > 2){
+            alert(`Invalid format: Number (${new_value}): Only 2 decimal numbers allowed -> not uploaded`)
+            return
+        }
+
 
         new_state[try_name] = new_value || "";
 

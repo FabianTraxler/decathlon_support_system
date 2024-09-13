@@ -213,7 +213,6 @@ function AddAthlete({ groupName }: { groupName: string }) {
                                 <select className="max-w-30 sm:max-w-fit shadow-md bg-slate-200" name="gender">
                                     <option value="W">W</option>
                                     <option value="M">M</option>
-                                    <option value="M">Diverse</option>
                                 </select>
                                 <input type="number" className="w-16 max-w-30 shadow-md bg-slate-200" name="birth_date">
                                 </input>

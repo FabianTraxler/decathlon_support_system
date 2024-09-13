@@ -58,11 +58,10 @@ export default function Achievement({ index, name, achievement, achievement_type
         return (
             <td className='group flex-col border border-slate-800 text-right hover:bg-slate-400 hover:cursor-pointer'>
                 <div onClick={handleOpenPopup} className='p-1 w-full h-full text-right'>
-                    {achievement_string != "" &&
+                    {achievement_string != "" ?
                         <div>{ achievement_string } {achievement_unit}</div>
-                    }
-                    {(achievement_string == "") &&
-                        <button onClick={handleOpenPopup} className='pl-3 hidden group-hover:block text-center'>&#9998;</button>
+                        :
+                        <div onClick={handleOpenPopup} className='hidden group-hover:block text-center'>&#9998;</div>
                     }
                 </div>
                 {isPopupOpen &&

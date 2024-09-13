@@ -77,9 +77,9 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 method: "DELETE",
             }).then(res => {
                 if (res.ok) {
-                    if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1){
+                    if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1) {
                         alert("Invalid values for start height or height incrase --> Achievement deleted")
-                    }else{
+                    } else {
                         create_new_achievement(athleteName, new_achievement, onSubmit)
                     }
                 } else {
@@ -111,7 +111,11 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
 
     const adapt_final_result = function (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>, input_type: string) {
         let new_state = { ...achievementState }
-        new_state[input_type] = e.target.value
+        if (input_type !== "tries") {
+            new_state[input_type] = e.target.value.replace(/[^\d]/g, '');
+        }else{
+            new_state[input_type] = e.target.value
+        }
 
         if (input_type !== "final_result") {
             let tries = new_state.tries.split("-") || []
@@ -123,6 +127,10 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 }
             })
             new_state["final_result"] = jumped_height.toString().toUpperCase()
+        } else {
+            new_state["start_height"] = new_state["final_result"].toString().toUpperCase()
+            new_state["height_increase"] = achievement?.name == "Hochsprung" ? "4" : "20"
+            new_state["tries"] = "O-XXX"
         }
 
         setAchievementState(new_state)
@@ -135,14 +143,14 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
             <form id="time_form" onSubmit={form_submit}>
                 <div className="mb-2">
                     <label>Endergebnis [{unit}]: </label>
-                    <input type="number" step={achievementState.height_increase} name="final_result" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
+                    <input name="final_result" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.final_result}
                         onChange={(e) => adapt_final_result(e, "final_result")}
                     ></input>
                 </div>
                 <div className="mb-2">
                     <label>Starthöhe [{unit}]: </label>
-                    <input type="number" step={achievementState.height_increase} name="start_height" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
+                    <input name="start_height" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.start_height}
                         onChange={(e) => adapt_final_result(e, "start_height")}
                     ></input>
@@ -150,7 +158,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
 
                 <div className="mb-2">
                     <label>Höhenänderung [{unit}]: </label>
-                    <input type="number" name="height_increase" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
+                    <input name="height_increase" className="shadow-md rounded-md bg-slate-200 w-16 text-center"
                         value={achievementState.height_increase}
                         onChange={(e) => adapt_final_result(e, "height_increase")}
                     ></input>

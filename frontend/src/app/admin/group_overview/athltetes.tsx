@@ -37,7 +37,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
 function GroupAthletes({ group_name }: { group_name: string }) {
   const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
   const [disciplineEdit, setDisciplineEdit] = useState<{discipline: string, athlete_order: string[]}>({discipline: "", athlete_order: []})
-  const [sorted, setSorted] = useState({ name: "#", ascending: true })
+  const [sorted, setSorted] = useState({ name: "Name", ascending: true })
 
   const discipline_edit_mode = function (selected_discipline: string) {
     if(selected_discipline != disciplineEdit.discipline){
@@ -238,7 +238,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{age_group}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{birthdate.getUTCFullYear() || ""}</td>
-      <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.total_points}</td>
+      <td className='border border-slate-800 pl-2 pr-2 text-center'><div className='p-1'>{athlete.total_points}</div></td>
       {disciplines.map(([name, type]) => {
         return (
           <Achievement key={name} index={index} name={name}
@@ -267,9 +267,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
 function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
   const birthdate = new Date(athlete.birth_date * 1000);
   const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
-  const [birthyearState, changeBirthyearState] = useState<string>("")
   const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
-  const [birthyearstartingNumber, changestartingNumber] = useState<string>("")
 
   const deleteAthlete = function () {
     if (confirm("Athlet:in löschen?")) {
@@ -295,6 +293,7 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
       if (starting_number) {
         changeStartingNumber(starting_number)
       } else {
+        alert("Invalid format")
         changeStartingNumber("")
       }
     }
@@ -308,6 +307,7 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
       if (birth_year) {
         changeBirthyear(birth_year)
       } else {
+        alert("Invalid format")
         changeBirthyear("")
       }
     }
