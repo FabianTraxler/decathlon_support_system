@@ -36,7 +36,7 @@ impl DynamoDB {
         let mut update_call = self
             .client
             .update_item()
-            .table_name("athlete_store")
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
             .key("athlete_id", AttributeValue::S(athlete_name));
 
         update_call = update_call
@@ -63,7 +63,7 @@ impl AchievementStorage for DynamoDB {
         let item = self
             .client
             .get_item()
-            .table_name("athlete_store")
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
             .key("athlete_id", AttributeValue::S(athlete_name))
             .send()
             .await;
@@ -79,7 +79,7 @@ impl AchievementStorage for DynamoDB {
     }
 
     async fn get_athletes(&self) -> HashMap<String, Vec<Athlete>> {
-        let results = self.client.scan().table_name("group_store").send().await;
+        let results = self.client.scan().table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string())).send().await;
 
         let group_ids: Vec<GroupID> = match results {
             Ok(items) => {
@@ -123,7 +123,7 @@ impl AchievementStorage for DynamoDB {
         let item = serde_dynamo::to_item(athlete)?;
         self.client
             .put_item()
-            .table_name("athlete_store")
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
             .set_item(Some(item))
             .item("athlete_id", AttributeValue::S(athlete_name))
             .send()
@@ -147,7 +147,7 @@ impl AchievementStorage for DynamoDB {
         let mut update_call = self
             .client
             .update_item()
-            .table_name("athlete_store")
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
             .key("athlete_id", AttributeValue::S(athlete_name));
 
         let json_value: Value = serde_json::from_str(json_string)?;
@@ -244,7 +244,7 @@ impl AchievementStorage for DynamoDB {
         // Delete Athlete from athlete_store
         // self.client
         //     .delete_item()
-        //     .table_name("athlete_store")
+        //     .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
         //     .key("athlete_id", AttributeValue::S(athlete_id.full_name().into()))
         //     .send().await?;
 
@@ -256,7 +256,7 @@ impl AchievementStorage for DynamoDB {
 
         let groups = match self.client
             .scan()
-            .table_name("group_store")
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
             .send()
             .await{
                 Ok(groups) => {
@@ -308,7 +308,7 @@ impl AchievementStorage for DynamoDB {
         let item = self
             .client
             .get_item()
-            .table_name("group_store")
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
             .key("name", AttributeValue::S(group_name))
             .send();
         
@@ -339,12 +339,12 @@ impl AchievementStorage for DynamoDB {
                 let athlete_result = self.client
                 .batch_get_item()
                 .request_items(
-                    "athlete_store",
+                    std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()),
                     group_athletes_keys.build().ok()?,
                 )
                 .send().await.ok()?;
 
-                let athlete_items = athlete_result.responses()?.get("athlete_store")?; 
+                let athlete_items = athlete_result.responses()?.get(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()).as_str())?; 
                 let mut athletes = Vec::new();
 
                 for athlete_data in athlete_items{
@@ -383,7 +383,7 @@ impl AchievementStorage for DynamoDB {
         let item = serde_dynamo::to_item(group_store)?;
         self.client
             .put_item()
-            .table_name("group_store")
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
             .set_item(Some(item))
             .send()
             .await?;
@@ -420,7 +420,7 @@ impl AchievementStorage for DynamoDB {
         let mut update_call = self
             .client
             .update_item()
-            .table_name("group_store")
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
             .key("name", AttributeValue::S(group_name));
 
         let json_value: Value = serde_json::from_str(json_string)?;
@@ -549,7 +549,7 @@ impl AchievementStorage for DynamoDB {
                 let mut athletes: Vec<Athlete> = Vec::new();
 
                 let all_athletes: Vec<Option<Athlete>> =
-                    match self.client.scan().table_name("athlete_store").send().await {
+                    match self.client.scan().table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string())).send().await {
                         Ok(items) => {
                             if let Some(items) = items.items {
                                 Some(
@@ -613,7 +613,7 @@ impl AchievementStorage for DynamoDB {
         let mut update_call = self
             .client
             .update_item()
-            .table_name("athlete_store")
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
             .key("athlete_id", AttributeValue::S(athlete_name));
 
         update_call = update_call
@@ -662,7 +662,7 @@ impl TimePlanStorage for DynamoDB {
         let item = self
             .client
             .get_item()
-            .table_name("time_group_store")
+            .table_name(std::env::var("DB_NAME_TIMEGROUP").unwrap_or("time_group_store".to_string()))
             .key("name", AttributeValue::S(group_name))
             .send()
             .await;
@@ -784,7 +784,7 @@ impl TimePlanStorage for DynamoDB {
         let item = serde_dynamo::to_item(group)?;
         self.client
             .put_item()
-            .table_name("time_group_store")
+            .table_name(std::env::var("DB_NAME_TIMEGROUP").unwrap_or("time_group_store".to_string()))
             .set_item(Some(item))
             .send()
             .await?;
@@ -799,7 +799,7 @@ impl AuthenticateStorage for DynamoDB {
         let item = self
             .client
             .get_item()
-            .table_name("authentication")
+            .table_name(std::env::var("DB_NAME_AUTHENTICATION").unwrap_or("authentication".to_string()))
             .key("password", AttributeValue::S(login_info.pwd))
             .send()
             .await;
@@ -818,7 +818,7 @@ impl AuthenticateStorage for DynamoDB {
         let item = serde_dynamo::to_item(role)?;
         self.client
             .put_item()
-            .table_name("authentication")
+            .table_name(std::env::var("DB_NAME_AUTHENTICATION").unwrap_or("authentication".to_string()))
             .set_item(Some(item))
             .send()
             .await?;

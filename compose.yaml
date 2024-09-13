@@ -18,6 +18,11 @@ services:
       build:
         context: ./backend
         dockerfile: backend.dockerfile
+      environment:
+        DB_NAME_ATHLETE: athlete_store
+        DB_NAME_AUTHENTICATION: authentication
+        DB_NAME_GROUP: group_store
+        DB_NAME_TIMEGROUP: time_group_store
       ports:
         - '3001:3001'
       volumes:
