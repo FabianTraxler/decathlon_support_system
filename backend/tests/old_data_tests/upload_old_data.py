@@ -41,12 +41,13 @@ def read_excel_file(filename: str) -> Dict[str, pd.DataFrame]:
 
 
 def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_disciplines: Dict = {}):
-    groups = results["GRP"].unique()
-    for group in groups:
-        if group is None: continue
-        group_name = f"Gruppe {group}"
-        if not upload_group(group_name, "Decathlon"):
-            print(f"{group_name} not uploaded")
+    if not config["timetable"]:
+        groups = results["GRP"].unique()
+        for group in groups:
+            if group is None: continue
+            group_name = f"Gruppe {group}"
+            if not upload_group(group_name, "Decathlon"):
+                print(f"{group_name} not uploaded")
 
     disciplines = [('100m', "100 Meter Lauf", "Time"),
                    ('Weit', "Weitsprung", "Distance"),
@@ -60,6 +61,8 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
                    (('1500m', '1500sec'), "1500 Meter Lauf", "Time")]
 
     for _, row in tqdm(results.iterrows(), total=len(results)):
+        if row["GRP"] in ["J5K", "J7K"]:
+            continue
         if isinstance(row["GRP"], int):
             group_name = f"Gruppe {row['GRP']}"
         else:
@@ -155,10 +158,11 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
 
 
 def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_disciplines: Dict = {}):
-    if not upload_group("U14", "Pentathlon"):
-        print(f"U14 not uploaded")
-    if not upload_group("U16", "Heptathlon"):
-        print(f"U16 not uploaded")
+    if not config["timetable"]:
+        if not upload_group("U14", "Pentathlon"):
+            print(f"U14 not uploaded")
+        if not upload_group("U16", "Heptathlon"):
+            print(f"U16 not uploaded")
 
     disciplines = {
         "Pentathlon": [('100m', "60 Meter Lauf", "Time"),
@@ -279,10 +283,11 @@ def upload_youth_results(results: pd.DataFrame, config: Dict, skipped_discipline
 
 
 def upload_kids_results(results: pd.DataFrame, config: Dict, skipped_disciplines: Dict = {}):
-    group_names = ["U12", "U10", "U8", "U4/U6"]
-    for group_name in group_names:
-        if not upload_group(group_name, "Triathlon"):
-            print(f"{group_name} not uploaded")
+    if not config["timetable"]:
+        group_names = ["U12", "U10", "U8", "U4/U6"]
+        for group_name in group_names:
+            if not upload_group(group_name, "Triathlon"):
+                print(f"{group_name} not uploaded")
 
     disciplines = [('60 Meter', "60 Meter Lauf", "Time"),
                    ('Weit', "Weitsprung", "Distance"),
@@ -436,8 +441,16 @@ def upload_athlete(name: str, surname: str,
         if response.ok:
             return True
         else:
-            return False
-
+            time.sleep(30)
+            response = requests.put(url,
+                                    params={
+                                        "name": group_name,
+                                    },
+                                    json=post_body)
+            if response.ok:
+                return True
+            else:
+                return False
     else:
         return False
 
