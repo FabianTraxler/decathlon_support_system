@@ -67,7 +67,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                 if (!current_state.all_athletes_start_height_set) {
                     // Not all athletes ready
                     discipline.state = "BeforeStart"
-                }else{
+                } else {
                     //  all athletes ready
                     discipline.state = "Active"
                 }
@@ -85,6 +85,14 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                     loaded: true,
                     all_athletes_start_height_set: current_state.all_athletes_start_height_set,
                     new_athletes_for_new_height: current_state.new_in_height
+                })
+            } else if (current_state.athlete_results.size == 0) {
+                let discipline = disciplineState.discipline;
+                discipline.state = "NoAthletes"
+                setDisciplineState({
+                    ...disciplineState,
+                    loaded: true,
+                    discipline: discipline
                 })
             } else {
                 finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
@@ -149,6 +157,21 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                             </div>
                         </div>
                     </BeforeStartInfoBox>
+                }
+                {
+                    disciplineState.discipline.state == "NoAthletes" &&
+                    <div className="h-full flex flex-col items-center justify-center">
+                        <div className="font-bold text-xl text-center">
+                            Kein Athlet:innen mit Startnummer! Warten auf Anmeldung.
+                        </div>
+                        <div
+                            className="border border-red-900 rounded-xl shadow-md shadow-black bg-red-400 p-2  m-5 active:shadow-none"
+                            onClick={() => finish_height_discipline()}
+                        >
+                            Diziplin dennoch abschließen!
+                        </div>
+                    </div>
+
                 }
                 {
                     showStartHeightInput &&
@@ -352,7 +375,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
         let starting_number = athlete_results.get(athlete.name + "_" + athlete.surname)?.starting_number || NaN
         return new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, starting_number)
     })
-    
+
 
     if (active_athletes.length > 0) {
         if (current_height == Infinity) {
@@ -375,7 +398,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                     } else if (athlete.current_try == (current_try + 1)) {
                         next_try_order.push(athlete_id)
                     }
-                    if (athlete.start_height == current_height){
+                    if (athlete.start_height == current_height) {
                         new_in_height.add(athlete_id)
                     }
                 } else if (athlete && athlete.still_active && athlete.final_result && athlete.final_result >= current_height) {
@@ -390,18 +413,18 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 current_try += 1
             }
         }
-        if (current_try == 1 && next_try_order.length == 0){
+        if (current_try == 1 && next_try_order.length == 0) {
             height_not_started = true;
         }
-        return { 
-            athlete_results: athlete_results, 
-            current_height: current_height, 
-            current_try: current_try, 
-            current_try_order: current_try_order, 
-            next_try_order: next_try_order, 
-            athletes_in_next_height: height_successful_jumped, 
-            all_athletes_start_height_set: all_athletes_start_height_set, 
-            default_starting_order:converted_default_starting_order,
+        return {
+            athlete_results: athlete_results,
+            current_height: current_height,
+            current_try: current_try,
+            current_try_order: current_try_order,
+            next_try_order: next_try_order,
+            athletes_in_next_height: height_successful_jumped,
+            all_athletes_start_height_set: all_athletes_start_height_set,
+            default_starting_order: converted_default_starting_order,
             height_not_started: height_not_started,
             new_in_height: new_in_height
         }
@@ -409,14 +432,14 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
 
     } else {
         let new_athletes_for_new_height: Set<AthleteHeightID> = new Set();
-        return { 
-            athlete_results: athlete_results, 
-            current_height: 0, 
-            current_try: 0, 
-            current_try_order: [], 
-            next_try_order: [], 
-            athletes_in_next_height: [], 
-            all_athletes_start_height_set: all_athletes_start_height_set, 
+        return {
+            athlete_results: athlete_results,
+            current_height: 0,
+            current_try: 0,
+            current_try_order: [],
+            next_try_order: [],
+            athletes_in_next_height: [],
+            all_athletes_start_height_set: all_athletes_start_height_set,
             default_starting_order: [],
             height_not_started: false,
             new_in_height: new_athletes_for_new_height
@@ -454,24 +477,24 @@ export function decode_athlete_tries(athlete_result: AthleteHeightResults): Athl
             current_try = last_attempt.length + 1
         } else if (last_attempt.length == 3) { // already had three tries but skipped the last one
             next_height = (athlete_result.start_height || 0) + tries.length * (athlete_result.height_increase || 0);
-            if (last_attempt == "///"){ // skipped last height completely
-                for (let i = tries.length - 2; i >= 0; i--){
-                    for (let j = tries[i].length - 1; j >= 0; j--){
-                        if(tries[i][j] == "X"){
+            if (last_attempt == "///") { // skipped last height completely
+                for (let i = tries.length - 2; i >= 0; i--) {
+                    for (let j = tries[i].length - 1; j >= 0; j--) {
+                        if (tries[i][j] == "X") {
                             current_try = j + 2
                             break
-                        }else if (tries[i][j] == "O"){
+                        } else if (tries[i][j] == "O") {
                             current_try = 1
                             break
                         }
                     }
                 }
-            }else{
-                for (let i = last_attempt.length - 1; i >= 0; i--){
-                    if(last_attempt[i] == "X"){
+            } else {
+                for (let i = last_attempt.length - 1; i >= 0; i--) {
+                    if (last_attempt[i] == "X") {
                         current_try = i + 2
                         break
-                    }else if (last_attempt[i] == "O"){
+                    } else if (last_attempt[i] == "O") {
                         current_try = 1
                         break
                     }

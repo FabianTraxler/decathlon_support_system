@@ -80,18 +80,18 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
             if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
                 default_starting_order = disciplineState.discipline.starting_order.Default.filter(athlete => {
                     let athlete_result = athlete_results.get(athlete.name + "_" + athlete.surname)
-                    if (!athlete_result?.starting_number){
+                    if (!athlete_result?.starting_number) {
                         return false
                     }
-                    if (athlete_result.first_try && athlete_result.second_try && athlete_result.third_try){
+                    if (athlete_result.first_try && athlete_result.second_try && athlete_result.third_try) {
                         return false
                     }
                     return true
                 }).map(athlete => {
                     let athlete_result = athlete_results.get(athlete.name + "_" + athlete.surname)
-                    if(athlete_result){
+                    if (athlete_result) {
                         return athlete_result
-                    }else {
+                    } else {
                         return new AthleteDistanceResults(athlete, discipline.name, discipline_unit, undefined)
                     }
                 })
@@ -120,7 +120,12 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         try_order.shift()
                     }
                 })
-                if (not_done) {
+                if (try_order.length == 0) {
+                    let discipline = disciplineState.discipline;
+                    discipline.state = "NoAthletes"
+                    setDiscipline(discipline)
+                }
+                else if (not_done) {
                     setDisciplineState({
                         ...disciplineState,
                         current_try: current_try,
@@ -147,7 +152,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
     }
 
 
-    if (disciplineState.current_try == 0 || disciplineState.results.size == 0) {
+    if ((disciplineState.current_try == 0 || disciplineState.results.size == 0) && !(disciplineState.discipline.state == "NoAthletes" || disciplineState.discipline.state == "Finished")) {
         return (
             <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
         )
@@ -167,6 +172,21 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         discipline={disciplineState.discipline}
                         start_discipline={() => start_discipline(group_name, disciplineState.discipline, setDiscipline)}
                     ></BeforeStartInfoBox>
+                }
+                {
+                    disciplineState.discipline.state == "NoAthletes" &&
+                    <div className="h-full flex flex-col items-center justify-center">
+                        <div className="font-bold text-xl text-center">
+                            Kein Athlet:innen mit Startnummer! Warten auf Anmeldung.
+                        </div>
+                        <div
+                            className="border border-red-900 rounded-xl shadow-md shadow-black bg-red-400 p-2  m-5 active:shadow-none"
+                            onClick={() => finish_discipline(group_name, disciplineState.discipline, setDiscipline)}
+                        >
+                            Diziplin dennoch abschließen!
+                        </div>
+                    </div>
+
                 }
                 {
                     (disciplineState.discipline.state == "Active" && disciplineState.default_order.length > 0) &&
@@ -238,7 +258,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 if (athlete_result) {
                     new_results.set(athlete.full_name(), athlete_result)
                 }
-                if(try_number == state.current_try){
+                if (try_number == state.current_try) {
                     try_completed(new_results)
                 }
             })
@@ -387,10 +407,10 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         }}
                         skipDiscipline={() => {
                             // Remove athlete from default order
-                            if (athlete_result){
+                            if (athlete_result) {
                                 const index = state.default_order.indexOf(athlete as AthleteDistanceResults);
-                                if (index > -1) { 
-                                    state.default_order.splice(index, 1); 
+                                if (index > -1) {
+                                    state.default_order.splice(index, 1);
                                 }
                             }
                             // Set all tries to -1
@@ -496,18 +516,18 @@ function NumberPad({ current_value, updateValue }: { current_value: { try_number
 
         if (typeof val == "string") {
             if (val == ".") {
-                if(new_value.includes(".")){
+                if (new_value.includes(".")) {
                     alert("2 Kommas nicht erlaubt!")
-                }else{
+                } else {
                     new_value += val
                 }
             } else if (val == "C") {
                 new_value = new_value.slice(0, new_value.length - 1)
             }
         } else {
-            if(new_value.includes(".") && new_value.split(".")[1].length >= 2){
+            if (new_value.includes(".") && new_value.split(".")[1].length >= 2) {
                 alert("Maximal 2 Nachkommastellen erlaubt!")
-            }else{
+            } else {
                 new_value += val
             }
         }
