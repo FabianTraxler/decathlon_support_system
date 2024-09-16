@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use super::achievements::Achievement;
-use chrono::{DateTime, LocalResult, TimeZone, Utc};
+use chrono::{DateTime, Datelike, LocalResult, TimeZone, Utc};
 use chrono::serde::ts_seconds_option;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -94,7 +94,8 @@ impl Athlete {
             CompetitionType::Decathlon => {
                 let mut age_group = self.gender.clone();
                 if let Some(birth_date) = self.birth_date() {
-                    let years = Utc::now().years_since(birth_date).unwrap_or(0);
+                    let years = Utc::now().year() - birth_date.year();
+                    //let years = Utc::now().years_since(birth_date).unwrap_or(0);
                     match years {
                         age if age < 40 => age_group += "",
                         age if age < 50 => age_group += "40",
@@ -108,7 +109,8 @@ impl Athlete {
             _ => {
                 let mut age_group = self.gender.clone();
                 if let Some(birth_date) = self.birth_date() {
-                    let years = Utc::now().years_since(birth_date).unwrap_or(0);
+                    let years = Utc::now().year() - birth_date.year();
+                    //let years = Utc::now().years_since(birth_date).unwrap_or(0);
                     match years {
                         age if age < 4 => age_group += "-U4",
                         age if age < 6 => age_group += "-U6",
