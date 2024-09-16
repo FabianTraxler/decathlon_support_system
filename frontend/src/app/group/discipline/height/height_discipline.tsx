@@ -63,10 +63,13 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
 
             let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
 
-            if (current_state.current_try_order.length > 0) {
+            if (current_state.current_try_order.length > 0 || !current_state.all_athletes_start_height_set) {
                 if (!current_state.all_athletes_start_height_set) {
                     // Not all athletes ready
                     discipline.state = "BeforeStart"
+                }else{
+                    //  all athletes ready
+                    discipline.state = "Active"
                 }
                 setDisciplineState({
                     ...disciplineState,
@@ -321,10 +324,11 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                     athlete_result.still_active = decoded_tries.still_active
                     athlete_result.final_result = decoded_tries.jumped_height
 
-                    if (decoded_tries.next_height < current_height) {
+                    if (athlete_result.still_active && decoded_tries.next_height < current_height) {
                         current_height = decoded_tries.next_height
                     }
                 } else if (achievement.start_height) {
+                    athlete_result.still_active = true
                     athlete_result.current_height = achievement.start_height
                     athlete_result.current_try = 1
                     if (achievement.start_height < current_height && achievement.start_height != -1) {
@@ -332,6 +336,8 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                     }
                 }
             } else {
+                // Never started discipline and therefore still active
+                athlete_result.still_active = true
                 all_athletes_start_height_set = false
             }
             athlete_results.set(athlete_result.full_name(), athlete_result)
@@ -410,7 +416,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
             current_try_order: [], 
             next_try_order: [], 
             athletes_in_next_height: [], 
-            all_athletes_start_height_set: true, 
+            all_athletes_start_height_set: all_athletes_start_height_set, 
             default_starting_order: [],
             height_not_started: false,
             new_in_height: new_athletes_for_new_height
@@ -433,7 +439,7 @@ export function decode_athlete_tries(athlete_result: AthleteHeightResults): Athl
         }
     })
 
-    let next_height = Infinity
+    let next_height = still_active ? Infinity : jumped_height
     let current_try = 1
 
     if (still_active) {
