@@ -13,6 +13,9 @@ const config: Config = {
         "stw_orange": "#f5a623",
         "stw_blue": "#4ab5e2",
         "stw_green": "#7ed321"
+      },
+      "screens": {
+        'smallPhone': {'raw': '(max-height: 700px)'},
       }
     }
 

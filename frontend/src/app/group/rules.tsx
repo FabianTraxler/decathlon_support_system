@@ -126,7 +126,7 @@ function DisciplineRuleOverview({ discipline, onClose }: { discipline: Disciplin
 
         return (
             <PopUp onClose={onClose} title={discipline.name}>
-                <div className="h-[80vh] w-[90vw] overflow-scroll p-2">
+                <div className="h-[80vh] w-[90vw] min-[576px]:h-[100%] min-[576px]:w-[100%] overflow-scroll p-2  min-[576px]:p-4">
                     <div >
                         <div className="font-bold">Generelle Information:</div>
                         {info_paragraphs.map((text, i) => {

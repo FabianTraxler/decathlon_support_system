@@ -34,7 +34,7 @@ export default function Group() {
     "Athletenübersicht",
     "Platzübersicht",
     "Zeitplan",
-    "Disziplinen & Regelwerk",
+    "Regelwerk",
     "Aktuelle Disziplin"
   ]
 
@@ -56,7 +56,7 @@ export default function Group() {
 
   return (
     <NavigationContext.Provider value={navigation}>
-      <div className="absolute inset-0 flex flex-col items-center p-0 sm:p-42 xl:p-10 w-screen sm:w-full">
+      <div className="absolute inset-0 flex flex-col items-center p-0 sm:p-42 xl:p-10 w-screen sm:w-full smallPhone:overflow-scroll">
         <Header homescreen={homescreen}></Header>
         {homescreen && (
           <Overview groupname={groupName} changeTab={setCurrentTab} allTabs={all_tabs}></Overview>
@@ -70,7 +70,7 @@ export default function Group() {
         {currentTab == "Zeitplan" &&
           <Timetable group_name={groupName}></Timetable>
         }
-        {currentTab == "Disziplinen & Regelwerk" &&
+        {currentTab == "Regelwerk" &&
           <Rules group_name={groupName}></Rules>
         }
         {currentTab == "Aktuelle Disziplin" &&

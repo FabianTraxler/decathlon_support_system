@@ -89,7 +89,7 @@ export const discipline_rules: Rules = {
     },
     "Vortex": {
         "image": "javelin_throw.svg",
-        "info": ""
+        "info": "Es gilt immer die erste Bodenberührung des Vortex und gemessen wird von der Abwurflinie! Die Linie darf beim Abwurf sowie danach nicht berührt oder überschritten werden."
     },
     "1200 Meter Cross Lauf": {
         "image": "run.svg",
@@ -97,6 +97,6 @@ export const discipline_rules: Rules = {
     },
     "Schlagball": {
         "image": "javelin_throw.svg",
-        "info": ""
+        "info": "Es gilt immer die erste Bodenberührung des Vortex und gemessen wird von der Abwurflinie! Die Linie darf beim Abwurf sowie danach nicht berührt oder überschritten werden."
     }
 }

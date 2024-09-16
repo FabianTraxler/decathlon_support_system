@@ -120,7 +120,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
                                     </div>
                                     {(disciplines.has(day_id) && selectedDay == day_id) &&
-                                        <div className="max-h-[60vh] overflow-scroll max-w-[100vw]">
+                                        <div className=" max-w-[100vw]">
                                             <table className="table-auto border-collapse w-full">
                                                 <thead>
                                                     <tr>

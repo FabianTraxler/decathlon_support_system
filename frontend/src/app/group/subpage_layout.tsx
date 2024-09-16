@@ -7,7 +7,7 @@ export default function Title_Footer_Layout({ title, children }: { title: string
             <div className="flex items-center row-span-1">
                 <Title title={title}></Title>
             </div>
-            <div className="row-span-8 sm:row-span-9 flex flex-col items-top justify-top pb-4">
+            <div className="row-span-8 sm:row-span-9 flex flex-col items-top justify-top pb-4 smallPhone:overflow-scroll">
                 {children}
             </div>
             <div className="flex items-center justify-center row-span-1">
