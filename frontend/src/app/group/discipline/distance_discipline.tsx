@@ -238,7 +238,9 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 if (athlete_result) {
                     new_results.set(athlete.full_name(), athlete_result)
                 }
-                try_completed(new_results)
+                if(try_number == state.current_try){
+                    try_completed(new_results)
+                }
             })
         } else {
             alert("Error while saving achievement")
@@ -422,7 +424,8 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         key={try_number}
                         try_number={try_number}
                         try_value={try_value}
-                        current_try={selectedTry.try_number == try_number}
+                        current_try={state.current_try == try_number}
+                        selected_try={selectedTry.try_number == try_number}
                         setSelectedTry={setSelectedTry}
                         save_value={(try_number: number, new_value: number | string) => save_athlete_try(athlete, try_number, new_value)}>
                     </Try>
@@ -434,22 +437,22 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
 }
 
 
-function Try({ try_number, try_value, current_try, save_value, setSelectedTry }:
-    { try_number: number, try_value: number | string, current_try: boolean, save_value: (try_number: number, new_value: number | string) => void, setSelectedTry: (val: { try_number: number, try_value: number | string }) => void }) {
+function Try({ try_number, try_value, current_try, selected_try, save_value, setSelectedTry }:
+    { try_number: number, try_value: number | string, current_try: boolean, selected_try: boolean, save_value: (try_number: number, new_value: number | string) => void, setSelectedTry: (val: { try_number: number, try_value: number | string }) => void }) {
 
     return (
         <div className="text-xl sm:text-4xl">
             <div className="grid grid-cols-3 justify-between items-center h-full">
-                <div >
+                <div className={"" + (current_try && "font-bold")}>
                     {try_number}. Versuch:
                 </div>
                 <div className="flex flex-row items-center justify-center h-full">
-                    <div className={"text-center w-full min-h-[50%] p-1 rounded bg-slate-400 " + (current_try && "bg-slate-50 border border-green-300")}
+                    <div className={"text-center w-full min-h-[50%] p-1 rounded bg-slate-400 " + (selected_try && "bg-slate-50 border border-green-300")}
                         onClick={() => setSelectedTry({ try_number: try_number, try_value: try_value })}
                     >
                         {try_value != -1 && try_value}
-                        {(try_value == -1 && current_try) && ""}
-                        {(try_value == -1 && !current_try) && "X"}
+                        {(try_value == -1 && selected_try) && ""}
+                        {(try_value == -1 && !selected_try) && "X"}
 
                     </div>
                     <div>
@@ -457,7 +460,7 @@ function Try({ try_number, try_value, current_try, save_value, setSelectedTry }:
                     </div>
                 </div>
                 {
-                    current_try &&
+                    selected_try &&
                     <div className="flex flex-row items-center justify-center h-full p-3">
                         {
                             (try_value != "") &&
@@ -493,13 +496,22 @@ function NumberPad({ current_value, updateValue }: { current_value: { try_number
 
         if (typeof val == "string") {
             if (val == ".") {
-                new_value += val
+                if(new_value.includes(".")){
+                    alert("2 Kommas nicht erlaubt!")
+                }else{
+                    new_value += val
+                }
             } else if (val == "C") {
                 new_value = new_value.slice(0, new_value.length - 1)
             }
         } else {
-            new_value += val
+            if(new_value.includes(".") && new_value.split(".")[1].length >= 2){
+                alert("Maximal 2 Nachkommastellen erlaubt!")
+            }else{
+                new_value += val
+            }
         }
+
         updateValue({ ...current_value, try_value: new_value })
     }
     return (
