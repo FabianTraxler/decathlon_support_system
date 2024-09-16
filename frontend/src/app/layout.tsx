@@ -40,7 +40,17 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
-      <body className={"h-full overflow-hidden relative overscroll-none " + inter.className}>{children}</body>
+      <body className={"h-full overflow-hidden relative overscroll-none " + inter.className}>
+        <div className='h-full w-full tooSmall:hidden'>
+          {children}
+        </div>
+        <div className="hidden tooSmall:flex h-full items-center">
+          <div className='text-xl font-bold text-red-600 text-center'>
+            Display size too small to use this application
+          </div>
+        </div>
+
+      </body>
     </html>
   )
 }

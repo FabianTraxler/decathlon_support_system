@@ -16,6 +16,7 @@ const config: Config = {
       },
       "screens": {
         'smallPhone': {'raw': '(max-height: 700px)'},
+        'tooSmall': {'raw': '((max-height: 400px) and (max-width: 400px))'},
       }
     }
 
