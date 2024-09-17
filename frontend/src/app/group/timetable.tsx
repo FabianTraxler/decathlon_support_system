@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
-import { Discipline, StartingOrder } from "../lib/interfaces";
+import { useContext, useEffect, useState } from "react";
+import { Discipline } from "../lib/interfaces";
 import { convert_date_to_time } from "../lib/parsing";
 import { DisciplineEditButton } from "../admin/group_overview/disciplines/discipline_edit";
 import Title_Footer_Layout from "./subpage_layout";
 import { LoadingAnimation } from "../lib/loading";
+import { NavigationContext } from "./navigation";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
     const [selectedDay, setSelectedDay] = useState("");
+    const nav = useContext(NavigationContext)
 
     const days = [
         ["day 1", "Samstag"],
@@ -65,12 +67,16 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
     }
 
-    const change_selected_date = function(day_id: string) {
+    const change_selected_date = function (day_id: string) {
         if (day_id == selectedDay) {
             setSelectedDay("")
         } else {
             setSelectedDay(day_id)
         }
+    }
+
+    const start_discipline = function (discipline_name: string) {
+        nav.tab_navigation_function({ name: "Aktuelle Disziplin--" + discipline_name, reset_function: () => { } })
     }
 
 
@@ -131,13 +137,19 @@ export default function Timetable({ group_name }: { group_name: string }) {
                                                 </thead>
                                                 <tbody>
                                                     {disciplines.get(day_id)?.map((discipline, i) => {
-                                                        return <tr key={discipline.name} className={"" + (discipline.state == "Finished" && "bg-slate-400")}>
+                                                        return <tr key={discipline.name} className={"" + (discipline.state == "Finished" && "bg-slate-300")}>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{i + 1}.</td>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center font-bold'>{discipline.name.replace("Stabhochsprung", "Stabhoch")}</td>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{discipline.location}</td>
                                                             <td className='border border-slate-800 p-1 sm:p-3 pt-4 sm:pt-6 pb-4 sm:pb-6 pl-2 pr-2 text-center'>{convert_date_to_time(discipline.start_time)}</td>
-                                                            <DisciplineEditButton group_name={group_name} discipline={discipline} group_view={true} update_discipline={(discipline) => update_discipline(day_id, i, discipline)}>
-                                                                <span className='bg-transparent w-full text-center'>&#9998;</span>
+                                                            <DisciplineEditButton
+                                                                group_name={group_name}
+                                                                discipline={discipline}
+                                                                group_view={true}
+                                                                update_discipline={(discipline) => update_discipline(day_id, i, discipline)}
+                                                                start_discipline={start_discipline}
+                                                            >
+                                                                <span className='block bg-transparent w-full text-center'>&#9998;</span>
                                                             </DisciplineEditButton>
                                                         </tr>
                                                     })}

@@ -98,7 +98,7 @@ export default function Disciplines() {
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date(discipline.start_time)}</td>
-                  <DisciplineEditButton group_name={group_name} discipline={discipline} group_view={false} update_discipline={(discipline) => update_discipline(i, discipline)}>
+                  <DisciplineEditButton group_name={group_name} discipline={discipline} group_view={false} start_discipline={undefined} update_discipline={(discipline) => update_discipline(i, discipline)}>
                     <span className='flex'>Ändern</span>
                     <span className='pl-2 hidden group-hover:flex'>&#9998;</span>
                   </DisciplineEditButton>

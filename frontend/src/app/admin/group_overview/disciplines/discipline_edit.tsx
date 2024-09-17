@@ -1,23 +1,23 @@
-import { Navigation, NavigationContext } from "@/app/group/navigation";
+import { start_discipline } from "@/app/group/discipline/discipline";
 import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { PopUp } from "@/app/lib/achievement_edit/popup";
 import { finish_discipline, reset_discipline } from "@/app/lib/discipline_edit";
 import { StartingOrder, Discipline, AthleteID } from "@/app/lib/interfaces";
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 
 
 export function DisciplineEditButton(
-  { discipline, group_name, update_discipline, group_view, children }: 
-  { discipline: Discipline, group_name: string, group_view: boolean, update_discipline: (order: Discipline) => void, children: React.ReactNode }) {
+  { discipline, group_name, group_view, update_discipline, start_discipline, children }: 
+  { discipline: Discipline, group_name: string, group_view: boolean, 
+    update_discipline: (order: Discipline) => void,
+    start_discipline: undefined | ((name: string) => void),
+    children: React.ReactNode,
+  }) {
   const [state, setState] = useState({
     showPopup: false,
     showStartingOrderPopup: false,
     discipline: discipline
   })
-  var nav: Navigation | undefined = undefined;
-  if(group_view){
-    nav = useContext(NavigationContext)
-  }
 
   const closePopup = function (order: StartingOrder) {
     discipline.starting_order = order
@@ -26,8 +26,8 @@ export function DisciplineEditButton(
   }
 
   const startDiscipline = function(){
-    if (nav){
-      nav.tab_navigation_function({name: "Aktuelle Disziplin--" + state.discipline.name, reset_function: () => {}})
+    if (start_discipline){
+      start_discipline(state.discipline.name)
     }
   }
 
@@ -47,13 +47,13 @@ export function DisciplineEditButton(
 
 
   return (
-    <td className='border border-slate-800 p-1 pl-4 pr-4 ' >
-      <div className='flex justify-center w-full rounded-s-md shadow-md hover:bg-slate-600 hover:text-slate-50 hover:cursor-pointer  group'
+    <td className='border border-slate-800 p-1 sm:pl-4 sm:pr-4 w-10 h-10 sm:w-fit sm:h-fit' >
+      <div className='flex justify-center items-center w-full h-full rounded-md shadow-md shadow-slate-600 active:shadow-none hover:bg-slate-600 hover:text-slate-50 hover:cursor-pointer  group'
         onClick={() => setState({ ...state, showPopup: true })}>
         {children}
       </div>
       {state.showPopup &&
-        <PopUp title="Disziplin bearbeiten" onClose={() => setState({ ...state, showPopup: false })}>
+        <PopUp title={state.discipline.name +  " bearbeiten"} onClose={() => setState({ ...state, showPopup: false })}>
           <div className="text-lg sm:text-xl">
             {(typeof state.discipline.starting_order != "string") &&
               <div
@@ -109,7 +109,7 @@ function StartingOrderEditPopup({ group_name, disciplineName, startingOrder, onC
 
   return (
     <PopUp title={disciplineName} onClose={() => onClose(startingOrder)}>
-      <div className="relative flex-auto p-0 sm:p-2 max-w-[90vw] max-h-[80vh] sm:max-h-[90vh] overflow-scroll" data-te-modal-body-ref>
+      <div className="relative flex-auto p-0 sm:p-2 max-w-[90vw] max-h-[80vh] sm:max-h-[90vh] overflow-scroll select-none" data-te-modal-body-ref>
         {startingOrder.Default && <DefaultStartingOrder StartingOrder={startingOrder.Default} saveStartingOrder={saveNewStartingOrder}></DefaultStartingOrder>}
         {startingOrder.Track && <TrackStartingOrder StartingOrder={startingOrder.Track} saveStartingOrder={saveNewStartingOrder}></TrackStartingOrder>}
       </div>
