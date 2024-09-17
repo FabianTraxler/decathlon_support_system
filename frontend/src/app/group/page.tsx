@@ -7,7 +7,6 @@ import Header from "./header";
 import Athletes from "./athletes/athletes";
 import Field from "./field";
 import Timetable from "./timetable";
-import Title from "./title";
 import Disciplines from "./discipline/discipline";
 import { Navigation, NavigationContext, NavigationItem } from "./navigation";
 import Rules from "./rules";
@@ -27,7 +26,7 @@ export default function Group() {
   const navigation = {
     history: [home_nav_item],
     max_history: 5,
-    tab_navigation_function: (tab) => setTabHistory([...TabHistory, tab])
+    tab_navigation_function: (tab) => setTabHistory([...TabHistory, tab]),
   } as Navigation
 
   let all_tabs = [
@@ -38,11 +37,17 @@ export default function Group() {
     "Aktuelle Disziplin"
   ]
 
-
   var currentTab = home_nav_item.name
+
   if (TabHistory.length > 0) {
     currentTab = TabHistory[TabHistory.length - 1].name
   }
+  var selected_discipline = undefined
+  if (currentTab.includes("--")){
+    selected_discipline = currentTab.split("--")[1]
+    currentTab = currentTab.split("--")[0]
+  }
+
   var homescreen = (currentTab == "" || currentTab == "overview")
 
   const setCurrentTab = function (name: string) {
@@ -74,7 +79,7 @@ export default function Group() {
           <Rules group_name={groupName}></Rules>
         }
         {currentTab == "Aktuelle Disziplin" &&
-          <Disciplines group_name={groupName}></Disciplines>
+          <Disciplines group_name={groupName} discipline_name={selected_discipline}></Disciplines>
         }
       </div>
     </NavigationContext.Provider>

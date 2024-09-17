@@ -8,27 +8,47 @@ import DistanceDiscipline from "./distance_discipline";
 import HeightDiscipline from "./height/height_discipline";
 import { LoadingAnimation } from "@/app/lib/loading";
 
-export default function Disciplines({ group_name }: { group_name: string }) {
+export default function Disciplines({ group_name, discipline_name }: { group_name: string, discipline_name: string | undefined }) {
     const [discipline, setDiscipline] = useState<Discipline>();
 
     useEffect(() => {
-        let api_url = `/api/current_discipline?name=${group_name}`
+        if (discipline_name){ // Use given discipline 
+            let api_url = `/api/discipline?group_name=${group_name}&discipline_name=${discipline_name}`
 
-        fetch(api_url)
-            .then(res => {
-                if (res.ok) {
-                    return res.json()
-                } else {
-                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-                }
-            })
-            .then(res => {
-                setDiscipline(res)
-            })
-            .catch((e) => {
-                console.error(e)
-                throw e
-            })
+            fetch(api_url)
+                .then(res => {
+                    if (res.ok) {
+                        return res.json()
+                    } else {
+                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                    }
+                })
+                .then(res => {
+                    setDiscipline(res)
+                })
+                .catch((e) => {
+                    console.error(e)
+                    throw e
+                })
+        }else{ // get current discipline
+            let api_url = `/api/current_discipline?name=${group_name}`
+
+            fetch(api_url)
+                .then(res => {
+                    if (res.ok) {
+                        return res.json()
+                    } else {
+                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                    }
+                })
+                .then(res => {
+                    setDiscipline(res)
+                })
+                .catch((e) => {
+                    console.error(e)
+                    throw e
+                })
+        }
     }, [group_name])
 
 
@@ -129,35 +149,6 @@ export function start_discipline(group_name: string, discipline: Discipline, cal
                 callback_fn({
                     ...discipline,
                     state: "Active"
-                })
-            } else {
-                throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-            }
-        })
-        .catch((e) => {
-            console.error(e)
-            throw e
-        })
-}
-
-export function finish_discipline(group_name: string, discipline: Discipline, callback_fn: (discipline: Discipline) => void) {
-    let api_url = `/api/discipline_state?name=${group_name}`
-
-    fetch(api_url, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            "name": discipline.name,
-            "state": "Finished"
-        })
-    })
-        .then(res => {
-            if (res.ok) {
-                callback_fn({
-                    ...discipline,
-                    state: "Finished"
                 })
             } else {
                 throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);

@@ -328,18 +328,12 @@ impl TimeGroup {
         if self.get_current_discipline().name == discipline_name {
             // most likely the current discipline is changed
             let discipline = self.get_mut_current_discipline();
-            if discipline.state == DisciplineState::Finished {
-                return Err(Box::from("Discipline already finished. Update not allowed"));
-            }
             discipline.change_state(new_state);
             discipline_updated = true;
         } else {
             // Changing state of a different discipline
             for discipline in &mut self.disciplines {
                 if discipline.name == discipline_name {
-                    if discipline.state == DisciplineState::Finished {
-                        return Err(Box::from("Discipline already finished. Update not allowed"));
-                    }
                     discipline.change_state(new_state);
                     discipline_updated = true;
                     break;

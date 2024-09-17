@@ -1,11 +1,12 @@
 import { AthleteHeightID, AthleteHeightResults, AthleteID, Discipline } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { BeforeStartInfoBox, finish_discipline, start_discipline } from "../discipline";
+import { BeforeStartInfoBox, start_discipline } from "../discipline";
 import { get_group_achievements } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { StartHeightInput } from "./starting_height";
 import { HeightOrderOverview } from "./athlete_overview";
 import { LoadingAnimation } from "@/app/lib/loading";
+import { finish_discipline } from "@/app/lib/discipline_edit";
 
 
 interface HeightDisciplineState {

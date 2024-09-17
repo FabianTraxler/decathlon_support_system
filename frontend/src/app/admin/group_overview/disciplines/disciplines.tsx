@@ -5,7 +5,7 @@ import { LoadingButton } from '@/app/lib/loading';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { StartingOrderEditButton } from './discipline_edit';
+import { DisciplineEditButton } from './discipline_edit';
 import { StartingOrder, Discipline } from '@/app/lib/interfaces';
 import { convert_date } from '@/app/lib/parsing';
 
@@ -59,12 +59,10 @@ export default function Disciplines() {
       });
   }
 
-  const update_starting_order = function (discipline_index: number, order: StartingOrder) {
-    let new_discipline = Disciplines[discipline_index]
-
-    new_discipline.starting_order = order
-    Disciplines[discipline_index] = new_discipline
-    setDisciplines(Disciplines)
+  const update_discipline = function (discipline_index: number, discipline: Discipline) {
+    let new_disciplines = [...Disciplines];
+    new_disciplines[discipline_index] = discipline
+    setDisciplines(new_disciplines)
   }
 
   return (
@@ -100,10 +98,10 @@ export default function Disciplines() {
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date(discipline.start_time)}</td>
-                  <StartingOrderEditButton group_name={group_name} discipline={discipline} updateStartingOrder={(order) => update_starting_order(i, order)}>
+                  <DisciplineEditButton group_name={group_name} discipline={discipline} group_view={false} update_discipline={(discipline) => update_discipline(i, discipline)}>
                     <span className='flex'>Ändern</span>
                     <span className='pl-2 hidden group-hover:flex'>&#9998;</span>
-                  </StartingOrderEditButton>
+                  </DisciplineEditButton>
                   <td className='border border-slate-800 group hover:bg-slate-600'>
                     <LoadingButton size="1.5" onclick={(stop_load) => print_protocol(discipline.name, stop_load)}>
                       <svg className="text-slate-600 fill-current group-hover:text-slate-50" xmlns="http://www.w3.org/2000/svg" height="25" width="25" viewBox="0 0 512 512">

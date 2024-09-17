@@ -1,9 +1,10 @@
 import { AthleteID, AthleteTimeResult, Discipline, StartingOrder } from "@/app/lib/interfaces";
 import { useEffect, useState } from "react";
-import { BeforeStartInfoBox, finish_discipline, start_discipline } from "./discipline";
+import { BeforeStartInfoBox, start_discipline } from "./discipline";
 import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { Athlete } from "@/app/lib/athlete_fetching";
 import { LoadingAnimation } from "@/app/lib/loading";
+import { finish_discipline } from "@/app/lib/discipline_edit";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [current_discipline, setDiscipline] = useState<Discipline>({ ...discipline, starting_order: { Track: [] } })

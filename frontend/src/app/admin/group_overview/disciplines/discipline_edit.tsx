@@ -1,86 +1,119 @@
+import { Navigation, NavigationContext } from "@/app/group/navigation";
 import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
+import { PopUp } from "@/app/lib/achievement_edit/popup";
+import { finish_discipline, reset_discipline } from "@/app/lib/discipline_edit";
 import { StartingOrder, Discipline, AthleteID } from "@/app/lib/interfaces";
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 
-export function StartingOrderEditButton({ discipline, group_name, updateStartingOrder, children }: { discipline: Discipline, group_name: string, updateStartingOrder: (order: StartingOrder) => void, children: React.ReactNode }) {
-  const [showPopup, setshowPopup] = useState(false)
+export function DisciplineEditButton(
+  { discipline, group_name, update_discipline, group_view, children }: 
+  { discipline: Discipline, group_name: string, group_view: boolean, update_discipline: (order: Discipline) => void, children: React.ReactNode }) {
+  const [state, setState] = useState({
+    showPopup: false,
+    showStartingOrderPopup: false,
+    discipline: discipline
+  })
+  var nav: Navigation | undefined = undefined;
+  if(group_view){
+    nav = useContext(NavigationContext)
+  }
 
   const closePopup = function (order: StartingOrder) {
-    updateStartingOrder(order)
-    setshowPopup(false)
+    discipline.starting_order = order
+    update_discipline(discipline)
+    setState({ ...state, showStartingOrderPopup: false })
   }
 
-  if (typeof discipline.starting_order == "string" || discipline.state == "Finished") {
-    return (
-      <td className='border border-slate-800 p-1 pl-4 pr-4  '>
-        <div className='flex justify-center w-full'>
-          <span className='flex'>
-
-            {typeof discipline.starting_order == "string" && "-"}
-            {discipline.state == "Finished" && "-"}
-
-          </span>
-        </div>
-      </td>
-    )
-  } else {
-    return (
-      <td className='border border-slate-800 p-1 pl-4 pr-4 ' >
-        <div className='flex justify-center w-full rounded-s-md shadow-md hover:bg-slate-600 hover:text-slate-50 hover:cursor-pointer  group'
-          onClick={() => setshowPopup(true)}>
-          {children}
-        </div>
-        {showPopup &&
-          <EditPopup group_name={group_name} disciplineName={discipline.name} startingOrder={discipline.starting_order}
-            onClose={closePopup}>
-          </EditPopup>}
-      </td>
-    )
+  const startDiscipline = function(){
+    if (nav){
+      nav.tab_navigation_function({name: "Aktuelle Disziplin--" + state.discipline.name, reset_function: () => {}})
+    }
   }
+
+  const finish = function() {
+    finish_discipline(group_name, state.discipline, (discipline) => {
+      setState({ ...state, showPopup: false, discipline: discipline })
+      update_discipline(discipline)
+    })
+  }
+
+  const reset = function() {
+    reset_discipline(group_name, state.discipline, (discipline) => {
+      setState({ ...state, showPopup: false, discipline: discipline })
+      update_discipline(discipline)
+    })
+  }
+
+
+  return (
+    <td className='border border-slate-800 p-1 pl-4 pr-4 ' >
+      <div className='flex justify-center w-full rounded-s-md shadow-md hover:bg-slate-600 hover:text-slate-50 hover:cursor-pointer  group'
+        onClick={() => setState({ ...state, showPopup: true })}>
+        {children}
+      </div>
+      {state.showPopup &&
+        <PopUp title="Disziplin bearbeiten" onClose={() => setState({ ...state, showPopup: false })}>
+          <div className="text-lg sm:text-xl">
+            {(typeof state.discipline.starting_order != "string") &&
+              <div
+                onClick={() => setState({ ...state, showPopup: false, showStartingOrderPopup: true })}
+                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-green-300 active:shadow-none"
+              >Startreihenfolge bearbeiten</div>
+            }
+            {state.discipline.state != "Finished" && group_view &&
+              <div
+                onClick={startDiscipline}
+                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-slate-400 active:shadow-none"
+              >
+                Diszipline jetzt starten!
+              </div>
+            }
+            {state.discipline.state != "Finished" &&
+              <div
+                onClick={finish}
+                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
+              >
+                Disziplin abschließen!
+              </div>
+            }
+            {state.discipline.state == "Finished" &&
+              <div
+                onClick={reset}
+                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
+              >
+                Status zurücksetzen!
+              </div>
+            }
+          </div>
+        </PopUp>
+      }
+
+      {(state.showStartingOrderPopup && (typeof state.discipline.starting_order != "string")) &&
+
+        <StartingOrderEditPopup group_name={group_name} disciplineName={discipline.name} startingOrder={state.discipline.starting_order}
+          onClose={closePopup}>
+        </StartingOrderEditPopup>
+
+      }
+
+    </td>
+  )
+
 }
 
-function EditPopup({ group_name, disciplineName, startingOrder, onClose }: { group_name: string, disciplineName: string, startingOrder: StartingOrder, onClose: (order: StartingOrder) => void }) {
+function StartingOrderEditPopup({ group_name, disciplineName, startingOrder, onClose }: { group_name: string, disciplineName: string, startingOrder: StartingOrder, onClose: (order: StartingOrder) => void }) {
   const saveNewStartingOrder = function (new_order: StartingOrder) {
     saveStartingOrder(new_order, group_name, onClose)
   }
 
   return (
-    <div
-      className="fixed left-0 top-0 z-[1055] h-full w-full overflow-y-auto overflow-x-hidden outline-none bg-slate-500 bg-opacity-45">
-      <div
-        className="pointer-events-none relative w-auto transition-all duration-300 ease-in-out min-[576px]:mx-auto min-[576px]:mt-7 min-[1000px]:max-w-[80%]">
-        <div
-          className="min-[576px]:shadow-[0_0.5rem_1rem_rgba(#000, 0.15)] pointer-events-auto relative flex w-full flex-col rounded-md border-none bg-white bg-clip-padding text-current shadow-lg outline-none dark:bg-neutral-600">
-          <div
-            className="flex flex-shrink-0 items-center justify-between rounded-t-md border-b-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
-            <h5
-              className="text-xl font-medium leading-normal">
-              {disciplineName}
-            </h5>
-            <button
-              type="button"
-              className="box-content rounded-none border-none hover:no-underline hover:opacity-75 focus:opacity-100 focus:shadow-none focus:outline-none"
-              onClick={(_) => onClose(startingOrder)}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="h-6 w-6">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          {startingOrder.Default && <DefaultStartingOrder StartingOrder={startingOrder.Default} saveStartingOrder={saveNewStartingOrder}></DefaultStartingOrder>}
-          {startingOrder.Track && <TrackStartingOrder StartingOrder={startingOrder.Track} saveStartingOrder={saveNewStartingOrder}></TrackStartingOrder>}
-        </div>
+    <PopUp title={disciplineName} onClose={() => onClose(startingOrder)}>
+      <div className="relative flex-auto p-0 sm:p-2 max-w-[90vw] max-h-[80vh] sm:max-h-[90vh] overflow-scroll" data-te-modal-body-ref>
+        {startingOrder.Default && <DefaultStartingOrder StartingOrder={startingOrder.Default} saveStartingOrder={saveNewStartingOrder}></DefaultStartingOrder>}
+        {startingOrder.Track && <TrackStartingOrder StartingOrder={startingOrder.Track} saveStartingOrder={saveNewStartingOrder}></TrackStartingOrder>}
       </div>
-    </div>
+    </PopUp>
   )
 }
 
@@ -316,7 +349,7 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
               }
             </div>
 
-            <table className="table-auto border-collapse text-[1rem] sm:text-[0.8rem] 2xl:text-sm " >
+            <table className="table-auto border-collapse text-[0.8rem] sm:text-[0.9rem] 2xl:text-sm " >
               <thead >
                 <tr onDrop={(e) => handleTableHeadDragDrop(e, run_id)}>
                   <th className="border border-slate-600 p-1 pl-2 pr-2">Bahn</th>
