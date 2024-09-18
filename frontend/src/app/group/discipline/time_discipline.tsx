@@ -5,9 +5,11 @@ import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement
 import { Athlete } from "@/app/lib/athlete_fetching";
 import { LoadingAnimation } from "@/app/lib/loading";
 import { finish_discipline } from "@/app/lib/discipline_edit";
+import { useAsyncError } from "@/app/lib/asyncError";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [current_discipline, setDiscipline] = useState<Discipline>({ ...discipline, starting_order: { Track: [] } })
+    const throwError = useAsyncError();
 
     useEffect(() => {
         const get_athlete_starting_numbers = function (athletes: Athlete[]) {
@@ -67,10 +69,16 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
 
         }
         get_group_achievements(group_name, get_athlete_starting_numbers)
+        .catch((e) => {
+            throwError(e);
+        })
     }, [group_name])
 
     const saveNewStartingOrder = function (new_order: StartingOrder) {
         saveStartingOrder(new_order, group_name, () => { })
+        .catch((e) => {
+            throwError(e);
+        })
     }
 
     return (
@@ -80,7 +88,17 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                 <BeforeStartInfoBox
                     ready={true}
                     discipline={current_discipline}
-                    start_discipline={() => start_discipline(group_name, current_discipline, setDiscipline)}>
+                    start_discipline={() => {
+                        try{
+                            start_discipline(group_name, current_discipline, setDiscipline)
+                            .catch((e) => {
+                                throwError(e);
+                            })
+                        }catch(e){
+                            throwError(new Error("Error starting discipline"));
+                        }
+                    }
+                    }>
                 </BeforeStartInfoBox>
             }
             {

@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { HeightAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
+import { useAsyncError } from "../asyncError";
 
 
 type AchievementState = {
@@ -11,6 +12,8 @@ type AchievementState = {
 }
 
 export function HeightResult({ achievement, athleteName, onSubmit }: { achievement?: HeightAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+    const throwError = useAsyncError();
+
     let final_result = "";
     let unit = ""
     let height_increase = ""
@@ -75,18 +78,18 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         if (start_height_changed) {
             fetch(`/api/achievement?name=${achievement?.name}&athlete_name=${athleteName}`, {
                 method: "DELETE",
-            }).then(res => {
+            }).then(async function(res) {
                 if (res.ok) {
                     if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1) {
                         alert("Invalid values for start height or height incrase --> Achievement deleted")
                     } else {
-                        create_new_achievement(athleteName, new_achievement, onSubmit)
+                        return await create_new_achievement(athleteName, new_achievement, onSubmit)
                     }
                 } else {
-                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                    throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                 }
             }).catch(e => {
-                alert(`Not updated: ${e}`)
+                throwError(new Error(`Not updated: ${e}`))
             }
             )
         } else {
@@ -96,14 +99,15 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify(changable_values)
-            }).then(res => {
+            }).then(async function(res) {
                 if (res.ok) {
                     onSubmit(new_achievement)
                 } else {
-                    create_new_achievement(athleteName, new_achievement, onSubmit)
+                    await create_new_achievement(athleteName, new_achievement, onSubmit)
+                    .catch((e) => throwError(e))
                 }
             }).catch(e => {
-                alert(`Not updated: ${e}`)
+                throwError(new Error(`Not updated: ${e}`))
             }
             )
         }
@@ -188,10 +192,10 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
 }
 
 
-function create_new_achievement(athleteName: string, new_achievement: AchievementValue, onSubmit: (achievement: AchievementValue) => void) {
+async function create_new_achievement(athleteName: string, new_achievement: AchievementValue, onSubmit: (achievement: AchievementValue) => void) {
     let name = athleteName.split("_")[0];
     let surname = athleteName.split("_")[1]
-    fetch(`/api/achievement?name=${name}&surname=${surname}`, {
+    await fetch(`/api/achievement?name=${name}&surname=${surname}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -201,7 +205,7 @@ function create_new_achievement(athleteName: string, new_achievement: Achievemen
         if (res.ok) {
             onSubmit(new_achievement)
         } else {
-            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+            return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
         }
-    })
+    }).catch((e) => {return Promise.reject(new Error(e))})
 }

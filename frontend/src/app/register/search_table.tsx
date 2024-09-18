@@ -243,7 +243,7 @@ function StartingNumberInput({ athlete }: { athlete: Athlete }) {
                         ...prevState,
                         isError: true
                     }))
-                    alert(`Not updated: ${e}`)
+                    alert(`Startnummer nicht gespeichert! Händisch niederschreiben! -> ${e}`)
                 }
                 )
 

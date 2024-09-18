@@ -5,11 +5,13 @@ import { DisciplineEditButton } from "../admin/group_overview/disciplines/discip
 import Title_Footer_Layout from "./subpage_layout";
 import { LoadingAnimation } from "../lib/loading";
 import { NavigationContext } from "./navigation";
+import { useAsyncError } from "../lib/asyncError";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
     const [selectedDay, setSelectedDay] = useState("");
     const nav = useContext(NavigationContext)
+    const throwError = useAsyncError();
 
     const days = [
         ["day 1", "Samstag"],
@@ -24,7 +26,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
                 if (res.ok) {
                     return res.json()
                 } else {
-                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                    throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                 }
             })
             .then(res => {
@@ -48,7 +50,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
                 setDisciplines(all_disciplines)
             })
             .catch((e) => {
-                console.error(e)
+                throwError(e);
                 setDisciplines(new Map())
             })
     }, [group_name])
@@ -62,7 +64,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
             new_disciplines.set(day_id, day_disciplines);
             setDisciplines(new_disciplines)
         } else {
-            console.error("Error updating discipline starting order")
+            throwError(new Error("Error updating discipline starting order"));
         }
 
     }

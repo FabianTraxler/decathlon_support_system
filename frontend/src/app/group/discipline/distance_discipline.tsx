@@ -7,6 +7,7 @@ import { NavigationContext } from "../navigation";
 import { LoadingAnimation } from "@/app/lib/loading";
 import AthleteEditPopup from "./athlete_edit_popup";
 import { finish_discipline } from "@/app/lib/discipline_edit";
+import { useAsyncError } from "@/app/lib/asyncError";
 
 
 interface DistanceDisciplineState {
@@ -32,6 +33,7 @@ const AthleteResults = createContext<{ state: DistanceDisciplineState, update_st
 
 export default function DistanceDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [disciplineState, setDisciplineState] = useState<DistanceDisciplineState>({ ...empty_state, discipline: discipline })
+    const throwError = useAsyncError();
 
     useEffect(() => {
         const get_discipline_results = function (athletes: Athlete[]) {
@@ -141,6 +143,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
         }
 
         get_group_achievements(group_name, get_discipline_results)
+        .catch((e) => {
+            throwError(e);
+        })
     }, [group_name])
 
 
@@ -171,7 +176,20 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                     <BeforeStartInfoBox
                         ready={true}
                         discipline={disciplineState.discipline}
-                        start_discipline={() => start_discipline(group_name, disciplineState.discipline, setDiscipline)}
+                        start_discipline={() => {
+                            try {
+                                start_discipline(group_name, disciplineState.discipline, setDiscipline)
+                                .catch((e) => {
+                                    throwError(e);
+                                });
+                            } catch (e) {
+                                if (e instanceof Error) {
+                                    throwError(e)
+                                } else {
+                                    throwError(new Error("Unkown Error starting discipline"));
+                                }
+                            }
+                        }}
                     ></BeforeStartInfoBox>
                 }
                 {
@@ -217,8 +235,9 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
     const [selectedAthlete, setSelectedAthlete] = useState<AthleteDistanceResults | undefined>()
     const { state, update_state } = useContext(AthleteResults)
     const navigation = useContext(NavigationContext)
+    const throwError = useAsyncError();
 
-    const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string) {
+    const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) {
         let selected_athlete = state.current_order[0]
         navigation.history.push({
             name: "Save Achievement",
@@ -263,8 +282,11 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                     try_completed(new_results)
                 }
             })
+            .catch((e) => {
+                if (!skip_error) throwError(e);
+            })
         } else {
-            alert("Error while saving achievement")
+            if (!skip_error) throwError(new Error("Error while saving achievement: Athlete result not found locally for distance discipline"));
         }
 
     }
@@ -367,7 +389,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 }
 
 function DistanceInput({ athlete, save_athlete_try, try_completed }:
-    { athlete: AthleteID, save_athlete_try: (athlete: AthleteID, try_number: number, new_value: number | string) => void, try_completed: (new_results: Map<string, AthleteDistanceResults>) => void }) {
+    { athlete: AthleteID, save_athlete_try: (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) => void, try_completed: (new_results: Map<string, AthleteDistanceResults>) => void }) {
     const { state } = useContext(AthleteResults)
     const [showAthleteEdit, setShowAthleteEdit] = useState(false)
     const athlete_result = state.results.get(athlete.full_name())
@@ -401,7 +423,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         onclose={() => { setShowAthleteEdit(false) }}
                         skipTry={() => {
                             let old_state = { ...state }
-                            save_athlete_try(athlete, state.current_try, "-1")
+                            save_athlete_try(athlete, state.current_try, "-1", true)
                             if (state.current_order.length == old_state.current_order.length) {
                                 try_completed(state.results)
                             }
@@ -448,7 +470,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         current_try={state.current_try == try_number}
                         selected_try={selectedTry.try_number == try_number}
                         setSelectedTry={setSelectedTry}
-                        save_value={(try_number: number, new_value: number | string) => save_athlete_try(athlete, try_number, new_value)}>
+                        save_value={(try_number: number, new_value: number | string) => save_athlete_try(athlete, try_number, new_value, false)}>
                     </Try>
                 )
             })}

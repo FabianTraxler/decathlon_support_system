@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Discipline } from "../lib/interfaces";
 import { LoadingAnimation } from "../lib/loading";
 import { PopUp } from "../lib/achievement_edit/popup";
+import { useAsyncError } from "../lib/asyncError";
 
 const general_info: Discipline = {
     name: "general",
@@ -18,6 +19,7 @@ const general_info: Discipline = {
 export default function Rules({ group_name }: { group_name: string }) {
     const [selectedDiscipline, setSelectedDiscipline] = useState<Discipline | undefined>();
     const [groupDisciplines, setGroupDisciplines] = useState<Discipline[]>([]);
+    const throwError = useAsyncError();
 
     useEffect(() => {
         let api_url = `/api/disciplines?name=${group_name}`
@@ -27,7 +29,7 @@ export default function Rules({ group_name }: { group_name: string }) {
                 if (res.ok) {
                     return res.json()
                 } else {
-                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                    throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                 }
             })
             .then(res => {
@@ -35,7 +37,7 @@ export default function Rules({ group_name }: { group_name: string }) {
                 setGroupDisciplines(disciplines)
             })
             .catch((e) => {
-                console.error(e)
+                throwError(e);
                 setGroupDisciplines([])
             })
     }, [group_name])

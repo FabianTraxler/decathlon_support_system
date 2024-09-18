@@ -2,9 +2,11 @@ import { FormEvent } from "react";
 import { AchievementValue, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { convert_to_integral_fractional } from "@/app/lib/parsing";
 import { long_distance_disciplines } from "../config";
+import { useAsyncError } from "../asyncError";
 
 
 export function TimeResult({ achievement, athleteName, onSubmit }: { achievement?: TimeAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+    const throwError = useAsyncError();
 
     const form_submit = function (form_event: FormEvent<HTMLFormElement>, unit_format: string) {
         form_event.preventDefault();
@@ -64,12 +66,12 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
                         if (res.ok) {
                             onSubmit(new_achievement)
                         } else {
-                            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                            throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                         }
                     })
                 }
             }).catch(e => {
-                alert(`Not updated: ${e}`)
+                throwError(new Error(`Not updated: ${e}`))
             }
             )
         }else{ // final result deleted
@@ -79,10 +81,10 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
                 if(res.ok){
                     onSubmit(new_achievement)
                 }else{
-                    throw new Error(res.statusText)
+                    throwError(new Error(res.statusText))
                 }
             }).catch(e => {
-                alert(`Not deleted: ${e}`)
+                throwError(new Error(`Not deleted: ${e}`))
             }
             )
         }

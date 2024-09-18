@@ -2,8 +2,8 @@ import { AchievementValue, Athlete, HeightAchievement } from "../athlete_fetchin
 import { AthleteDistanceResults, AthleteHeightResults, AthleteID, Discipline, StartingOrder } from "../interfaces";
 import { convert_to_integral_fractional } from "../parsing";
 
-export function saveStartingOrder(order: StartingOrder, group_name: string, callback_fn: (order: StartingOrder) => void) {
-  fetch(`/api/change_starting_order?name=${group_name}`, {
+export async function saveStartingOrder(order: StartingOrder, group_name: string, callback_fn: (order: StartingOrder) => void) {
+  await fetch(`/api/change_starting_order?name=${group_name}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -13,22 +13,22 @@ export function saveStartingOrder(order: StartingOrder, group_name: string, call
     if (res.ok) {
       callback_fn(order)
     } else {
-      throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+      return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
     }
   }).catch(e => {
-    alert(`Not updated: ${e}`)
+    return Promise.reject(`Not updated: ${e}`)
   }
   )
 }
 
 
-export function get_group_achievements(group_name: string, callback_fn: (athletes: Athlete[]) => void) {
-  fetch(`/api/group?name=${group_name}`)
+export async function get_group_achievements(group_name: string, callback_fn: (athletes: Athlete[]) => void) {
+  await fetch(`/api/group?name=${group_name}`)
     .then(res => {
       if (res.ok) {
         return res.json()
       } else {
-        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+        return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
       }
     })
     .then(res => {
@@ -36,13 +36,13 @@ export function get_group_achievements(group_name: string, callback_fn: (athlete
       callback_fn(athletes)
     })
     .catch(e => {
-      alert(`Not updated: ${e}`)
+      Promise.reject(`Not updated: ${e}`)
     }
     )
 }
 
 
-export function save_distance_achievement(athlete: AthleteDistanceResults, callback_fn: () => void) {
+export async function save_distance_achievement(athlete: AthleteDistanceResults, callback_fn: () => void) {
   let achievement: AchievementValue = {
     "Distance": {
       "name": athlete.discipline_name,
@@ -65,32 +65,32 @@ export function save_distance_achievement(athlete: AthleteDistanceResults, callb
   }
 
 
-  fetch(`/api/achievement?name=${athlete.name}&surname=${athlete.surname}`, {
+  await fetch(`/api/achievement?name=${athlete.name}&surname=${athlete.surname}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(achievement)
-  }).then(res => {
+  }).then(async function(res) {
     if (res.ok) {
       callback_fn()
     } else {
-      update_distance_achievement(athlete, callback_fn)
+      return await update_distance_achievement(athlete, callback_fn)
     }
   }).catch(e => {
-    alert(`Not updated: ${e}`)
+    return Promise.reject(new Error(`Not updated: ${e}`))
   }
   )
 }
 
-function update_distance_achievement(athlete: AthleteDistanceResults, callback_fn: () => void) {
+async function update_distance_achievement(athlete: AthleteDistanceResults, callback_fn: () => void) {
   let achievement = {
     "first_try": athlete.first_try,
     "second_try": athlete.second_try,
     "third_try": athlete.third_try,
   }
 
-  fetch(`/api/achievement?athlete_name=${athlete.name}_${athlete.surname}&name=${athlete.discipline_name}`, {
+  await fetch(`/api/achievement?athlete_name=${athlete.name}_${athlete.surname}&name=${athlete.discipline_name}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -100,13 +100,13 @@ function update_distance_achievement(athlete: AthleteDistanceResults, callback_f
     if (res.ok) {
       callback_fn()
     } else {
-      throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+      return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
     }
   })
 }
 
-export function skip_distance_discipline(athlete?: AthleteDistanceResults): boolean{
-  if (athlete){
+export async function skip_distance_discipline(athlete?: AthleteDistanceResults): Promise<boolean> {
+  if (athlete) {
     if (!athlete.first_try) {
       athlete.first_try = -1
     }
@@ -119,7 +119,10 @@ export function skip_distance_discipline(athlete?: AthleteDistanceResults): bool
     if (!athlete.best_try) {
       athlete.best_try = -1
     }
-    save_distance_achievement(athlete, () => {})
+    save_distance_achievement(athlete, () => { })
+    .catch((e) => {
+      console.log(e)
+    })
     return true
   }
   console.error("No athlete selected")
@@ -127,7 +130,7 @@ export function skip_distance_discipline(athlete?: AthleteDistanceResults): bool
 }
 
 
-export function save_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void, after_removed: boolean = false) {
+export async function save_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void, after_removed: boolean = false) {
   let achievement: AchievementValue = {
     "Height": {
       "name": athlete_height_result.discipline_name,
@@ -139,60 +142,60 @@ export function save_height_achievement(athlete_height_result: AthleteHeightResu
   }
 
 
-  fetch(`/api/achievement?name=${athlete_height_result.name}&surname=${athlete_height_result.surname}`, {
+  await fetch(`/api/achievement?name=${athlete_height_result.name}&surname=${athlete_height_result.surname}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(achievement)
-  }).then(res => {
+  }).then(async function(res) {
     if (res.ok) {
       callback_fn()
     } else {
       if (athlete_height_result.tries == "" && !after_removed) {
         // Delete current achievement and create new one
-        delete_and_create_new_height_achievement(athlete_height_result, callback_fn)
+        return await delete_and_create_new_height_achievement(athlete_height_result, callback_fn)
       } else {
-          update_height_achievement(athlete_height_result, callback_fn)
+        return await update_height_achievement(athlete_height_result, callback_fn)
       }
     }
   }).catch(e => {
-    alert(`Not updated: ${e}`)
+    return Promise.reject(new Error(`Not updated: ${e}`))
   }
   )
 }
 
-export function delete_and_create_new_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void) {
+export async function delete_and_create_new_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void) {
   let athlete_name = `${athlete_height_result.name}_${athlete_height_result.surname}`
-  fetch(`/api/achievement?name=${athlete_height_result.discipline_name}&athlete_name=${athlete_name}`, {
+  await fetch(`/api/achievement?name=${athlete_height_result.discipline_name}&athlete_name=${athlete_name}`, {
     method: "DELETE",
-  }).then(res => {
+  }).then(async function(res) {
     if (res.ok) {
-      save_height_achievement(athlete_height_result, callback_fn, true)
+      return await save_height_achievement(athlete_height_result, callback_fn, true)
     } else {
-      throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+      return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
     }
   }).catch(e => {
-    alert(`Not updated: ${e}`)
+    return Promise.reject(new Error(`Not updated: ${e}`))
   }
   )
 }
 
 
-export function update_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void, update_only_tries: boolean = false) {
+export async function update_height_achievement(athlete_height_result: AthleteHeightResults, callback_fn: () => void, update_only_tries: boolean = false) {
   let achievement: HeightAchievement = {
     "name": athlete_height_result.discipline_name,
     "unit": athlete_height_result.discipline_unit,
   }
 
-  if (update_only_tries){
+  if (update_only_tries) {
     achievement.tries = athlete_height_result.tries
-  }else{
+  } else {
     achievement = update_height_achievement_dict(achievement, athlete_height_result)
   }
 
 
-  fetch(`/api/achievement?athlete_name=${athlete_height_result.name}_${athlete_height_result.surname}&name=${athlete_height_result.discipline_name}`, {
+  await fetch(`/api/achievement?athlete_name=${athlete_height_result.name}_${athlete_height_result.surname}&name=${athlete_height_result.discipline_name}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -202,10 +205,10 @@ export function update_height_achievement(athlete_height_result: AthleteHeightRe
     if (res.ok) {
       callback_fn()
     } else {
-      throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+      return Promise.reject(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
     }
-  }).catch( e =>{
-          alert(`Not updated: ${e}`)
+  }).catch(e => {
+    return Promise.reject(new Error(`Not updated: ${e}`))
   })
 }
 
@@ -225,14 +228,4 @@ function update_height_achievement_dict(achievement_dict: HeightAchievement, ath
   }
 
   return achievement_dict
-}
-
-export function skip_height_discipline(athlete?: AthleteHeightResults){
-  if (athlete){
-    if (athlete.tries){
-      athlete.tries += "-XXX"
-    } 
-    save_height_achievement(athlete, () => {})
-  }
-  console.error("No athlete selected")
 }

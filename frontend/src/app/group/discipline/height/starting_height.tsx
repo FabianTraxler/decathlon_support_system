@@ -3,9 +3,11 @@ import { AthleteResults } from "./height_discipline";
 import { AthleteHeightResults } from "@/app/lib/interfaces";
 import { save_height_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { PopUp } from "@/app/lib/achievement_edit/popup";
+import { useAsyncError } from "@/app/lib/asyncError";
 
-export function StartHeightInput({ close, min_height, max_height, step_size}: { close: () => void, min_height: number, max_height: number, step_size: number }) {
+export function StartHeightInput({ close, min_height, max_height, step_size }: { close: () => void, min_height: number, max_height: number, step_size: number }) {
     const { state, update_state } = useContext(AthleteResults)
+    const throwError = useAsyncError();
 
     const start_height_values = Array.from({ length: (max_height - min_height) / step_size }, (x, i) => min_height + i * step_size);
 
@@ -20,41 +22,11 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
             athlete_result.start_height_set = true;
             athlete_result.tries = "";
 
-            try{
-                save_height_achievement(athlete_result, () => {
-                    state.results.set(athlete_result.full_name(), athlete_result)
-                    let all_athletes_set = true;
-                    state.results.forEach(athlete => {
-                        if(athlete.starting_number != undefined && !athlete.start_height_set){
-                            all_athletes_set = false
-                        }
-                    })
-                    update_state({
-                        ...state,
-                        results: state.results,
-                        all_athletes_start_height_set: all_athletes_set
-                    })
-                })
-            }
-            catch(err){
-                console.log(err)
-            }
-
-        } else {
-            console.error("Error updating starting height")
-        }
-    }
-
-    const save_starting_height = function(athlete_result: AthleteHeightResults | undefined) {
-        if (athlete_result) {
-            athlete_result.start_height_set = true;
-            athlete_result.tries = "";
-
             save_height_achievement(athlete_result, () => {
                 state.results.set(athlete_result.full_name(), athlete_result)
                 let all_athletes_set = true;
                 state.results.forEach(athlete => {
-                    if(athlete.starting_number != undefined && !athlete.start_height_set){
+                    if (athlete.starting_number != undefined && !athlete.start_height_set) {
                         all_athletes_set = false
                     }
                 })
@@ -63,9 +35,46 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
                     results: state.results,
                     all_athletes_start_height_set: all_athletes_set
                 })
+            }).catch((err) => {
+                if (err instanceof Error) {
+                    throwError(err)
+                } else {
+                    throwError(new Error("Unknown error while updating height achievement (starting height)"))
+                }
+            })
+
+        } else {
+            throwError(new Error("Error updating starting height: Athelte result not found locally"))
+        }
+    }
+
+    const save_starting_height = function (athlete_result: AthleteHeightResults | undefined) {
+        if (athlete_result) {
+            athlete_result.start_height_set = true;
+            athlete_result.tries = "";
+
+            save_height_achievement(athlete_result, () => {
+                state.results.set(athlete_result.full_name(), athlete_result)
+                let all_athletes_set = true;
+                state.results.forEach(athlete => {
+                    if (athlete.starting_number != undefined && !athlete.start_height_set) {
+                        all_athletes_set = false
+                    }
+                })
+                update_state({
+                    ...state,
+                    results: state.results,
+                    all_athletes_start_height_set: all_athletes_set
+                })
+            }).catch((err) => {
+                if (err instanceof Error) {
+                    throwError(err)
+                } else {
+                    throwError(new Error("Unknown error while updating height achievement (starting height)"))
+                }
             })
         } else {
-            console.error("Error updating starting height")
+            throwError(new Error("Error saving starting height: Athelte result not found locally"))
         }
     }
 
@@ -96,8 +105,8 @@ export function StartHeightInput({ close, min_height, max_height, step_size}: { 
                                                     })}
                                                 </select>
                                                 {!athlete_result.start_height_set &&
-                                                 <div  className="text-3xl"onClick={() => save_starting_height(athlete_result)}>&#9989;</div>
-                                                 }
+                                                    <div className="text-3xl" onClick={() => save_starting_height(athlete_result)}>&#9989;</div>
+                                                }
                                             </td>
                                         </tr>
                                     )

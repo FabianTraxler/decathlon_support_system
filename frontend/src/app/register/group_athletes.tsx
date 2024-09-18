@@ -46,7 +46,7 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
                     </div>
                 </div>
 
-                <div className="w-screen sm:w-fit x-overflow-scroll border border-black p-2 mt-2 2xl:p-5 2xl:m-5 2xl:pl-10 2xl:pr-10 shadow-md rounded-md">
+                <div className="w-screen sm:w-fit x-overflow-scroll border border-black p-2 pb-16 sm:pb-2 mt-2 2xl:p-5 2xl:m-5 2xl:pl-10 2xl:pr-10 shadow-md rounded-md">
                     <AthleteTable athletes={athletes} searchQuery={searchQuery}></AthleteTable>
                 </div>
 

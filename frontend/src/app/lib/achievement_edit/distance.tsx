@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { DistanceAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 import { convert_from_integral_fractional, convert_to_integral_fractional } from "@/app/lib/parsing";
-import { nan } from "zod";
+import { useAsyncError } from "../asyncError";
 
 type AchievementState = {
     [key: string]: number | string,
@@ -13,6 +13,8 @@ type AchievementState = {
 
 
 export function DistanceResult({ achievement, athleteName, onSubmit }: { achievement?: DistanceAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+    const throwError = useAsyncError();
+
     let final_result: number | string = "";
     let unit = ""
     let first_try: number | string = ""
@@ -89,12 +91,12 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
                     if (res.ok) {
                         onSubmit(new_achievement)
                     } else {
-                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                        throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                     }
                 })
             }
         }).catch(e => {
-            alert(`Not updated: ${e}`)
+            throwError(new Error(`Not updated: ${e}`))
         }
         )
 

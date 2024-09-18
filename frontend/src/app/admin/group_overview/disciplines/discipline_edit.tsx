@@ -1,5 +1,6 @@
 import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { PopUp } from "@/app/lib/achievement_edit/popup";
+import { useAsyncError } from "@/app/lib/asyncError";
 import { finish_discipline, reset_discipline } from "@/app/lib/discipline_edit";
 import { StartingOrder, Discipline, AthleteID } from "@/app/lib/interfaces";
 import { useEffect, useState } from 'react';
@@ -110,8 +111,13 @@ export function DisciplineEditButton(
 }
 
 function StartingOrderEditPopup({ group_name, disciplineName, startingOrder, onClose }: { group_name: string, disciplineName: string, startingOrder: StartingOrder, onClose: (order: StartingOrder) => void }) {
+  const throwError = useAsyncError();
+
   const saveNewStartingOrder = function (new_order: StartingOrder) {
     saveStartingOrder(new_order, group_name, onClose)
+    .catch((e) => {
+      throwError(e);
+  })
   }
 
   return (

@@ -1,16 +1,18 @@
 import { useContext, useState } from "react";
-import { AthleteResults, athlete_in_competition, decode_athlete_tries } from "./height_discipline";
+import { AthleteResults, decode_athlete_tries } from "./height_discipline";
 import { AthleteHeightID, AthleteHeightResults, AthleteID } from "@/app/lib/interfaces";
 import { update_height_achievement } from "@/app/lib/achievement_edit/api_calls";
 import { HeightInput } from "./achievement_input";
 import { NavigationContext } from "../../navigation";
+import { useAsyncError } from "@/app/lib/asyncError";
 
 export function HeightOrderOverview({ finish_discipline }: { finish_discipline: () => void }) {
     const { state, update_state } = useContext(AthleteResults)
     const [selectedAthlete, setSelectedAthlete] = useState<AthleteHeightID | undefined>()
     const navigation = useContext(NavigationContext)
+    const throwError = useAsyncError();
 
-    const save_athlete_try = function (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) {
+    const save_athlete_try = function (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean, skip_error: boolean) {
         let selected_athlete = state.current_order[0]
         navigation.history.push({
             name: "Save Achievement",
@@ -22,9 +24,18 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
 
         if (athlete) {
             athlete.tries = new_value
-            let current_athlete_state = decode_athlete_tries(athlete)
-            athlete.final_result = current_athlete_state.jumped_height
-            
+            try {
+                let current_athlete_state = decode_athlete_tries(athlete)
+                athlete.final_result = current_athlete_state.jumped_height
+            } catch (e) {
+                if (e instanceof Error) {
+                    if (!skip_error) throwError(e)
+                } else {
+                    if (!skip_error) throwError(new Error("Unkown Error: Not able to decode athlete tries"))
+                }
+            }
+
+
             let update_result = { ...athlete, full_name: () => athlete.full_name() }
             update_height_achievement(update_result, () => {
                 let new_results = state.results
@@ -36,15 +47,22 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                 try_completed(new_results, try_successful, athlete_still_active, new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, athlete.starting_number || NaN))
                 //setTimeout(() => try_completed(new_results, try_successful, athlete), 200)
             }, true)
+            .catch((err) => {
+                if (err instanceof Error) {
+                    if (!skip_error) throwError(err)
+                } else {
+                    if (!skip_error) throwError(new Error("Unknown error while updating height achievement (starting height)"))
+                }
+            })
         } else {
-            alert("Error while saving achievement")
+            if (!skip_error) throwError(new Error("Error while saving achievement: Athlete result not found locally for height discipline"));
         }
     }
 
-    const handle_skip = function(athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean){
+    const handle_skip = function (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) {
         let old_state = { ...state }
-        save_athlete_try(athlete, new_value, athlete_still_active)
-        if (old_state.current_order.length == state.current_order.length){
+        save_athlete_try(athlete, new_value, athlete_still_active, true)
+        if (old_state.current_order.length == state.current_order.length) {
             try_completed(state.results, false, athlete_still_active, new AthleteHeightID(athlete.name, athlete.surname, athlete.age_group, athlete.starting_number || NaN))
         }
     }
@@ -63,20 +81,29 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         state.default_order.forEach((athlete) => {
             let athlete_result = state.results.get(athlete.full_name())
             if (athlete_result) {
-                let athlete_state = decode_athlete_tries(athlete_result)
-                if (athlete_state.still_active && athlete_state.next_height == new_height){
-                    if (!athletes_in_next_height.has(athlete.full_name()) && athlete_state.current_try == 1) {
-                        new_athletes.add(athlete)
-                    }
+                try {
+                    let athlete_state = decode_athlete_tries(athlete_result)
+                    if (athlete_state.still_active && athlete_state.next_height == new_height) {
+                        if (!athletes_in_next_height.has(athlete.full_name()) && athlete_state.current_try == 1) {
+                            new_athletes.add(athlete)
+                        }
 
-                    if (athlete_state.current_try == 1){
-                        athletes_for_next_height.push(athlete)
-                    } else if (athlete_state.current_try == 2){
-                        athletes_for_second_try.push(athlete)
-                    } else if (athlete_state.current_try == 3){
-                        athletes_for_third_try.push(athlete)
+                        if (athlete_state.current_try == 1) {
+                            athletes_for_next_height.push(athlete)
+                        } else if (athlete_state.current_try == 2) {
+                            athletes_for_second_try.push(athlete)
+                        } else if (athlete_state.current_try == 3) {
+                            athletes_for_third_try.push(athlete)
+                        }
+                    }
+                } catch (e) {
+                    if (e instanceof Error) {
+                        throwError(e)
+                    } else {
+                        throwError(new Error("Unkown Error: Not able to decode athlete tries"))
                     }
                 }
+
                 if ((athlete_result.start_height || 0) > new_height || athlete_result.current_height > new_height) {
                     athletes_not_yet_in_competition.push(athlete)
                 }
@@ -91,13 +118,13 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
             }
         } else {
             let current_try = 1;
-            if(athletes_for_next_height.length > 0) {
+            if (athletes_for_next_height.length > 0) {
                 current_try = 1
-            } else if(athletes_for_second_try.length > 0){
+            } else if (athletes_for_second_try.length > 0) {
                 current_try = 2
                 athletes_for_next_height = athletes_for_second_try
                 athletes_for_second_try = athletes_for_third_try
-            } else if (athletes_for_third_try.length > 0){
+            } else if (athletes_for_third_try.length > 0) {
                 current_try = 3
                 athletes_for_next_height = athletes_for_third_try
                 athletes_for_second_try = []
@@ -116,13 +143,13 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         }
     }
 
-    const try_completed = function(new_results: Map<string, AthleteHeightResults>, try_successful: boolean, athlete_still_active: boolean, athlete: AthleteHeightID) {
+    const try_completed = function (new_results: Map<string, AthleteHeightResults>, try_successful: boolean, athlete_still_active: boolean, athlete: AthleteHeightID) {
         let athletes_in_next_try = [...state.athletes_in_next_try]
         let athletes_in_next_height = [...state.athletes_in_next_height]
 
         if (try_successful) {
             athletes_in_next_height.push(athlete)
-        } else  if (athlete_still_active){
+        } else if (athlete_still_active) {
             athletes_in_next_try.push(athlete)
         }
         if (state.current_order.length <= 1) {
@@ -131,10 +158,10 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
                 increase_height(state.current_height, new Set(athletes_in_next_height.map(athlete => athlete.full_name())))
             } else {
                 // increase try
-                if (athletes_in_next_try.length == 0){
-                    if(state.athletes_in_next_next_try.length == 0){ // No athletes in this height
+                if (athletes_in_next_try.length == 0) {
+                    if (state.athletes_in_next_next_try.length == 0) { // No athletes in this height
                         increase_height(state.current_height, new Set(athletes_in_next_height.map(athlete => athlete.full_name())))
-                    }else { // athletes only for last try
+                    } else { // athletes only for last try
                         update_state({
                             ...state,
                             current_try: state.current_try + 2,
@@ -181,7 +208,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
         })
     }
 
-    if (state.current_order.length == 0){
+    if (state.current_order.length == 0) {
         increase_height(state.current_height, new Set())
     }
 
@@ -263,7 +290,7 @@ export function HeightOrderOverview({ finish_discipline }: { finish_discipline: 
 
 function get_try_result(athlete_result: AthleteHeightResults, current_height: number, current_try: number): string {
     let height_tries = get_tries_for_height(athlete_result, current_height)
-    if (height_tries.length == 3){
+    if (height_tries.length == 3) {
         return height_tries[2] // return last attempt
     } else {
         return height_tries[current_try - 1]
@@ -278,7 +305,7 @@ export function get_tries_for_height(athlete_result: AthleteHeightResults, curre
     if (tries) {
         let current_height_tries_string = tries[current_height_index]
         let current_tries = []
-        if (current_height_tries_string){
+        if (current_height_tries_string) {
             for (let i = 0; i < current_height_tries_string.length; i++) {
                 current_tries.push(current_height_tries_string[i])
             }

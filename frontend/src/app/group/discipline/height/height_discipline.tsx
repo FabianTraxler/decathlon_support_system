@@ -7,6 +7,7 @@ import { StartHeightInput } from "./starting_height";
 import { HeightOrderOverview } from "./athlete_overview";
 import { LoadingAnimation } from "@/app/lib/loading";
 import { finish_discipline } from "@/app/lib/discipline_edit";
+import { useAsyncError } from "@/app/lib/asyncError";
 
 
 interface HeightDisciplineState {
@@ -54,6 +55,8 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
     const height_increase = discipline.name == "Hochsprung" ? 4 : 20 // TODO: Get from API Call (stored in central config) 
     const max_start_increase = discipline.name == "Hochsprung" ? 200 : 400 // TODO: Get from API Call (stored in central config) 
 
+    const throwError = useAsyncError();
+
     const [disciplineState, setDisciplineState] = useState<HeightDisciplineState>({ ...empty_state, discipline: discipline, current_height: min_start_height, height_increase: height_increase })
     const [showStartHeightInput, setShowStartHeightInput] = useState(false)
 
@@ -61,57 +64,69 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
         if (typeof disciplineState.discipline.starting_order != "string" && disciplineState.discipline.starting_order.Default) {
             let default_starting_order = disciplineState.discipline.starting_order.Default as AthleteID[]
             //default_starting_order = default_starting_order.filter((athlete) => athlete.starting_number != undefined)
-
-            let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
-
-            if (current_state.current_try_order.length > 0 || !current_state.all_athletes_start_height_set) {
-                if (!current_state.all_athletes_start_height_set) {
-                    // Not all athletes ready
-                    discipline.state = "BeforeStart"
-                } else {
-                    //  all athletes ready
-                    discipline.state = "Active"
-                }
-                setDisciplineState({
-                    ...disciplineState,
-                    discipline: discipline,
-                    current_height: current_state.current_height,
-                    current_try: current_state.current_try,
-                    results: current_state.athlete_results,
-                    current_order: current_state.current_try_order,
-                    athletes_in_next_try: current_state.next_try_order,
-                    athletes_in_next_height: current_state.athletes_in_next_height,
-                    discipline_progress_state: current_state.height_not_started ? "new_height" : "jumping",
-                    default_order: current_state.default_starting_order,
-                    loaded: true,
-                    all_athletes_start_height_set: current_state.all_athletes_start_height_set,
-                    new_athletes_for_new_height: current_state.new_in_height
-                })
-            } else if (current_state.athlete_results.size == 0) {
-                let discipline = disciplineState.discipline;
-                discipline.state = "NoAthletes"
-                setDisciplineState({
-                    ...disciplineState,
-                    loaded: true,
-                    discipline: discipline
-                })
-            } else {
-                finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
+            try {
+                let current_state = get_descipline_state_from_results(athletes, discipline, min_start_height, height_increase, default_starting_order)
+                if (current_state.current_try_order.length > 0 || !current_state.all_athletes_start_height_set) {
+                    if (!current_state.all_athletes_start_height_set) {
+                        // Not all athletes ready
+                        discipline.state = "BeforeStart"
+                    } else {
+                        //  all athletes ready
+                        discipline.state = "Active"
+                    }
+                    setDisciplineState({
+                        ...disciplineState,
+                        discipline: discipline,
+                        current_height: current_state.current_height,
+                        current_try: current_state.current_try,
+                        results: current_state.athlete_results,
+                        current_order: current_state.current_try_order,
+                        athletes_in_next_try: current_state.next_try_order,
+                        athletes_in_next_height: current_state.athletes_in_next_height,
+                        discipline_progress_state: current_state.height_not_started ? "new_height" : "jumping",
+                        default_order: current_state.default_starting_order,
+                        loaded: true,
+                        all_athletes_start_height_set: current_state.all_athletes_start_height_set,
+                        new_athletes_for_new_height: current_state.new_in_height
+                    })
+                } else if (current_state.athlete_results.size == 0) {
+                    let discipline = disciplineState.discipline;
+                    discipline.state = "NoAthletes"
                     setDisciplineState({
                         ...disciplineState,
                         loaded: true,
                         discipline: discipline
                     })
-                })
+                } else {
+                    finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
+                        setDisciplineState({
+                            ...disciplineState,
+                            loaded: true,
+                            discipline: discipline
+                        })
+                    })
+                }
+            } catch (e) {
+                if (e instanceof Error) {
+                    throwError(e)
+                } else {
+                    throwError(new Error("Unkown Error: Not able to convert local discipline results into state"))
+                }
             }
         }
     }
     const initialze_discipline = function (discipline: Discipline) {
         get_group_achievements(group_name, (athletes) => get_discipline_results(athletes, discipline))
+        .catch((e) => {
+            throwError(e);
+        })
     }
 
     useEffect(() => {
         get_group_achievements(group_name, (athletes) => get_discipline_results(athletes, disciplineState.discipline))
+        .catch((e) => {
+            throwError(e);
+        })
     }, [group_name])
 
     const finish_height_discipline = function () {
@@ -143,7 +158,18 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                         discipline={disciplineState.discipline}
                         start_discipline={() => {
                             if (disciplineState.all_athletes_start_height_set) {
-                                start_discipline(group_name, disciplineState.discipline, initialze_discipline)
+                                try {
+                                    start_discipline(group_name, disciplineState.discipline, initialze_discipline)
+                                    .catch((e) => {
+                                        throwError(e);
+                                    })
+                                } catch (e) {
+                                    if (e instanceof Error) {
+                                        throwError(e)
+                                    } else {
+                                        throwError(new Error("Unkown Error starting discipline"));
+                                    }
+                                }
                             } else {
                                 alert("Noch nicht alle Starthöhen eingetragen")
                             }
@@ -502,7 +528,7 @@ export function decode_athlete_tries(athlete_result: AthleteHeightResults): Athl
                 }
             }
         } else {
-            alert("Error loading athlete result")
+            throw new Error("Error loading athlete result: Athlete attempt out of range");
         }
     }
 

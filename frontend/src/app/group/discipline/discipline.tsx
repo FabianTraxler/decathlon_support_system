@@ -7,9 +7,11 @@ import { convert_date } from "@/app/lib/parsing";
 import DistanceDiscipline from "./distance_discipline";
 import HeightDiscipline from "./height/height_discipline";
 import { LoadingAnimation } from "@/app/lib/loading";
+import { useAsyncError } from "@/app/lib/asyncError";
 
 export default function Disciplines({ group_name, discipline_name }: { group_name: string, discipline_name: string | undefined }) {
     const [discipline, setDiscipline] = useState<Discipline>();
+    const throwError = useAsyncError();
 
     useEffect(() => {
         if (discipline_name){ // Use given discipline 
@@ -20,15 +22,14 @@ export default function Disciplines({ group_name, discipline_name }: { group_nam
                     if (res.ok) {
                         return res.json()
                     } else {
-                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                        throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                     }
                 })
                 .then(res => {
                     setDiscipline(res)
                 })
                 .catch((e) => {
-                    console.error(e)
-                    throw e
+                    throwError(e)
                 })
         }else{ // get current discipline
             let api_url = `/api/current_discipline?name=${group_name}`
@@ -38,15 +39,14 @@ export default function Disciplines({ group_name, discipline_name }: { group_nam
                     if (res.ok) {
                         return res.json()
                     } else {
-                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                        throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
                     }
                 })
                 .then(res => {
                     setDiscipline(res)
                 })
                 .catch((e) => {
-                    console.error(e)
-                    throw e
+                    throwError(e)
                 })
         }
     }, [group_name])
@@ -131,10 +131,10 @@ export function BeforeStartInfoBox({ discipline, start_discipline, ready, childr
 }
 
 
-export function start_discipline(group_name: string, discipline: Discipline, callback_fn: (discipline: Discipline) => void) {
+export async function start_discipline(group_name: string, discipline: Discipline, callback_fn: (discipline: Discipline) => void) {
     let api_url = `/api/discipline_state?name=${group_name}`
 
-    fetch(api_url, {
+    await fetch(api_url, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json",
@@ -151,11 +151,10 @@ export function start_discipline(group_name: string, discipline: Discipline, cal
                     state: "Active"
                 })
             } else {
-                throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                return Promise.reject(`Network response was not ok: ${res.status} - ${res.statusText}`);
             }
         })
         .catch((e) => {
-            console.error(e)
-            throw e
+            return Promise.reject(e)
         })
 }

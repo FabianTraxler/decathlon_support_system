@@ -7,7 +7,7 @@ import AthleteEditPopup from "../athlete_edit_popup";
 export function HeightInput({ athlete, save_try, skip_try }:
                                 {
                                     athlete: AthleteHeightID,
-                                    save_try: (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) => void,
+                                    save_try: (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean, skip_error: boolean) => void,
                                     skip_try: (athlete: AthleteHeightResults, new_value: string, athlete_still_active: boolean) => void
                                 }) {
     const { state } = useContext(AthleteResults)
@@ -23,7 +23,7 @@ export function HeightInput({ athlete, save_try, skip_try }:
 
         const handle_try_update = function (value: string) {
             let new_try_string = update_try_string_with_new_value(value, athlete_result, state.current_height, state.current_try)
-            save_try(athlete_result, new_try_string, true)
+            save_try(athlete_result, new_try_string, true, false)
         }
 
         const handle_surrender = function () {

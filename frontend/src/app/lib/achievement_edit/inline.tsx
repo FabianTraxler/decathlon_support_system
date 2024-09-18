@@ -3,12 +3,15 @@ import { AchievementValue } from "../athlete_fetching";
 import { convert_achievement_to_string } from "./popup";
 import { convert_to_integral_fractional } from "../parsing";
 import { long_distance_disciplines, unit_mapping } from "../config";
+import { useAsyncError } from "../asyncError";
 
 export function InlineEdit({ index, name, achievement, achievement_type, athleteName, onSubmit }:
     { index: string, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
+    const throwError = useAsyncError();
+
     let [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
 
-    if (achievement_string == "-" || achievement_string == "/") { 
+    if (achievement_string == "-" || achievement_string == "/") {
         achievement_string = ""
     }
 
@@ -39,18 +42,18 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                         if (res.ok) {
                             onSubmit(new_achievement)
                         } else {
-                            throw new Error("Achievement not deleted")
+                            throwError(new Error("Achievement not deleted"))
                         }
                     }).catch(e => {
-                        alert(`Not deleted: ${e}`)
+                        throwError(new Error(`Not deleted: ${e}`))
                     })
                 } else {
                     let final_result = convert_to_integral_fractional(currentState.achievement_string)
-                    
-                    if(!final_result){
+
+                    if (!final_result) {
                         alert(`Invalid format: Number (${currentState.achievement_string}): Not able to convert to number -> not uploaded`)
                         return
-                    } else if (final_result?.fractional >= 100){
+                    } else if (final_result?.fractional >= 100) {
                         alert(`Invalid format: Number (${currentState.achievement_string}): Only 2 decimal numbers allowed -> not uploaded`)
                         return
                     }
@@ -130,12 +133,12 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
                                 if (res.ok) {
                                     onSubmit(new_achievement)
                                 } else {
-                                    throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+                                    throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`))
                                 }
                             })
                         }
                     }).catch(e => {
-                        alert(`Not updated: ${e}`)
+                        throwError(new Error(`Not updated: ${e}`))
                     })
                 }
 
