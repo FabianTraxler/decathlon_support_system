@@ -2,20 +2,16 @@
 
 import { german_discipline_states } from '@/app/lib/config';
 import { LoadingButton } from '@/app/lib/loading';
-import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { DisciplineEditButton } from './discipline_edit';
-import { StartingOrder, Discipline } from '@/app/lib/interfaces';
+import { Discipline } from '@/app/lib/interfaces';
 import { convert_date } from '@/app/lib/parsing';
 
-export default function Disciplines() {
+export default function Disciplines({group_name}:{group_name: string}) {
   const [showDisciplines, set_showDisciplines] = useState(false);
   const [Disciplines, setDisciplines] = useState<Discipline[]>([])
-
-  let searchParams = useSearchParams();
-  let group_name = searchParams.get('group') ?? "";
-
+  
   useEffect(() => {
     let api_url = `/api/disciplines?name=${group_name}`
 
@@ -92,13 +88,13 @@ export default function Disciplines() {
             </thead>
             <tbody>
               {Disciplines.map((discipline, i) => {
-                return <tr key={discipline.name}>
+                return <tr key={discipline.name + group_name}>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{i + 1}.</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center font-bold'>{discipline.name}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{german_discipline_states.get(discipline.state)}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{discipline.location}</td>
                   <td className='border border-slate-800 p-1 pl-2 pr-2 text-center'>{convert_date(discipline.start_time)}</td>
-                  <DisciplineEditButton group_name={group_name} discipline={discipline} group_view={false} start_discipline={undefined} update_discipline={(discipline) => update_discipline(i, discipline)}>
+                  <DisciplineEditButton key={discipline.name + group_name} group_name={group_name} discipline={discipline} group_view={false} start_discipline={undefined} update_discipline={(discipline) => update_discipline(i, discipline)}>
                     <span className='flex'>Ändern</span>
                     <span className='pl-2 hidden group-hover:flex'>&#9998;</span>
                   </DisciplineEditButton>

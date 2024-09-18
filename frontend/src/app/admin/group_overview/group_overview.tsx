@@ -14,7 +14,7 @@ export default function Overview() {
 
   if (groupName == "Admin Übersicht") {
     return (
-      <div className="flex-row w-full">
+      <div className="flex-row w-full h-[95vh] overflow-scroll sm:h-full">
         <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll sm:h-screen">
           <Title title={groupName}></Title>
           <GroupOverview></GroupOverview>
@@ -23,13 +23,13 @@ export default function Overview() {
     )
   } else {
     return (
-      <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-screen">
+      <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
         <Title title={groupName}></Title>
         <PrintUtilities></PrintUtilities>
         <Athletes group_name={groupName}></Athletes>
 
         {(groupName.startsWith("Gruppe") || groupName.startsWith("U")) && 
-          <Disciplines></Disciplines>
+          <Disciplines group_name={groupName}></Disciplines>
         }
       </div>
     )
@@ -42,8 +42,8 @@ function GroupOverview() {
   const pathname = usePathname();
 
   return (
-    <div className='flex flex-col items-center '>
-      <div className='border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-screen sm:w-[90%]'>
+    <div className='flex flex-col items-center w-screen sm:w-auto'>
+      <div className='border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-[80%] sm:w-[90%]'>
         <div className='w-full 2xl:text-2xl font-bold text-center'>10-Kampf Altersklassen</div>
         <div className='flex flex-wrap justify-between pl-10 pr-10 '>
           {decathlon_age_groups.map((group_name) => {
@@ -58,7 +58,7 @@ function GroupOverview() {
         </div>
 
       </div>
-      <div className='flex-col border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-screen sm:w-[90%]'>
+      <div className='flex-col border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-[80%] sm:w-[90%]'>
         <div className='2xl:text-2xl font-bold text-center'>10-Kampf Gruppen</div>
         <div className='flex flex-wrap justify-between pl-10 pr-10'>
           {groups.map((group_name) => {
@@ -72,12 +72,12 @@ function GroupOverview() {
           })}
         </div>
       </div>
-      <div className='flex-col border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-screen sm:w-[90%]'>
+      <div className='flex-col border-black bg-slate-300 shadow-lg rounded-md m-8 p-2 2xl:p-5 w-[80%] sm:w-[90%]'>
         <div className='2xl:text-2xl font-bold text-center'>Jugend Gruppen</div>
-        <div className='flex justify-between pl-10 pr-10'>
+        <div className='flex flex-wrap justify-between pl-10 pr-10'>
           {youth_groups.map((group_name) => {
             return (
-              <div key={group_name} className='flex w-fit shadow-md rounded-md text-center p-2 m-3 bg-slate-100 hover:bg-slate-600 hover:cursor-pointer'
+              <div key={group_name} className='flex  w-fit shadow-md rounded-md text-center p-2 m-3 bg-slate-100 hover:bg-slate-600 hover:cursor-pointer'
                 onClick={() => {
                   replace(`${pathname}?group=${group_name}`);
 

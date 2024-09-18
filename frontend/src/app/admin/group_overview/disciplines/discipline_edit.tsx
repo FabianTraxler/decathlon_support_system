@@ -1,9 +1,8 @@
-import { start_discipline } from "@/app/group/discipline/discipline";
 import { saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { PopUp } from "@/app/lib/achievement_edit/popup";
 import { finish_discipline, reset_discipline } from "@/app/lib/discipline_edit";
 import { StartingOrder, Discipline, AthleteID } from "@/app/lib/interfaces";
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 
 export function DisciplineEditButton(
@@ -18,6 +17,14 @@ export function DisciplineEditButton(
     showStartingOrderPopup: false,
     discipline: discipline
   })
+
+  useEffect(() => {
+    setState({
+      showPopup: false,
+      showStartingOrderPopup: false,
+      discipline: discipline
+    })
+  }, [discipline])
 
   const closePopup = function (order: StartingOrder) {
     discipline.starting_order = order
@@ -54,17 +61,17 @@ export function DisciplineEditButton(
       </div>
       {state.showPopup &&
         <PopUp title={state.discipline.name +  " bearbeiten"} onClose={() => setState({ ...state, showPopup: false })}>
-          <div className="text-lg sm:text-xl">
-            {(typeof state.discipline.starting_order != "string") &&
+          <div className="text-lg sm:text-xl text-center">
+            {(state.discipline.state != "Finished" && typeof state.discipline.starting_order != "string") &&
               <div
                 onClick={() => setState({ ...state, showPopup: false, showStartingOrderPopup: true })}
-                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-green-300 active:shadow-none"
+                className="border rounded-md shadow-black shadow-md p-2 m-4 bg-green-300 active:shadow-none"
               >Startreihenfolge bearbeiten</div>
             }
             {state.discipline.state != "Finished" && group_view &&
               <div
                 onClick={startDiscipline}
-                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-slate-400 active:shadow-none"
+                className="border rounded-md shadow-black shadow-md p-2 m-4 bg-slate-400 active:shadow-none"
               >
                 Diszipline jetzt starten!
               </div>
@@ -72,7 +79,7 @@ export function DisciplineEditButton(
             {state.discipline.state != "Finished" &&
               <div
                 onClick={finish}
-                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
+                className="border rounded-md shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
               >
                 Disziplin abschließen!
               </div>
@@ -80,7 +87,7 @@ export function DisciplineEditButton(
             {state.discipline.state == "Finished" &&
               <div
                 onClick={reset}
-                className="border rounded-sm shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
+                className="border rounded-md shadow-black shadow-md p-2 m-4 bg-red-400 active:shadow-none"
               >
                 Status zurücksetzen!
               </div>

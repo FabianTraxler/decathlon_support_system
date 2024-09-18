@@ -26,7 +26,7 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
     return (
         <NavContext.Provider value={setshowNav}>
 
-            <div className={(showNav ? "h-screen" : "sm:max-w-[3.5rem]") + " flex sm:h-screen sm:w-[14rem] bg-gray-900 flex-col sm:overflow-scroll"}>
+            <div className={(showNav ? "h-screen" : "h-[5vh] sm:max-w-[3.5rem]") + " flex sm:h-screen sm:w-[14rem] bg-gray-900 flex-col sm:overflow-scroll"}>
                 <div className="flex justify-between">
                     <button onClick={(_) => setshowNav(!showNav)} data-drawer-target="default-sidebar" data-drawer-toggle="default-sidebar" aria-controls="default-sidebar" type="button"
                         className="text-gray-500 sm:mt-2 p-2 hover:text-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
