@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
 import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
-import { decathlon_disciplines, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines } from '@/app/lib/config';
+import { decathlon_disciplines, groups, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines, youth_groups } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
 import { PopUp } from '@/app/lib/achievement_edit/popup';
 import { AthleteID, Discipline } from '@/app/lib/interfaces';
+import { useSearchParams } from 'next/navigation';
 
 export default function Athletes({ group_name }: { group_name: string }) {
   const [showAthletes, set_showAthletes] = useState(false);
@@ -36,53 +37,53 @@ export default function Athletes({ group_name }: { group_name: string }) {
 
 function GroupAthletes({ group_name }: { group_name: string }) {
   const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
-  const [disciplineEdit, setDisciplineEdit] = useState<{discipline: string, athlete_order: string[]}>({discipline: "", athlete_order: []})
+  const [disciplineEdit, setDisciplineEdit] = useState<{ discipline: string, athlete_order: string[] }>({ discipline: "", athlete_order: [] })
   const [sorted, setSorted] = useState({ name: "Name", ascending: true })
 
   const discipline_edit_mode = function (selected_discipline: string) {
-    if(selected_discipline != disciplineEdit.discipline){
-      if (group_name.startsWith("G") || group_name.startsWith("U")){
+    if (selected_discipline != disciplineEdit.discipline) {
+      if (group_name.startsWith("G") || group_name.startsWith("U")) {
         let athlete_order: string[] = []
         fetch(`/api/discipline?group_name=${group_name}&discipline_name=${selected_discipline}`)
-        .then(res => {
-          if (res.ok) {
-            return res.json()
-          } else {
-            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-          }
-        })
-        .then(res => {
-          let discipline: Discipline = res;
-          let starting_order = discipline.starting_order;
-          if(typeof starting_order != "string"){
-            if(starting_order.Track){
-              let runs = starting_order.Track
-              runs.forEach(run => {
-                run.athletes.forEach(athlete => 
-                  athlete_order.push(athlete?.name + "_" + athlete?.surname)
-                )
-              })
-            }else if(starting_order.Default){
-              starting_order.Default.forEach(athlete => 
-                athlete_order.push(athlete.name + "_" + athlete.surname)
-              )
+          .then(res => {
+            if (res.ok) {
+              return res.json()
+            } else {
+              throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
             }
-          }
-          setDisciplineEdit({
-            discipline: selected_discipline,
-            athlete_order: athlete_order
           })
-        })
-        .catch(e => {
-          console.error(e)
-        })
-      }else{
+          .then(res => {
+            let discipline: Discipline = res;
+            let starting_order = discipline.starting_order;
+            if (typeof starting_order != "string") {
+              if (starting_order.Track) {
+                let runs = starting_order.Track
+                runs.forEach(run => {
+                  run.athletes.forEach(athlete =>
+                    athlete_order.push(athlete?.name + "_" + athlete?.surname)
+                  )
+                })
+              } else if (starting_order.Default) {
+                starting_order.Default.forEach(athlete =>
+                  athlete_order.push(athlete.name + "_" + athlete.surname)
+                )
+              }
+            }
+            setDisciplineEdit({
+              discipline: selected_discipline,
+              athlete_order: athlete_order
+            })
+          })
+          .catch(e => {
+            console.error(e)
+          })
+      } else {
         setDisciplineEdit({
           discipline: selected_discipline,
           athlete_order: []
         })
       }
-    }else{
+    } else {
       setDisciplineEdit({
         discipline: "",
         athlete_order: []
@@ -131,12 +132,12 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     }
   }
 
-  const sortAthletes = function(athletes: Athlete[]): Athlete[]{
+  const sortAthletes = function (athletes: Athlete[]): Athlete[] {
     if (disciplineEdit.discipline == "" || disciplineEdit.athlete_order.length == 0) {
       athletes.sort((a, b) => sort_athletes(a, b, sorted));
     } else {
       // sort athletes like the discipline athlete order for easier manual input
-      athletes.sort((a,b) => disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname) - disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname))
+      athletes.sort((a, b) => disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname) - disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname))
     }
     return athletes
   }
@@ -200,7 +201,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   const [popupOpen, setPopupOpen] = useState(false)
   var achievements = new Map(Object.entries(athlete.achievements));
   const birthdate = new Date(athlete.birth_date * 1000);
-  let age_group_number: number | string = Math.floor((new Date().getFullYear() - birthdate.getUTCFullYear()) / 10 ) * 10;
+  let age_group_number: number | string = Math.floor((new Date().getFullYear() - birthdate.getUTCFullYear()) / 10) * 10;
   age_group_number = age_group_number < 40 ? "" : age_group_number
   const full_name = athlete.name + "_" + athlete.surname;
   const age_group = athlete.gender + age_group_number
@@ -252,22 +253,26 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
             <path d="M0 64C0 28.7 28.7 0 64 0L224 0l0 128c0 17.7 14.3 32 32 32l128 0 0 144-208 0c-35.3 0-64 28.7-64 64l0 144-48 0c-35.3 0-64-28.7-64-64L0 64zm384 64l-128 0L256 0 384 128zM176 352l32 0c30.9 0 56 25.1 56 56s-25.1 56-56 56l-16 0 0 32c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-48 0-80c0-8.8 7.2-16 16-16zm32 80c13.3 0 24-10.7 24-24s-10.7-24-24-24l-16 0 0 48 16 0zm96-80l32 0c26.5 0 48 21.5 48 48l0 64c0 26.5-21.5 48-48 48l-32 0c-8.8 0-16-7.2-16-16l0-128c0-8.8 7.2-16 16-16zm32 128c8.8 0 16-7.2 16-16l0-64c0-8.8-7.2-16-16-16l-16 0 0 96 16 0zm80-112c0-8.8 7.2-16 16-16l48 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 32 32 0c8.8 0 16 7.2 16 16s-7.2 16-16 16l-32 0 0 48c0 8.8-7.2 16-16 16s-16-7.2-16-16l0-64 0-64z" />
           </svg>
         </LoadingButton>
-      </td>
-      {
-        popupOpen &&
-        <PopUp title="Athleten Einstellungen" onClose={() => setPopupOpen(false)}>
-          <AthleteEditPopup athlete={athlete}></AthleteEditPopup>
+        {
+          popupOpen &&
+          <PopUp title="Athleten Einstellungen" onClose={() => setPopupOpen(false)}>
+            <AthleteEditPopup athlete={athlete} onClose={() => setPopupOpen(false)}></AthleteEditPopup>
 
-        </PopUp>
-      }
+          </PopUp>
+        }
+      </td>
     </tr>
   )
 }
 
-function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
+function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () => void }) {
   const birthdate = new Date(athlete.birth_date * 1000);
   const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
   const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
+
+  let searchParams = useSearchParams();
+  const groupName = searchParams.get('group') ?? "";
+  const [newGroup, changeNewGroup] = useState<string>(groupName)
 
   const deleteAthlete = function () {
     if (confirm("Athlet:in löschen?")) {
@@ -310,6 +315,14 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
         alert("Invalid format")
         changeBirthyear("")
       }
+    }
+  }
+  const handleGroupChange = function (e: React.ChangeEvent<HTMLSelectElement>) {
+    if (e.target.value.length == 0) {
+      changeNewGroup("")
+    }
+     else {
+      changeNewGroup(e.target.value)
     }
   }
 
@@ -355,6 +368,49 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
       });
   }
 
+  const switchGroup = function (stop_load: () => void) {
+    if (newGroup.includes("U")){
+      // Yotuh group
+            // 2. Check if group matches birth year
+      let max_age;
+      if(newGroup == "U4/U6"){
+        max_age = 6
+      }else {
+        max_age = parseInt(newGroup.replace("U", "")) || 16
+      }
+      
+      let age = new Date().getFullYear() - ((typeof birthyear == "string") ? parseInt(birthyear) : birthyear)
+      if (age >= max_age || age < max_age - 2){
+        alert("Falsche Alterklasse ausgewählt")
+        stop_load()
+        return
+      }
+    }
+
+    fetch(`/api/switch_group?to=${newGroup}&from=${groupName}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        athlete_ids: [
+          {
+            name: athlete.name,
+            surname: athlete.surname
+          }
+        ]
+      })
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+        }
+        stop_load()
+        onClose()
+      })
+      .catch(error => {
+        console.error('Error deleting Athlete:', error);
+      });
+  }
+
+
   return (
     <div className='p-2'>
       <div className='flex flex-row'>
@@ -381,6 +437,32 @@ function AthleteEditPopup({ athlete }: { athlete: Athlete }) {
         ></input>
         <div className='text-lg'>
           <LoadingButton size={"2"} onclick={saveBirhyear} >&#9989;</LoadingButton>
+        </div>
+      </div>
+      <div className='grid grid-cols-3'>
+        <div className='mr-2 font-bold'>Gruppe wechseln:</div>
+        <select
+          className='border-black border rounded w-24 text-center shadow-md'
+          onChange={handleGroupChange}
+          defaultValue={groupName}
+        >
+          {groupName.includes("Gruppe") &&
+            groups.map(group_number => {
+              return (
+                <option key={group_number}>Gruppe {group_number}</option>
+              )
+            })
+          }
+          {groupName.includes("U") &&
+            youth_groups.map(group_name => {
+              return (
+                <option key={group_name}>{group_name}</option>
+              )
+            })
+          }
+        </select>
+        <div className='text-lg'>
+          <LoadingButton size={"2"} onclick={switchGroup} >&#9989;</LoadingButton>
         </div>
       </div>
       <div className='flex justify-end mt-5'>

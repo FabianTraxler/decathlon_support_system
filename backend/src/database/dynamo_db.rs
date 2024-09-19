@@ -1,6 +1,6 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AchievementStorage, AgeGroup, AgeGroupID,
-    AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore,
+    AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID
 };
 use crate::database::db_errors::ItemNotFound;
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
@@ -416,7 +416,6 @@ impl AchievementStorage for DynamoDB {
             .await
             .ok_or(ItemNotFound::new("Key not found", "404"))?;
 
-        let old_athletes = group.athletes().clone();
         let group_name = match group_id.name.clone() {
             Some(name) => Ok(name),
             None => Err("Group name not suuplied"),
@@ -432,6 +431,9 @@ impl AchievementStorage for DynamoDB {
 
         let mut update_expressions: Vec<String> = vec![];
 
+        let mut new_athletes: Vec<Athlete> = vec![];
+        let mut deleted_athletes: Vec<Athlete> = vec![];
+
         // Update specific fields from JSON to struct
         if let Some(name) = json_value.get("name").and_then(Value::as_str) {
             update_expressions.push(String::from(" name = :n"));
@@ -443,33 +445,17 @@ impl AchievementStorage for DynamoDB {
         }
         if let Some(athletes) = json_value.get("athletes").and_then(Value::as_array) {
             for athlete_value in athletes {
-                match serde_json::from_value(athlete_value.clone()) {
+                match serde_json::from_value::<Athlete>(athlete_value.clone()) {
                     Ok(athlete) => {
-                        group.add_athlete(athlete);
+                        group.add_athlete(athlete.clone());
+                        new_athletes.push(athlete);
                     }
                     Err(e) => {
                         return Err(Box::try_from(e).expect("Parsing Error should be convertible"));
                     }
                 }
             }
-            update_expressions.push(String::from(" athletes = :a"));
 
-            let mut athlete_values = vec![];
-            for athlete in group.athletes() {
-                let mut athlete_map = HashMap::new();
-                athlete_map.insert(
-                    "name".to_string(),
-                    AttributeValue::S(athlete.name().to_string()),
-                );
-                athlete_map.insert(
-                    "surname".to_string(),
-                    AttributeValue::S(athlete.surname().to_string()),
-                );
-                athlete_values.push(AttributeValue::M(athlete_map));
-            }
-
-            update_call = update_call
-                .expression_attribute_values(String::from(":a"), AttributeValue::L(athlete_values));
         }
         if let Some(athlete_ids) = json_value.get("athlete_ids").and_then(Value::as_array) {
             for athlete_id_value in athlete_ids {
@@ -477,7 +463,8 @@ impl AchievementStorage for DynamoDB {
                     Ok(athlete_id) => {
                         match self.get_athlete(&athlete_id).await {
                             Some(athlete) => {
-                                group.add_athlete(athlete);
+                                group.add_athlete(athlete.clone());
+                                new_athletes.push(athlete);
                             }
                             None => {
                                 return Err(Box::from(format!(
@@ -492,6 +479,32 @@ impl AchievementStorage for DynamoDB {
                     }
                 }
             }
+        }
+        if let Some(athlete_ids) = json_value.get("delete_athlete_ids").and_then(Value::as_array){
+            for athlete_id_value in athlete_ids {
+                match serde_json::from_value(athlete_id_value.clone()) {
+                    Ok(athlete_id) => {
+                        match self.get_athlete(&athlete_id).await {
+                            Some(athlete) => {
+                                group.delete_athlete(athlete.clone());
+                                deleted_athletes.push(athlete);
+                            }
+                            None => {
+                                return Err(Box::from(format!(
+                                    "Athlete with ID {:?} not found",
+                                    athlete_id
+                                )));
+                            }
+                        };
+                    }
+                    Err(e) => {
+                        return Err(Box::try_from(e).expect("Parsing Error should be convertible"));
+                    }
+                }
+            }
+        }
+        
+        if deleted_athletes.len() > 0 || new_athletes.len() > 0 {
             update_expressions.push(String::from(" athletes = :a"));
 
             let mut athlete_values = vec![];
@@ -519,16 +532,13 @@ impl AchievementStorage for DynamoDB {
 
         update_call.send().await?;
 
-        let all_athletes = group.athletes().clone();
         let group_name = group.name().to_string();
         self.write_group(group_id, group).await?;
-        let num_new_athletes = all_athletes.len() - old_athletes.len();
-        if num_new_athletes > 0 {
-            match self.get_time_group(&TimeGroupID::new(group_name)).await {
+        if new_athletes.len() > 0 {
+            match self.get_time_group(&TimeGroupID::new(group_name.clone())).await {
                 Some(mut time_group) => {
                     // Time group already available -> Update athletes
-                    let new_athletes = all_athletes[old_athletes.len()..].to_vec();
-                    let a = &new_athletes
+                    let time_group_athletes = &new_athletes
                         .iter()
                         .map(|athlete| {
                             time_planner::Athlete::new(
@@ -538,12 +548,47 @@ impl AchievementStorage for DynamoDB {
                             )
                         })
                         .collect();
-                    time_group.update_athletes(a)?;
+                    time_group.update_athletes(time_group_athletes)?;
                     self.store_time_group(time_group).await
                 }
                 None => Ok(String::from("")), // Do nothing
             }?;
         }
+        if deleted_athletes.len() > 0{
+            match self.get_time_group(&TimeGroupID::new(group_name)).await {
+                Some(mut time_group) => {
+                    // Time group already available -> Update athletes
+                    for athlete in deleted_athletes{
+                        let time_group_athlete = time_planner::Athlete::new(
+                            athlete.name().to_string(),
+                            athlete.surname().to_string(),
+                            Some(athlete.age_group()),
+                        );
+                        time_group.delete_athlete(time_group_athlete)?;
+                    }
+
+                    self.store_time_group(time_group).await
+                }
+                None => Ok(String::from("")), // Do nothing
+            }?;
+        }
+
+        Ok(String::from("Group updated"))
+    }
+
+    async fn switch_group(
+        &self,
+        group_info: SwitchGroupID,
+        json_string: &str,
+    ) -> Result<String, Box<dyn Error>> {
+
+        let from_group_id = GroupID::new(group_info.from.ok_or("From group not given")?.as_str());
+        let to_group_id = GroupID::new(group_info.to.ok_or("To group not given")?.as_str());
+
+        self.update_group(to_group_id, json_string).await?;
+
+        let delete_json_string = json_string.replace("athlete_ids", "delete_athlete_ids");
+        self.update_group(from_group_id, &delete_json_string).await?;
 
         Ok(String::from("Group updated"))
     }

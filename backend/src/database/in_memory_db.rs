@@ -1,5 +1,5 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
-use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore};
+use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -196,6 +196,11 @@ impl AchievementStorage for InMemoryDB {
         Ok(String::from("Group updated"))
 
     }
+
+    async fn switch_group(&self, group_info: SwitchGroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
+        todo!("Implement")
+    }
+
 
     async fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup> {
         // Implement correct age group getter

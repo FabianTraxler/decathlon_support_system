@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 use super::{Athlete, AthleteID, CompetitionType};
 
@@ -56,8 +56,16 @@ impl Group {
     pub fn set_name(&mut self, name: String) {
         self.name = name
     }
+
     pub fn add_athlete(&mut self, athlete: Athlete) {
         self.athletes.push(athlete)
+    }
+
+    pub fn delete_athlete(&mut self, athlete: Athlete) -> Option<Athlete> {
+        match self.athletes.iter().position(|x| *x == athlete){
+            Some(index) => Some(self.athletes.remove(index)),
+            None => None // Athlete not in vec therefore not deleted
+        }
     }
 
     pub fn athlete_ids(&self) -> HashSet<AthleteID> {
@@ -88,12 +96,29 @@ impl GroupID {
     }
     pub fn from_group(group: &Group) -> Self {
         GroupID {
-            name: Some(group.name.clone())
+            name: Some(group.name.clone()),
         }
     }
     pub fn from_group_store(group: &GroupStore) -> Self {
         GroupID {
-            name: Some(group.name.clone())
+            name: Some(group.name.clone()),
+        }
+    }
+}
+
+/// SwitchGroupID Object used to access the persistent storage and get access two specific groups by
+/// their names
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SwitchGroupID {
+    pub from: Option<String>,
+    pub to: Option<String>,
+}
+
+impl SwitchGroupID {
+    pub fn new(group_from: &str, group_to: &str) -> Self {
+        SwitchGroupID {
+            from: Some(group_from.to_string()),
+            to: Some(group_to.to_string()),
         }
     }
 }

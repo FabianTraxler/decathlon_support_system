@@ -14,7 +14,7 @@ use std::str::FromStr;
 use serde_json::{Map, Value};
 pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
-pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore};
+pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore, SwitchGroupID};
 pub use achievements::{Achievement, AchievementID};
 pub use pdf::PDF;
 use async_trait::async_trait;
@@ -30,6 +30,7 @@ pub trait AchievementStorage {
     async fn write_group_store(&self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
     async fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
     async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn switch_group(&self, group_info: SwitchGroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
     async fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
     async fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;
     async fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>>;

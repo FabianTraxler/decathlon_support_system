@@ -2,13 +2,14 @@ use crate::Storage;
 use actix_web::{get, web, HttpResponse, Responder, post, put};
 use actix_web::web::Query;
 use crate::api_server::parse_json_body;
-use crate::certificate_generation::{AgeGroupID, GroupID, GroupStore};
+use crate::certificate_generation::{AgeGroupID, GroupID, GroupStore, SwitchGroupID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_group);
     cfg.service(post_group);
     cfg.service(update_group);
     cfg.service(get_age_group);
+    cfg.service(switch_group);
 }
 
 #[get("/group")]
@@ -64,6 +65,23 @@ async fn update_group(
     let group_id = query.into_inner();
 
     match data.update_group(group_id, json_string.as_str()).await {
+        Ok(msg) => {
+            HttpResponse::Ok().body(msg)
+        }
+        Err(e) => HttpResponse::InternalServerError().body(format!("Error updating Group: {}", e))
+    }
+}
+
+#[put("/switch_group")]
+async fn switch_group(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    body: web::Payload,
+    query: Query<SwitchGroupID>,
+) -> impl Responder {
+    let json_string = parse_json_body(body).await;
+    let group_ids = query.into_inner();
+
+    match data.switch_group(group_ids, json_string.as_str()).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         }
