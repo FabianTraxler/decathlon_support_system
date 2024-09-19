@@ -9,9 +9,12 @@ const AGE_GROUPS_WO_POINTS:[&'static str; 6] = ["M-U4", "W-U4", "M-U6", "W-U6", 
 fn add_name(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athlete: &Athlete) {
     // Define font metrics
     let font_size = 36.0;
-    let avg_font_width = 5.5; // Manually measured
+    let avg_font_width = 6.2; // Manually measured
     let name = athlete.full_name();
-    let x_pos = 105.0 - name.len() as f32 / 2.0 * avg_font_width;
+    let mut x_pos = 105.0 - name.len() as f32 / 2.0 * avg_font_width;
+    //if name.len() > 20{
+    //    x_pos -= name.len() as f32 / 2.0;
+    //}
 
     pdf_layer.begin_text_section();
     pdf_layer.set_font(font, font_size);

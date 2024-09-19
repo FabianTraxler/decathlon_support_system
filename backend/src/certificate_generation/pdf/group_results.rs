@@ -344,16 +344,27 @@ fn add_group_athletes(
         // Split in multiple lines if text larger than 20 chars
         let mut athlete_part = athlete_name.as_str();
         while athlete_part.len() > max_name_char_len {
-            let name_line = &athlete_part[..max_name_char_len];
+            let athlete_names: Vec<&str> = athlete_part.split(" ").collect();
+            let name_line: String;
+            if athlete_names.len() > 1{
+                let all_but_last_name = athlete_names[..athlete_names.len() - 1].join(" ");
+                if all_but_last_name.len() < max_name_char_len{
+                    name_line = all_but_last_name;
+                }else{
+                    name_line = athlete_part[..max_name_char_len].to_string();
+                }
+            }else{
+                name_line = athlete_part[..max_name_char_len].to_string();
+            }
             pdf_layer.use_text(
-                name_line,
+                name_line.as_str(),
                 font_size,
                 Mm(x_coord),
                 Mm(y_coord - line_height * (num_lines - 1.)),
                 &font,
             );
 
-            athlete_part = &athlete_part[max_name_char_len..];
+            athlete_part = &athlete_part[name_line.len() + 1..];
             num_lines += 1.;
         }
         pdf_layer.use_text(
@@ -364,6 +375,8 @@ fn add_group_athletes(
             &font,
         );
         x_coord += *alignments.get("name").expect("Value defined before");
+
+
         if competition_disciplines.len() < 6 {
             // Use double space for names if we have less than 6 disciplines
             x_coord += *alignments.get("name").expect("Value defined before");
