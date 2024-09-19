@@ -74,7 +74,7 @@ export function DisciplineEditButton(
                 onClick={startDiscipline}
                 className="border rounded-md shadow-black shadow-md p-2 m-4 bg-slate-400 active:shadow-none"
               >
-                Diszipline jetzt starten!
+                Disziplin jetzt starten!
               </div>
             }
             {state.discipline.state != "Finished" &&

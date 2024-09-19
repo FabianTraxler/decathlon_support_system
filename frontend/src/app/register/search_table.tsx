@@ -68,7 +68,7 @@ export default function AthleteTable({ athletes, searchQuery }:
 
 
     return (
-        <div className="text-sm 2xl:text-md font-normal overflow-scroll sm:max-h-[20rem] md:max-h-[35rem] 2xl:max-h-[45rem]">
+        <div className="text-sm 2xl:text-md font-normal overflow-scroll sm:max-h-[20rem] md:max-h-[30rem] 2xl:max-h-[45rem]">
             <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
                 <thead>
                     <tr>

@@ -35,13 +35,13 @@ async fn status() -> impl Responder {
     "Ok"
 }
 
-async fn save_db(
+async fn _save_db(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
 ) -> impl Responder {
     data.serialize();
     HttpResponse::Ok().body("Saved")
 }
-async fn load_db(
+async fn _load_db(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
 ) -> impl Responder {
     data.load();

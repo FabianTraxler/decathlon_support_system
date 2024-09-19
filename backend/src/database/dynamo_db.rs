@@ -348,9 +348,14 @@ impl AchievementStorage for DynamoDB {
                 let mut athletes = Vec::new();
 
                 for athlete_data in athlete_items{
-                    let athlete: Athlete =
-                             serde_dynamo::from_item(athlete_data.clone()).ok()?;
-                         athletes.push(athlete);
+                    let athlete: serde_dynamo::Result<Athlete> =
+                             serde_dynamo::from_item(athlete_data.clone());
+                    match athlete.ok() {
+                        Some(athlete) => athletes.push(athlete),
+                        None => {
+                            error!("Error parsing athlete {:?}", athlete_data);
+                        }
+                    }
                 }
 
                 Some(Group::new(
