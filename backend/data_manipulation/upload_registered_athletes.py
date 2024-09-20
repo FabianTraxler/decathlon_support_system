@@ -60,7 +60,6 @@ def upload_decathlon(google_sheets_name: str):
 
 	for _, row in tqdm(zehnkampf_df.iterrows(), total=len(zehnkampf_df)):
 		group_name = f"Gruppe {row['Gruppe']}"
-		if group_name != "Gruppe 6": continue
 
 		if (not isinstance(row["Vorname"], str) or (row["Name"].strip() == "" and row["Staffelname"].strip() == "")):
 			continue
