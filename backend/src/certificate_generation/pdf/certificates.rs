@@ -11,7 +11,7 @@ fn add_name(pdf_layer: &PdfLayerReference, font: &IndirectFontRef, athlete: &Ath
     let font_size = 36.0;
     let avg_font_width = 6.2; // Manually measured
     let name = athlete.full_name();
-    let mut x_pos = 105.0 - name.len() as f32 / 2.0 * avg_font_width;
+    let x_pos = 105.0 - name.len() as f32 / 2.0 * avg_font_width;
     //if name.len() > 20{
     //    x_pos -= name.len() as f32 / 2.0;
     //}
