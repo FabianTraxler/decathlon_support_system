@@ -64,6 +64,13 @@ impl AgeGroupSelector {
                 end_year,
                 athlete_type: String::from("Erwachsen"),
             })
+        } else if age_identifier == "Staffel" {
+            Ok(AgeGroupSelector {
+                gender: Some("S".to_string()),
+                start_year:0,
+                end_year: 200,
+                athlete_type: String::from("Erwachsen"),
+            })
         } else {
             error!("Neither 'M', 'W' or 'U' in age_identifier string");
             Err(())
@@ -84,6 +91,12 @@ impl PartialEq<Athlete> for AgeGroupSelector {
                     false
                 }
             } else {
+                false
+            }
+        }else if *self.gender.as_ref().expect("Gender should be set or if clause before should be triggered") == "S" {
+            if other.gender().contains("S-"){
+                true
+            }else{
                 false
             }
         } else {

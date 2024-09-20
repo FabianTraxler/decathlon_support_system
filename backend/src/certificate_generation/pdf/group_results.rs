@@ -328,10 +328,11 @@ fn add_group_athletes(
         );
         x_coord += *alignments.get("place").expect("Value defined before");
 
-        let gender = match athlete.age_group().as_ref() {
-            "Staffel" => "S".to_string(),
-            ref x => x.to_string(),
-        };
+        let mut gender = athlete.age_group();
+        if gender.contains("S-"){
+            gender = "S".to_string();
+        }
+
         pdf_layer.use_text(gender, font_size, Mm(x_coord), Mm(y_coord), font);
         if competition_type == CompetitionType::Decathlon {
             x_coord += *alignments.get("sex").expect("Value defined before");

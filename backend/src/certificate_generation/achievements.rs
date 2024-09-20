@@ -150,7 +150,7 @@ impl HeightResult {
 
             let mut leistung: f32 = self.final_result() as f32;
             match self.name.as_str() {
-                "Hochsprung" => match athlete.gender().as_str() {
+                "Hochsprung" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 1.84523;
                         b = 75.;
@@ -162,7 +162,7 @@ impl HeightResult {
                         c = 1.42;
                     }
                 },
-                "Stabhochsprung" => match athlete.gender().as_str() {
+                "Stabhochsprung" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 0.44125;
                         b = 100.;
@@ -189,7 +189,7 @@ impl HeightResult {
             let c: f32;
             let mut m: f32 = self.final_result() as f32;
             match self.name.as_str() {
-                "Hochsprung" => match athlete.gender().as_str() {
+                "Hochsprung" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 855.310049;
                         b = 62.;
@@ -316,7 +316,7 @@ impl DistanceResult {
             match self.name.as_str() {
                 "Weitsprung" => {
                     leistung = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 0.188807;
                             b = 210.;
@@ -331,7 +331,7 @@ impl DistanceResult {
                 }
                 "Kugelstoß" => {
                     leistung = self.final_result().to_f32();
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 56.0211;
                             b = 1.5;
@@ -346,7 +346,7 @@ impl DistanceResult {
                 }
                 "Diskuswurf" => {
                     leistung = self.final_result().to_f32();
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 12.3311;
                             b = 3.;
@@ -361,7 +361,7 @@ impl DistanceResult {
                 }
                 "Speerwurf" => {
                     leistung = self.final_result().to_f32();
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 15.9803;
                             b = 3.8;
@@ -391,7 +391,7 @@ impl DistanceResult {
             match self.name.as_str() {
                 "Weitsprung" => {
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 220.628792;
                             b = 180.;
@@ -412,7 +412,7 @@ impl DistanceResult {
                 }
                 "Schlagball" => {
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 22.;
                             b = 100.;
@@ -433,7 +433,7 @@ impl DistanceResult {
                 }
                 "Vortex" => {
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 15.9803;
                             b = 380.;
@@ -454,7 +454,7 @@ impl DistanceResult {
                 }
                 "Speerwurf" => { // Heptathlon
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 15.9803;
                             b = 380.;
@@ -617,7 +617,7 @@ impl TimeResult {
             
             let mut leistung: f32 = self.final_result().to_f32();
             match self.name.as_str() {
-                "100 Meter Lauf" => match athlete.gender().as_str() {
+                "100 Meter Lauf" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 17.857;
                         b = 21.;
@@ -629,7 +629,7 @@ impl TimeResult {
                         c = 1.81;
                     }
                 },
-                "400 Meter Lauf" => match athlete.gender().as_str() {
+                "400 Meter Lauf" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 1.34285;
                         b = 91.7;
@@ -641,7 +641,7 @@ impl TimeResult {
                         c = 1.81;
                     }
                 },
-                "110 Meter Hürden" => match athlete.gender().as_str() {
+                "110 Meter Hürden" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 5.5;
                         b = 31.5;
@@ -653,7 +653,7 @@ impl TimeResult {
                         c = 1.92;
                     }
                 },
-                "1500 Meter Lauf" => match athlete.gender().as_str() {
+                "1500 Meter Lauf" => match athlete.gender().replace("S-", "").as_str() {
                     "W" => {
                         a = 0.02883;
                         b = 535.;
@@ -682,7 +682,7 @@ impl TimeResult {
             match self.name.as_str() {
                 "60 Meter Lauf" => {
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 19.742424;
                             b = 1417.;
@@ -703,7 +703,7 @@ impl TimeResult {
                 }
                 "60 Meter Hürden" => {
                     m = self.final_result().to_f32() * 100.;
-                    match athlete.gender().as_str() {
+                    match athlete.gender().replace("S-", "").as_str() {
                         "W" => {
                             a = 20.0479;
                             b = 1700.;
@@ -799,7 +799,7 @@ impl TimeResult {
 
 
 fn get_age_factor(athlete: &Athlete, discipline_name: &str) -> f32{
-    let age_group = athlete.age_group();
+    let age_group = athlete.age_group().replace("S-", "");
 
     let age_discipline_factor = match age_group.as_str() {
         "M" => 1.0,

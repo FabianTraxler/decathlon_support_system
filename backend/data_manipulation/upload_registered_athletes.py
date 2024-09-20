@@ -11,6 +11,8 @@ import json
 from tqdm import tqdm
 import pytz
 import gspread
+
+
 def parse_args() -> Namespace:
 	parser = ArgumentParser(
 		prog="Insertion Tool for current registered athletes"
@@ -45,6 +47,8 @@ def upload_decathlon(google_sheets_name: str):
 	sheet = get_google_sheet(google_sheets_name)
 	worksheet = sheet.worksheet("10-Kampf")
 	zehnkampf_df = pd.DataFrame(worksheet.get_all_records())
+ 
+	starting_number = 1
 
 	# Upload / Create groups
 	groups = zehnkampf_df["Gruppe"].unique()
@@ -56,8 +60,9 @@ def upload_decathlon(google_sheets_name: str):
 
 	for _, row in tqdm(zehnkampf_df.iterrows(), total=len(zehnkampf_df)):
 		group_name = f"Gruppe {row['Gruppe']}"
+		if group_name != "Gruppe 6": continue
 
-		if (not isinstance(row["Vorname"], str) or row["Name"].strip() == ""):
+		if (not isinstance(row["Vorname"], str) or (row["Name"].strip() == "" and row["Staffelname"].strip() == "")):
 			continue
 
 		if isinstance(row["Geburtstag"], datetime):
@@ -77,8 +82,9 @@ def upload_decathlon(google_sheets_name: str):
 		gender = row["Geschlecht"]
 		if isinstance(gender, str):
 			gender = gender.upper()
-		else:
-			gender = "Staffel"
+
+		if row.get("Staffelname") is not None and str(row.get("Staffelname")).strip() != "":
+			gender = "S-" + gender
    		
 		if row["Bezahlt"] in [1,2,3]:
 			paid = True
@@ -87,7 +93,7 @@ def upload_decathlon(google_sheets_name: str):
 
 		upload_success = upload_athlete(row["Vorname"],
 										row["Name"],
-										None,
+										None, #starting_number,
 										birthday_timestamp,
 										gender,
 										group_name,
@@ -96,6 +102,7 @@ def upload_decathlon(google_sheets_name: str):
 										paid
                         				)
 		time.sleep(0.1)
+		starting_number += 1
 
 		if not upload_success:
 			print(f"Athlete: {row['Vorname']} not uploaded")
@@ -120,7 +127,8 @@ def upload_kids(google_sheets_name: str):
 			if not upload_group(group_name, "Triathlon"):
 				print(f"{group_name} not uploaded")
 
-
+	starting_number = 200
+ 
 	for _, row in tqdm(jugend_df.iterrows(), total=len(jugend_df)):
 		group_name = row["Gruppe"]
 		if group_name in ["U4", "U6"]:
@@ -164,7 +172,7 @@ def upload_kids(google_sheets_name: str):
 
 		upload_success = upload_athlete(row["Vorname"],
 										row["Name"],
-										None,
+										None, #starting_number,
 										birthday_timestamp,
 										gender,
 										group_name,
@@ -174,6 +182,7 @@ def upload_kids(google_sheets_name: str):
                         				)
 
 		time.sleep(0.1)
+		starting_number += 1
 
 		if not upload_success:
 			print(f"Athlete: {row['Name']} not uploaded")
