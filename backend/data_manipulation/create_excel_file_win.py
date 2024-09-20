@@ -296,11 +296,11 @@ def write_kids_results(worksheet, row: pd.Series, group_name: str, group_idx: in
 	if group_name == "U4/U6":
 		row_idx = 3 + group_idx
 	elif group_name == "U8":
-		row_idx = 43 + group_idx
+		row_idx = 33 + group_idx
 	elif group_name == "U10":
-		row_idx = 83 + group_idx
+		row_idx = 63 + group_idx
 	elif group_name == "U12":
-		row_idx = 133 + group_idx
+		row_idx = 123 + group_idx
 	else:
 		return
 
