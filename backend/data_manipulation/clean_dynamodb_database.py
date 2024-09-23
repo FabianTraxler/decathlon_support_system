@@ -30,7 +30,9 @@ def truncateTable(tableName):
     
     
 if __name__ == "__main__":
-    truncateTable("athlete_store")
-    truncateTable("authentication")
-    truncateTable("group_store")
-    truncateTable("time_group_store")
+    answer = input("Delete all tables of DynamoDB (yes/no)")
+    if answer == "yes":
+        truncateTable("athlete_store")
+        truncateTable("authentication")
+        truncateTable("group_store")
+        truncateTable("time_group_store")

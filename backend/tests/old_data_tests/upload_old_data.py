@@ -5,11 +5,13 @@ import pandas as pd
 from argparse import Namespace, ArgumentParser, BooleanOptionalAction
 from typing import Dict, Union, List, Tuple
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 import json
 from tqdm import tqdm
 
+
+URL = "https://app.jedermannzehnkampf.at"
 
 def parse_args() -> Namespace:
     parser = ArgumentParser(
@@ -112,14 +114,14 @@ def upload_decathlon_results(results: pd.DataFrame, config: Dict, skipped_discip
             achievements[long_name] = discipline
 
         if isinstance(row["GBDT"], datetime):
-            birth_day = row["GBDT"]
+            birth_day = row["GBDT"].replace(tzinfo=timezone.utc)
             birthday_timestamp = int(datetime.timestamp(birth_day))
         elif isinstance(row["GBDT"], str):
             datetime_str = row["GBDT"].strip().split(" ")[0]
             if "." in datetime_str:
-                birth_day = datetime.strptime(datetime_str, '%d.%m.%Y')
+                birth_day = datetime.strptime(datetime_str, '%d.%m.%Y').replace(tzinfo=timezone.utc)
             elif "-" in datetime_str:
-                birth_day = datetime.strptime(datetime_str, '%Y-%m-%d')
+                birth_day = datetime.strptime(datetime_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
             birthday_timestamp = int(datetime.timestamp(birth_day))
         else:
             birth_day = datetime.strptime("1.1.1990", '%d.%m.%Y')
@@ -397,7 +399,7 @@ def upload_athlete(name: str, surname: str,
                    achievements: Dict[str, Dict[str, Dict[str, Union[str, float]]]],
                    group_name: str, competition_type: str,
                    config: Dict) -> bool:
-    url = "http://127.0.0.1:3001/api/athlete"
+    url = URL + "/api/athlete"
     name = str(name).replace(".", " ")
     surname = str(surname).replace(".", " ")
     if isinstance(surname, float) or surname == "nan":
@@ -424,7 +426,7 @@ def upload_athlete(name: str, surname: str,
                              json=post_body)
     if response.ok:
         ## Add to group
-        url = "http://127.0.0.1:3001/api/group"
+        url = URL + "/api/group"
         post_body = {
             "athlete_ids": [
                 {
@@ -456,7 +458,7 @@ def upload_athlete(name: str, surname: str,
 
 
 def upload_group(name: str, competition_type: str) -> bool:
-    url = "http://127.0.0.1:3001/api/group"
+    url = URL + "/api/group"
     post_body = {
         "name": name,
         "athlete_ids": [],
@@ -468,7 +470,7 @@ def upload_group(name: str, competition_type: str) -> bool:
 
 
 def upload_timetable(timetable: Dict) -> bool:
-    url = "http://127.0.0.1:3001/api/time_table"
+    url = URL + "/api/time_table"
     post_body = timetable
     response = requests.post(url,
                              json=post_body)
@@ -533,7 +535,7 @@ def simulate_in_progress(timetable: Dict, selected_time: Dict) -> Tuple[Dict, bo
 
 
 def update_discipline_state(group_name: str, name: str, state: str):
-    url = f"http://127.0.0.1:3001/api/discipline_state?name={group_name}"
+    url = URL + f"/api/discipline_state?name={group_name}"
     post_body = {
         "name": name,
         "state": state
@@ -562,7 +564,7 @@ def main(args: Namespace):
     }
 
     if config["timetable"]:
-        with open(args.timetable_file) as f:
+        with open(args.timetable_file, encoding='utf-8') as f:
             timetable = json.load(f)
         upload_timetable(timetable)
 
