@@ -280,17 +280,17 @@ impl TimeGroup {
         selected_discipline
     }
     pub fn get_current_discipline(&mut self) -> &Discipline {
-        let current_discipline = &self.disciplines[self.current_discipline];
-        match current_discipline.state {
-            DisciplineState::Active => current_discipline,
-            DisciplineState::BeforeStart => current_discipline,
-            DisciplineState::Finished => {
-                if self.current_discipline < self.disciplines.len() - 1 {
+        while self.current_discipline < self.disciplines.len() -1 {
+            let active_discipline: &Discipline = &self.disciplines[self.current_discipline];
+            match active_discipline.state {
+                DisciplineState::Active => break,
+                DisciplineState::BeforeStart => break,
+                DisciplineState::Finished => {
                     self.current_discipline += 1;
                 }
-                &self.disciplines[self.current_discipline]
             }
         }
+        &self.disciplines[self.current_discipline]
     }
     pub fn get_mut_current_discipline(&mut self) -> &mut Discipline {
         match self.disciplines[self.current_discipline].state {
