@@ -56,11 +56,25 @@ pub struct Discipline {
     state: DisciplineState,
     starting_order: StartingOrder,
     discipline_type: DisciplineType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    time_started: Option<DateTime<Utc>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    time_finished: Option<DateTime<Utc>>
 }
 
 impl Discipline {
     fn change_state(&mut self, new_state: DisciplineState) {
+        match new_state {
+            DisciplineState::Active => {
+                self.time_started = Some(chrono::offset::Utc::now())
+            },
+            DisciplineState::BeforeStart => {},
+            DisciplineState::Finished => {
+                self.time_finished = Some(chrono::offset::Utc::now())
+            }
+        }
         self.state = new_state;
+
     }
 
     pub fn name(&self) -> &str {
@@ -244,6 +258,8 @@ impl TimeGroup {
                         state: DisciplineState::BeforeStart,
                         starting_order,
                         discipline_type,
+                        time_finished: None,
+                        time_started: None
                     };
 
                     disciplines.push(discipline)
