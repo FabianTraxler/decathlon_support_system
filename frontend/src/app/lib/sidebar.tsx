@@ -161,8 +161,8 @@ function GroupSelection(props: GroupProps) {
     }
 
     return (
-        <div className="flex w-full text-xl sm:text-lg pl-2 pt-1 pb-1 text-center hover:bg-white">
-            <button onClick={(e) => handle_click((e.target as HTMLTextAreaElement).value)} value={props.name}>{props.name} </button>
+        <div onClick={(e) => handle_click(props.name)} className="flex w-full text-xl sm:text-lg pl-2 pt-1 pb-1 text-center hover:bg-white hover:cursor-pointer">
+            <button  value={props.name}>{props.name} </button>
         </div>
     )
 }
