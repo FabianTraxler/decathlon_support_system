@@ -101,7 +101,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
         var disciplines: [string, string, string][] = [];
         if (group_name == "U16") {
           disciplines = hepathlon_disciplines;
-        } else if (group_name == "U14") {
+        } else if (["U14/U16", "U14"].includes(group_name)) {
           disciplines = pentathlon_disciplines;
         } else {
           disciplines = triathlon_discplines

@@ -336,37 +336,7 @@
         "time": "16:30, Sonntag"
       }
     },
-    "U16": {
-      "100 Meter Hürden": {
-        "location": "Start 100m",
-        "time": "9:45, Sonntag"
-      },
-      "Hochsprung": {
-        "location": "Hoch 3",
-        "time": "10:15, Sonntag"
-      },
-      "Kugelstoß": {
-        "location": "Kugel 2",
-        "time": "12:00, Sonntag"
-      },
-      "100 Meter Lauf": {
-        "location": "Start 100m",
-        "time": "12:45, Sonntag"
-      },
-      "Weitsprung": {
-        "location": "Weit 3",
-        "time": "13:15, Sonntag"
-      },
-      "Speerwurf": {
-        "location": "Speer / Vortex",
-        "time": "14:00, Sonntag"
-      },
-      "1000 Meter Lauf": {
-        "location": "Start 1200 / 1000",
-        "time": "14:45, Sonntag"
-      }
-    },
-    "U14": {
+    "U14/U16": {
       "60 Meter Hürden": {
         "location": "Start 60",
         "time": "11:00, Sonntag"
@@ -501,9 +471,9 @@
       "role": "group",
       "group": "U16"
     },
-    "JU14": {
+    "JU1416": {
       "role": "group",
-      "group": "U14"
+      "group": "U14/U16"
     },
     "JU12": {
       "role": "group",
