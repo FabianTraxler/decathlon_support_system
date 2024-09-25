@@ -130,6 +130,8 @@ function AddAthlete({ groupName }: { groupName: string }) {
                         let age_group = parseInt(string_val.replace("U", ""))
                         if(string_val == "U4/U6"){
                             age_group = 6
+                        }else if (string_val == "U14/U16"){
+                            age_group = 16
                         }
                         if (age_group <= 12) {
                             comptetion_name = "Triathlon"
@@ -139,7 +141,7 @@ function AddAthlete({ groupName }: { groupName: string }) {
                             comptetion_name = "Heptathlon"
                         }
 
-                        if ((age_group - age <= 0 || age_group - age > 2) && (age_group != 6 || age >= 6)){
+                        if ((age_group - age <= 0 || age_group - age > 2) && (age_group != 6 || age >= 6) && (age_group != 16 || (12 > age || age >= 16))){
                             parsing_error = [true, "Falsche Altersklasse ausgewählt für angegebenen Jahrgang"]
                         }
                     }
