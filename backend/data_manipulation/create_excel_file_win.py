@@ -124,7 +124,7 @@ def write2excel(results_df: pd.DataFrame, empty_excel_file_path: str, filled_exc
 						print("Error uploading athlete from group ", group_name, row.get("athlete_id"))
 						print("Error:", e)
 					group_idx += 1
-			elif "U" in group_name and group_name != "U14" and group_name != "U16":
+			elif "U" in group_name and group_name != "U14" and group_name != "U16" and group_name != "U14/U16":
 				group_idx = 0
 				group_df = group_df.sort_values(by="gender")
 				for idx, row in tqdm.tqdm(group_df.iterrows(), total=len(group_df)):
@@ -134,7 +134,7 @@ def write2excel(results_df: pd.DataFrame, empty_excel_file_path: str, filled_exc
 						print("Error uploading athlete from group ", group_name, row.get("athlete_id"))
 						print("Error:", e)
 					group_idx += 1
-			elif group_name in ["U14", "U16"]:
+			elif group_name in ["U14", "U16", "U14/U16"]:
 				group_idx = 0
 				group_df = group_df.sort_values(by="gender")
 				for idx, row in tqdm.tqdm(group_df.iterrows(), total=len(group_df)):
@@ -220,7 +220,7 @@ def write_decathlon_athlete(worksheet, row: pd.Series, group_number: int, group_
 
 
 def write_youth_results(worksheet, row: pd.Series, group_name: str, group_idx: int):
-	if group_name == "U14":
+	if group_name == "U14" or group_name == "U14/U16":
 		row_idx = 243 + group_idx
 	elif group_name == "U16":
 		row_idx = 273 + group_idx
@@ -413,7 +413,7 @@ def get_groups():
 if __name__ == "__main__":
 	# Datei-Pfade
 	xls_file_path = '../tests/excel_files/Adressen_empty.xls'
-	xls_file_path_filled = '../tests/excel_files/Adressen_filled.xls'
+	xls_file_path_filled = '../tests/excel_files/Adressen_filled2.xls'
 
 	boto3.setup_default_session(profile_name='jzk_app')
 
