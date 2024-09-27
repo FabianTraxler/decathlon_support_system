@@ -28,7 +28,7 @@ def get_groups():
     dynamodb = boto3.client("dynamodb")
 
     response = dynamodb.scan(
-		TableName = "athlete_store_backup"
+		TableName = "athlete_store"
     )
 
     athletes_list = []
@@ -56,7 +56,7 @@ def get_groups():
     athletes["Bezahlt"] = athletes["Bezahlt"].apply(lambda x: "Ja" if x else "Nein" )
     
     response = dynamodb.scan(
-		TableName = "group_store_backup"
+		TableName = "group_store"
 	)
 
     athletes_list = []

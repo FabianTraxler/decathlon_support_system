@@ -66,6 +66,9 @@ def upload_decathlon(google_sheets_name: str):
 		if (not isinstance(row["Vorname"], str) or (row["Name"].strip() == "" and row["Staffelname"].strip() == "")):
 			continue
 
+		if row["Absage"] == 1:
+			continue
+
 		if isinstance(row["Geburtstag"], datetime):
 			birth_day = row["Geburtstag"]
 			birthday_timestamp = int(datetime.timestamp(birth_day))
@@ -142,6 +145,9 @@ def upload_kids(google_sheets_name: str):
 			competition_type = "Triathlon"
 
 		if (not isinstance(row["Vorname"], str) and np.isnan(row["Name"])) or row["Vorname"] == "":
+			continue
+
+		if row["Absage"] == 1:
 			continue
 
 		if isinstance(row["Geburtsdatum"], datetime):
