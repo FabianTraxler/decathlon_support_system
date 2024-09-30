@@ -12,7 +12,7 @@ from tqdm import tqdm
 import pytz
 import gspread
 
-URL = "https://app.jedermannzehnkampf.at"
+URL = "https://backup.jedermannzehnkampf.at"
 
 
 def parse_args() -> Namespace:
