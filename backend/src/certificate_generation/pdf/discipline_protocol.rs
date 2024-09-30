@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use printpdf::{IndirectFontRef, Line, Mm, PdfDocumentReference, PdfLayerReference, Point, TextRenderingMode};
 use printpdf::BuiltinFont::{Helvetica, HelveticaBold};
-use crate::certificate_generation::{Achievement, Athlete, Float, Group};
+use crate::certificate_generation::{Achievement, Athlete, CompetitionType, Float, Group};
 use crate::certificate_generation::pdf::{DATE, COMPETITION_NUMBER};
 use crate::certificate_generation::pdf::pdf_generation::{add_pdf_page, LEFT_PAGE_EDGE, setup_pdf};
 use crate::time_planner::{Discipline, DisciplineType, Run, StartingOrder};
@@ -366,14 +366,22 @@ fn add_track_discipline(pdf: &PdfDocumentReference, mut current_layer: PdfLayerR
                                 "".to_string()
                             }
                         }).collect();
-                        let mut run_athletes: Vec<Athlete> = all_athletes.iter().cloned().filter(|athlete| run_names.contains(&athlete.full_name())).collect();
-                        run_athletes.sort_by_key(|item| athletes.iter().position(|x| {
-                            if let Some(athlete) = x {
-                                *athlete.full_name() == *item.full_name()
-                            }else{
-                                false
+
+                        let mut run_athletes: Vec<Athlete> = vec![];
+
+                        for athlete_name in run_names {
+                            let index = all_athletes.iter().position(|r| r.full_name() == athlete_name);
+                            match index {
+                                Some(idx) => {
+                                    run_athletes.push(all_athletes[idx].clone())
+                                },
+                                None => {
+                                    run_athletes.push(Athlete::new("", "", None, "", HashMap::new(), CompetitionType::Decathlon, None, None, None))
+                                }
                             }
-                    }).unwrap());
+                            
+                        
+                        }
                         run_athletes
                     },
                     None => {

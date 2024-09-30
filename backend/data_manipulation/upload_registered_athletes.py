@@ -12,6 +12,8 @@ from tqdm import tqdm
 import pytz
 import gspread
 
+URL = "https://backup.jedermannzehnkampf.at"
+
 
 def parse_args() -> Namespace:
 	parser = ArgumentParser(
@@ -62,6 +64,9 @@ def upload_decathlon(google_sheets_name: str):
 		group_name = f"Gruppe {row['Gruppe']}"
 
 		if (not isinstance(row["Vorname"], str) or (row["Name"].strip() == "" and row["Staffelname"].strip() == "")):
+			continue
+
+		if row["Absage"] == 1:
 			continue
 
 		if isinstance(row["Geburtstag"], datetime):
@@ -132,14 +137,17 @@ def upload_kids(google_sheets_name: str):
 		group_name = row["Gruppe"]
 		if group_name in ["U4", "U6"]:
 			group_name = "U4/U6"
-		if group_name == "U14":
+		
+		if group_name in ["U14", "U16"]:
+			group_name = "U14/U16"
 			competition_type ="Pentathlon"
-		elif group_name == "U16":
-			competition_type = "Heptathlon"
 		else:
 			competition_type = "Triathlon"
 
 		if (not isinstance(row["Vorname"], str) and np.isnan(row["Name"])) or row["Vorname"] == "":
+			continue
+
+		if row["Absage"] == 1:
 			continue
 
 		if isinstance(row["Geburtsdatum"], datetime):
@@ -191,7 +199,7 @@ def upload_kids(google_sheets_name: str):
 def upload_athlete(name: str, surname: str,
 				   starting_number: int, birth_day: int, gender: str,
 				   group_name: str, competition_type: str, t_shirt: str, paid: bool) -> bool:
-	url = "http://127.0.0.1:3001/api/athlete"
+	url = URL + "/api/athlete"
 	name = str(name).replace(".", " ")
 	surname = str(surname).replace(".", " ")
 	if isinstance(surname, float) or surname == "nan":
@@ -218,7 +226,7 @@ def upload_athlete(name: str, surname: str,
 							 json=post_body)
 	if response.ok:
 		## Add to group
-		url = "http://127.0.0.1:3001/api/group"
+		url = URL + "/api/group"
 		post_body = {
 			"athlete_ids": [
 				{
@@ -251,7 +259,7 @@ def upload_athlete(name: str, surname: str,
 
 
 def upload_group(name: str, competition_type: str) -> bool:
-	url = "http://127.0.0.1:3001/api/group"
+	url = URL + "/api/group"
 	post_body = {
 		"name": name,
 		"athlete_ids": [],
@@ -266,7 +274,7 @@ def upload_timetable(timetable_path: str) -> bool:
 	with open(timetable_path) as f:
 		timetable = json.load(f)
 
-	url = "http://127.0.0.1:3001/api/time_table"
+	url = URL + "/api/time_table"
 	post_body = timetable
 	response = requests.post(url,
 							 json=post_body)
