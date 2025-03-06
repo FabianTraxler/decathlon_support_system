@@ -1,5 +1,5 @@
 # Build stage
-FROM rust:1.78-buster as builder
+FROM rust:1.85-bullseye as builder
 
 WORKDIR /app
 
