@@ -1,4 +1,4 @@
-use super::Athlete;
+use super::{Athlete, CompetitionType};
 use chrono::prelude::{Datelike, Utc};
 use log::error;
 
@@ -20,7 +20,7 @@ pub struct AgeGroupSelector {
     pub gender: Option<String>,
     pub start_year: i32,
     pub end_year: i32,
-    pub athlete_type: String,
+    pub competition_type: CompetitionType
 }
 
 impl AgeGroupSelector {
@@ -31,11 +31,21 @@ impl AgeGroupSelector {
             let max_age = parse_age_group(age_identifier)?;
             let start_year = current_year - max_age + 1;
             let end_year = start_year + 1;
+            let competition_type: CompetitionType;
+
+            if max_age <= 12 {
+                competition_type = CompetitionType::Triathlon
+            }else if max_age <= 14 {
+                competition_type = CompetitionType::Pentathlon
+            }else {
+                competition_type = CompetitionType::Heptathlon
+            }
+
             Ok(AgeGroupSelector {
                 gender: None,
                 start_year,
                 end_year,
-                athlete_type: String::from("Jugend"),
+                competition_type: competition_type
             })
         } else if age_identifier.contains("M") || age_identifier.contains("W") {
             let gender = age_identifier
@@ -50,10 +60,14 @@ impl AgeGroupSelector {
             match min_age {
                 Ok(min_age) => {
                     end_year = current_year - min_age;
-                    start_year = end_year - 10;
+                    if min_age == 70 {
+                        start_year = 0; // All athletes older than 70
+                    }else{
+                        start_year = end_year - 10;
+                    }
                 }
                 Err(_) => {
-                    end_year = current_year - 16;
+                    end_year = current_year;
                     start_year = current_year - 40;
                 }
             };
@@ -62,14 +76,14 @@ impl AgeGroupSelector {
                 gender: Some(gender.to_string()),
                 start_year,
                 end_year,
-                athlete_type: String::from("Erwachsen"),
+                competition_type: CompetitionType::Decathlon
             })
         } else if age_identifier == "Staffel" {
             Ok(AgeGroupSelector {
                 gender: Some("S".to_string()),
                 start_year:0,
                 end_year: 200,
-                athlete_type: String::from("Erwachsen"),
+                competition_type: CompetitionType::Decathlon
             })
         } else {
             error!("Neither 'M', 'W' or 'U' in age_identifier string");
@@ -85,7 +99,7 @@ impl PartialEq<Athlete> for AgeGroupSelector {
         {
             if let Some(birth_date) = other.birth_date() {
                 let birth_year = birth_date.year();
-                if self.start_year <= birth_year && birth_year <= self.end_year {
+                if self.start_year < birth_year && birth_year <= self.end_year && other.competition_type() == &self.competition_type {
                     true
                 } else {
                     false

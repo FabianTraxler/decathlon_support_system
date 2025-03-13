@@ -377,6 +377,11 @@ fn add_group_athletes(
         );
         x_coord += *alignments.get("name").expect("Value defined before");
 
+        let first_line_y_coord = y_coord;
+        if num_lines > 1. {
+            y_coord = y_coord - (num_lines - 1.) * line_height * 0.5
+        }
+
 
         if competition_disciplines.len() < 6 {
             // Use double space for names if we have less than 6 disciplines
@@ -390,8 +395,14 @@ fn add_group_athletes(
         pdf_layer.use_text(birthyear, font_size, Mm(x_coord), Mm(y_coord), &font);
         x_coord += *alignments.get("birthyear").expect("Value defined before");
 
+        let points ;
+        if group.name().contains("U4/U6") || group.name().contains("U8"){
+            points = "".to_string();
+        }else{
+            points = athlete.total_point().to_string();
+        }
         pdf_layer.use_text(
-            athlete.total_point().to_string(),
+            points,
             font_size,
             Mm(x_coord),
             Mm(y_coord),
@@ -408,11 +419,15 @@ fn add_group_athletes(
             let (achievement_string, points_string) = match athlete.get_achievement(discipline_name)
             {
                 Some(achievement) => {
-                    if achievement.final_result() == "" {
+                    if achievement.final_result() == "" || achievement.final_result() == "0,00"{
                         ("".to_string(), "".to_string())
                     } else {
                         let (fmt_final_result, _) = achievement.fmt_final_result();
-                        (fmt_final_result, achievement.points(&athlete).to_string())
+                        if group.name().contains("U4/U6") || group.name().contains("U8"){
+                            (fmt_final_result, "".to_string())
+                        }else{
+                            (fmt_final_result, achievement.points(&athlete).to_string())
+                        }
                     }
                 }
                 None => ("".to_string(), "".to_string()),
@@ -441,14 +456,14 @@ fn add_group_athletes(
                 (
                     Point::new(
                         Mm(LEFT_PAGE_EDGE - 1.),
-                        Mm(y_coord - 1. - line_height * (num_lines - 1.)),
+                        Mm(first_line_y_coord - 1. - line_height * (num_lines - 1.)),
                     ),
                     false,
                 ),
                 (
                     Point::new(
                         Mm(x_coord - 1.),
-                        Mm(y_coord - 1. - line_height * (num_lines - 1.)),
+                        Mm(first_line_y_coord - 1. - line_height * (num_lines - 1.)),
                     ),
                     false,
                 ),
@@ -456,7 +471,7 @@ fn add_group_athletes(
             is_closed: true,
         });
         pdf_layer.set_outline_thickness(1.);
-        y_coord = y_coord - line_height * num_lines;
+        y_coord = first_line_y_coord - line_height * num_lines;
 
         if y_coord < 10. {
             add_vertical_lines(&pdf_layer, alignments, group, y_coord + line_height - 1.);
