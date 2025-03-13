@@ -14,7 +14,7 @@ services:
       restart: always
   rust_backend:
       container_name: rust_backend
-      image: fabsl22/decathlon_support_system:backend_v0.1
+      image: fabsl22/decathlon_support_system:backend_v0.2
       build:
         context: ./backend
         dockerfile: backend.dockerfile
@@ -26,7 +26,7 @@ services:
       ports:
         - '3001:3001'
       volumes:
-        - /home/fabian/.aws:/root/.aws
+        - /Users/fabian/.aws:/root/.aws
       restart: always
   reverse_proxy:
     container_name: reverse_proxy

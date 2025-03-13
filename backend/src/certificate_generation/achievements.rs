@@ -837,29 +837,14 @@ fn get_age_factor(athlete: &Athlete, discipline_name: &str) -> f32{
             match discipline_name {
                 "100 Meter Lauf" => 0.8414,
                 "400 Meter Lauf" => 0.8154,
-                "1500 Meter Lauf" => 0.8379,
-                "110 Meter Hürden" => 0.9463,
+                "1500 Meter Lauf" => 0.7939,
+                "110 Meter Hürden" => 0.8379,
                 "Weitsprung" => 1.4078,
                 "Hochsprung" => 1.3025,
                 "Stabhochsprung" => 1.4236,
                 "Kugelstoß" => 1.2482,
                 "Diskuswurf" => 1.0628,
                 "Speerwurf" => 1.4140,
-                _ => 1.0
-            }
-        },
-        "M70" => {
-            match discipline_name {
-                "100 Meter Lauf" => 0.7782,
-                "400 Meter Lauf" => 0.7460,
-                "1500 Meter Lauf" => 0.7079,
-                "110 Meter Hürden" => 0.7665,
-                "Weitsprung" => 1.6482,
-                "Hochsprung" => 1.4832,
-                "Stabhochsprung" => 1.6949,
-                "Kugelstoß" => 1.2806,
-                "Diskuswurf" => 1.2781,
-                "Speerwurf" => 1.6801,
                 _ => 1.0
             }
         },
@@ -906,21 +891,6 @@ fn get_age_factor(athlete: &Athlete, discipline_name: &str) -> f32{
                 "Kugelstoß" => 1.5015,
                 "Diskuswurf" => 1.5961,
                 "Speerwurf" => 1.6118,
-                _ => 1.0
-            }
-        },
-        "W70" => {
-            match discipline_name {
-                "100 Meter Lauf" => 0.7396,
-                "400 Meter Lauf" => 0.6602,
-                "1500 Meter Lauf" => 0.6635,
-                "110 Meter Hürden" => 0.6362,
-                "Weitsprung" => 1.6943,
-                "Hochsprung" => 1.5795,
-                "Stabhochsprung" => 1.7854,
-                "Kugelstoß" => 1.8559,
-                "Diskuswurf" => 2.0542,
-                "Speerwurf" => 2.0992,
                 _ => 1.0
             }
         },
