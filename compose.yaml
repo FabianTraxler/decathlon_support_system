@@ -1,7 +1,7 @@
 services:
   next_frontend:
       container_name: next_frontend
-      image: fabsl22/decathlon_support_system:frontend_v0.1
+      image: fabsl22/decathlon_support_system:frontend_v0.2
       build:
         context: ./frontend
         dockerfile: frontend.dockerfile
