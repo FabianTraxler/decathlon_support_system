@@ -67,6 +67,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         athlete_result.third_try = parseFloat(achievement.third_try.integral + "." + achievement.third_try.fractional)
                         all_results.push(athlete_result.third_try)
                     }
+                    if (all_results.length > 0){
+                        athlete_result.best_try = Math.max(...all_results)
+                    }
                     if (achievement.final_result) {
                         if (all_results.length == 0 || Math.max(...all_results) == -1) {
                             athlete_result.first_try = parseFloat(achievement.final_result.integral + "." + achievement.final_result.fractional)
@@ -506,7 +509,7 @@ function Try({ try_number, try_value, current_try, selected_try, save_value, set
                     selected_try &&
                     <div className="flex flex-row items-center justify-center h-full p-3">
                         {
-                            (try_value != "") &&
+                            (try_value != "" && try_value != -1) &&
                             <div className="flex items-center justify-center border rounded-md shadow-lg h-full w-[75%] border-stw_green active:bg-slate-100"
                                 onClick={() => save_value(try_number, try_value)}
                             >
@@ -514,7 +517,7 @@ function Try({ try_number, try_value, current_try, selected_try, save_value, set
                             </div>
                         }
                         {
-                            (try_value == "") &&
+                            (try_value == "" || try_value == -1) &&
                             <div className="flex items-center justify-center  border rounded-md shadow-lg h-full  w-[75%] border-stw_orange active:bg-slate-100"
                                 onClick={() => save_value(try_number, -1)}
                             >
