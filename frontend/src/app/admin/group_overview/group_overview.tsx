@@ -7,12 +7,23 @@ import Title from "../../lib/title";
 import { decathlon_age_groups, groups, youth_groups } from '@/app/lib/config';
 import { usePathname, useRouter } from 'next/navigation';
 import Disciplines from './disciplines/disciplines';
+import { SearchQuery } from '@/app/lib/search';
 
-export default function Overview() {
+export default function Overview( {searchQuery }: {searchQuery?: SearchQuery}) {
   let searchParams = useSearchParams();
   let groupName = searchParams.get('group') ?? "Admin Übersicht";
 
-  if (groupName == "Admin Übersicht") {
+  if (searchQuery && searchQuery.global && searchQuery.queries.length > 0) {
+    return (
+      <div className="flex-row w-full h-[95vh] overflow-scroll sm:h-full">
+        <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll sm:h-screen">
+          <Title title="Globale Suche"></Title>
+          <GlobalSearch searchQuery={searchQuery}></GlobalSearch>
+        </div>
+      </div>
+    )
+  }
+  else if (groupName == "Admin Übersicht") {
     return (
       <div className="flex-row w-full h-[95vh] overflow-scroll sm:h-full">
         <div className="flex flex-col items-center p-4 2xl:p-10 overflow-scroll sm:h-screen">
@@ -26,7 +37,7 @@ export default function Overview() {
       <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
         <Title title={groupName}></Title>
         <PrintUtilities></PrintUtilities>
-        <Athletes group_name={groupName}></Athletes>
+        <Athletes group_name={groupName} query={searchQuery}></Athletes>
 
         {(groupName.startsWith("Gruppe") || groupName.startsWith("U")) && 
           <Disciplines group_name={groupName}></Disciplines>
@@ -86,6 +97,22 @@ function GroupOverview() {
           })}
         </div>
       </div>
+    </div>
+  )
+}
+
+function GlobalSearch({searchQuery}: {searchQuery?: SearchQuery}){
+  if (searchQuery == null){
+    return (
+      <div>
+        <p>Keine Suchparameter angegeben</p>
+      </div>
+    )
+  }
+
+  return (
+      <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
+          <Athletes group_name="all" query={searchQuery} show_athletes={true}></Athletes>
     </div>
   )
 }

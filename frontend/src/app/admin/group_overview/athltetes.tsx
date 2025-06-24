@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import Achievement from './achievement';
 import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, groups, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines, youth_groups } from '@/app/lib/config';
-import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
+import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes, fetch_all_athletes } from '@/app/lib/athlete_fetching';
 import { PopUp } from '@/app/lib/achievement_edit/popup';
 import { AthleteID, Discipline } from '@/app/lib/interfaces';
 import { useSearchParams } from 'next/navigation';
+import { AthleteQuery, SearchQuery } from '@/app/lib/search';
 
-export default function Athletes({ group_name }: { group_name: string }) {
-  const [showAthletes, set_showAthletes] = useState(false);
+export default function Athletes({ group_name, query, show_athletes = false }: { group_name: string,  query?: SearchQuery, show_athletes?: boolean}) {
+  const [showAthletes, set_showAthletes] = useState(show_athletes);
 
   return (
     <div className="items-center justify-between p-1 w-full ">
@@ -26,7 +27,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
           </button>
         </div>
         <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
-          <GroupAthletes group_name={group_name}></GroupAthletes>
+          <GroupAthletes group_name={group_name} query={query}></GroupAthletes>
         </div>
       </div>
     </div>
@@ -35,10 +36,22 @@ export default function Athletes({ group_name }: { group_name: string }) {
 }
 
 
-function GroupAthletes({ group_name }: { group_name: string }) {
-  const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
+function GroupAthletes({ group_name, query }: { group_name: string, query?: SearchQuery }) {
+  const [athleteState, set_athleteState] = useState<{ 
+    allAthletes: Athlete[], 
+    selectedAthletes?: Athlete[] |  null, 
+    disciplines: [string, string, string][],
+    sort_by: string,
+    sort_ascending: boolean
+  }>({ 
+    allAthletes: [], 
+    selectedAthletes: null, 
+    disciplines: [],
+    sort_by: "Name",
+    sort_ascending: true
+  });
   const [disciplineEdit, setDisciplineEdit] = useState<{ discipline: string, athlete_order: string[] }>({ discipline: "", athlete_order: [] })
-  const [sorted, setSorted] = useState({ name: "Name", ascending: true })
+  //const [sorted, setSorted] = useState({ name: "Name", ascending: true })
 
   const discipline_edit_mode = function (selected_discipline: string) {
     if (selected_discipline != disciplineEdit.discipline) {
@@ -95,7 +108,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     const getData = function () {
       if (group_name.startsWith("Gruppe")) {
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: decathlon_disciplines }))
         })
       } else if (group_name.startsWith("U")) {
         var disciplines: [string, string, string][] = [];
@@ -107,34 +120,39 @@ function GroupAthletes({ group_name }: { group_name: string }) {
           disciplines = triathlon_discplines
         }
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: disciplines }))
         })
 
+      }else if (group_name == "all") 
+      {
+        fetch_all_athletes((athletes: Athlete[]) => {
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: [] }))
+        })
       } else {
         fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: decathlon_disciplines }))
         })
       }
     }
 
     getData()
-
     const interval = setInterval(() => getData(), 2000)
 
     return () => clearInterval(interval)
   }, [group_name])
+  
 
   const sortColumn = function (col_name: string) {
-    if (sorted.name == col_name) {
-      setSorted({ name: col_name, ascending: !sorted.ascending })
+    if (athleteState.sort_by == col_name) {
+      set_athleteState((prevState) => ({ ...prevState, sort_by: col_name, sort_ascending: !athleteState.sort_ascending }))
     } else {
-      setSorted({ name: col_name, ascending: false })
+      set_athleteState((prevState) => ({ ...prevState, sort_by: col_name, sort_ascending: false }))
     }
   }
 
-  const sortAthletes = function (athletes: Athlete[]): Athlete[] {
+  const sortAthletes = function (athletes: Athlete[], sort_by: string, sort_ascending: boolean): Athlete[] {
     if (disciplineEdit.discipline == "" || disciplineEdit.athlete_order.length == 0) {
-      athletes.sort((a, b) => sort_athletes(a, b, sorted));
+      athletes.sort((a, b) => sort_athletes(a, b, {name: sort_by, ascending: sort_ascending}));
     } else {
       // sort athletes like the discipline athlete order for easier manual input
       athletes.sort((a, b) => disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname) - disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname))
@@ -142,37 +160,51 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     return athletes
   }
 
-  athleteState.athletes = sortAthletes(athleteState.athletes);
+  let selectedAthletes = [];
 
+  if(query != null){
+    let athlete_query = new AthleteQuery(query)
+    let selected_athletes: Athlete[] = [];
+
+    athleteState.allAthletes.forEach(athlete => {
+        if (athlete_query.matchAthlete(athlete)) {
+            selected_athletes.push(athlete)
+        } 
+      });
+      
+    selectedAthletes = sortAthletes(selected_athletes, athleteState.sort_by, athleteState.sort_ascending)
+  }else{
+    selectedAthletes = sortAthletes(athleteState.allAthletes, athleteState.sort_by, athleteState.sort_ascending)
+  }
 
   return (
     <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
       <thead>
         <tr>
           <th onClick={() => sortColumn("#")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>#</span>
-            {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "#" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "#" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "#" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
-          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Klasse</span>
-            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
+          <th onClick={() => sortColumn("age_group")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Klasse</span>
+            {athleteState.sort_by != "age_group" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "age_group" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "age_group" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("Name")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Name</span>
-            {sorted.name != "Name" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Name" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Name" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "Name" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "Name" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "Name" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("JG")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>JG</span>
-            {sorted.name != "JG" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "JG" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "JG" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "JG" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("Summe")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Summe</span>
-            {sorted.name != "Summe" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Summe" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Summe" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "Summe" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "Summe" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "Summe" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           {athleteState.disciplines.map((info) => {
             return <th key={info[0]} onClick={(_) => {
@@ -186,10 +218,13 @@ function GroupAthletes({ group_name }: { group_name: string }) {
         </tr>
       </thead>
       <tbody>
-        {athleteState.athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
-            disciplineEdit={disciplineEdit.discipline}></AthleteTableRow>
-        })}
+        {
+          selectedAthletes.map((athlete, i) => {
+                return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
+                  disciplineEdit={disciplineEdit.discipline}></AthleteTableRow>
+          })
+        }
+          
       </tbody>
     </table>
   )

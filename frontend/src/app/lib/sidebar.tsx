@@ -4,11 +4,14 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { decathlon_age_groups, groups, youth_groups } from "../lib/config";
 import { signOut } from "@/auth";
+import { Search, SearchQuery } from "./search";
 
 export const NavContext = createContext((x: boolean) => { });
 
 
-export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }: { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean }) {
+export default function Sidebar(
+    { showGroups, showAgeGroups, showLateRegister, updateSearchQuery }: 
+    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
     const [showNav, setshowNav] = useState(false);
     const pathname = usePathname();
     const { replace } = useRouter();
@@ -92,6 +95,17 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                                     <button onClick={(_) => replace(`${pathname}?group=Nachmeldungen`)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 ">
                                         <p>Nachmeldungen</p>
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    {updateSearchQuery &&
+                        <div  className="p-2 w-full">
+                            <hr />
+                            <div className="mt-2 p-2  border-white border rounded-md" >
+                                <div className="overflow-hidden text-white"> 
+                                    <Search updateQuery={updateSearchQuery}></Search>
                                 </div>
                             </div>
                         </div>
