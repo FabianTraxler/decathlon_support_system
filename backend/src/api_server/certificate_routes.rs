@@ -1,6 +1,7 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use lopdf::content;
+use itertools::Itertools;
 use crate::certificate_generation::{merge_pdfs, AgeGroupID, AgeGroupIDs, AthleteID, GroupID, PDF, PDFMessage};
+use crate::time_planner::{TimeGroupID};
 use crate::Storage;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -67,9 +68,24 @@ async fn get_group_results(
     let group_id = query.into_inner();
     let group = data.get_group(&group_id).await;
 
+    let time_group_id = TimeGroupID::new(group_id.name.unwrap_or("".to_string()));
+    let time_group = data.get_time_group(&time_group_id).await;
+    let disciplines = match time_group {
+        Some(time_group) => {
+            time_group.get_disciplines().clone()
+        }
+        None => vec![]
+    };
+
+    let included_disciplines = Some(disciplines
+        .iter()
+        .filter(|e| e.is_finished())
+        .map(|e| e.name().to_string())
+        .collect());
+    
     match group {
         Some(group) => {
-            let certificate = PDF::new_group_result(&group);
+            let certificate = PDF::new_group_result(&group, included_disciplines);
             let pdf_message = certificate.to_http_message();
             match pdf_message {
                 Ok(pdf_message) => HttpResponse::Ok()
@@ -77,7 +93,6 @@ async fn get_group_results(
                     .body(pdf_message),
                 Err(e) => HttpResponse::InternalServerError().body(format!("Error generating PDF: {}", e))
             }
-
         },
         None => HttpResponse::NotFound().body("Group not found")
     }

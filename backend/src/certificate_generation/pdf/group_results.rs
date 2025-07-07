@@ -17,11 +17,11 @@ use super::pdf_generation::add_pdf_page;
 const DEFAULT_DISCIPLINE_WIDTH: f32 = 11.5;
 const POINTS_WIDTH: f32 = 8.;
 
-pub fn new_group_result(group: &Group) -> PdfDocumentReference {
+pub fn new_group_result(group: &Group, disciplines: Option<Vec<String>>) -> PdfDocumentReference {
     if group.competition_type() == CompetitionType::Decathlon {
         // One result for full group
         let (pdf, page, layer) = setup_pdf(format!("Ergebniss {}", group.name()).as_str(), true);
-        add_group_result_to_page(group, pdf, page, layer)
+        add_group_result_to_page(group, pdf, page, layer, disciplines)
     } else {
         // Separated result for M and W
         let w_group = Group::new(
@@ -36,7 +36,7 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
         );
         let (mut pdf, mut page, mut layer) =
             setup_pdf(format!("Ergebniss {}", w_group.name()).as_str(), true);
-        pdf = add_group_result_to_page(&w_group, pdf, page, layer);
+        pdf = add_group_result_to_page(&w_group, pdf, page, layer, disciplines.clone());
 
         let m_group = Group::new(
             format!("{} - {}", group.name(), "M").as_str(),
@@ -49,7 +49,7 @@ pub fn new_group_result(group: &Group) -> PdfDocumentReference {
             group.competition_type(),
         );
         (page, layer) = add_pdf_page(&pdf, format!("Ergebniss {}", m_group.name()).as_str(), true);
-        add_group_result_to_page(&m_group, pdf, page, layer)
+        add_group_result_to_page(&m_group, pdf, page, layer, disciplines)
     }
 }
 
@@ -58,6 +58,7 @@ pub fn add_group_result_to_page(
     pdf: PdfDocumentReference,
     page: PdfPageIndex,
     layer: PdfLayerIndex,
+    disciplines: Option<Vec<String>>
 ) -> PdfDocumentReference {
     let comic_font = pdf
         .add_external_font(
@@ -113,6 +114,7 @@ pub fn add_group_result_to_page(
         &alignments,
         group,
         &pdf,
+        disciplines
     );
     pdf
 }
@@ -296,6 +298,7 @@ fn add_group_athletes(
     alignments: &HashMap<&str, f32>,
     group: &Group,
     pdf: &PdfDocumentReference,
+    included_disciplines: Option<Vec<String>>
 ) {
     let font_size = 10.0;
     let line_height = font_size * 0.5;
@@ -416,23 +419,30 @@ fn add_group_athletes(
             let discipline_width = alignments
                 .get(format!("{}: {}", group.competition_type(), discipline_name).as_str())
                 .unwrap_or(&DEFAULT_DISCIPLINE_WIDTH);
-            let (achievement_string, points_string) = match athlete.get_achievement(discipline_name)
-            {
-                Some(achievement) => {
-                    if achievement.final_result() == "" || achievement.final_result() == "0,00"{
-                        ("".to_string(), "".to_string())
-                    } else {
-                        let (fmt_final_result, _) = achievement.fmt_final_result();
-                        if group.name().contains("U4/U6") || group.name().contains("U8"){
-                            (fmt_final_result, "".to_string())
-                        }else{
-                            (fmt_final_result, achievement.points(&athlete).to_string())
+            
+            let achievement_string: String;
+            let points_string: String;
+            let discplines: Option<Vec<String>> = included_disciplines.clone();
+            if discplines.is_none() || (discplines.is_some() && discplines.unwrap().iter().any(|e| discipline_name.contains(e))) {
+                (achievement_string, points_string) = match athlete.get_achievement(discipline_name)
+                {
+                    Some(achievement) => {
+                        if achievement.final_result() == "" || achievement.final_result() == "0,00"{
+                            ("".to_string(), "".to_string())
+                        } else {
+                            let (fmt_final_result, _) = achievement.fmt_final_result();
+                            if group.name().contains("U4/U6") || group.name().contains("U8"){
+                                (fmt_final_result, "".to_string())
+                            }else{
+                                (fmt_final_result, achievement.points(&athlete).to_string())
+                            }
                         }
                     }
-                }
-                None => ("".to_string(), "".to_string()),
-            };
-
+                    None => ("".to_string(), "".to_string()),
+                };
+            }else{
+                (achievement_string, points_string) = ("".to_string(), "".to_string()); // Don't show results if not included
+            }
             pdf_layer.use_text(
                 achievement_string,
                 font_size,

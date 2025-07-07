@@ -78,8 +78,8 @@ impl PDF {
         PDF { content: doc }
     }
 
-    pub fn new_group_result(group: &Group) -> Self {
-        let doc = new_group_result(group);
+    pub fn new_group_result(group: &Group, disciplines: Option<Vec<String>>) -> Self {
+        let doc = new_group_result(group, disciplines);
         PDF { content: doc }
     }
 
@@ -104,7 +104,7 @@ impl PDF {
             return Err(Box::from("Not all athletes in same competition"));
         }
         let group = Group::from_age_group(age_group, competition_type);
-        let doc = new_group_result(&group);
+        let doc = new_group_result(&group, None);
         Ok(PDF { content: doc })
     }
 
@@ -360,14 +360,14 @@ mod tests {
         athletes.push(get_athlete());
         athletes.push(get_athlete());
         let group = Group::new("Gruppe 1", athletes, CompetitionType::Decathlon);
-        let pdf = PDF::new_group_result(&group);
+        let pdf = PDF::new_group_result(&group, None);
         let pdf_write_result = pdf._write_pdf("tests/output/write_group_result.pdf");
         match pdf_write_result {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF: {err}"),
         }
 
-        let pdf = PDF::new_group_result(&group);
+        let pdf = PDF::new_group_result(&group, None);
         match pdf.to_http_message() {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
