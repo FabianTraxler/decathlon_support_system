@@ -1,5 +1,6 @@
 use actix_web::{get, web, HttpResponse, Responder};
-use crate::certificate_generation::{PDF, AthleteID, GroupID, AgeGroupID};
+use lopdf::content;
+use crate::certificate_generation::{merge_pdfs, AgeGroupID, AgeGroupIDs, AthleteID, GroupID, PDF, PDFMessage};
 use crate::Storage;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
@@ -7,6 +8,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_group_results);
     cfg.service(get_age_group_results);
     cfg.service(get_certificates);
+    cfg.service(get_all_age_group_results);
 }
 
 #[get("/certificate")]
@@ -106,4 +108,50 @@ async fn get_age_group_results(
         },
         None => HttpResponse::NotFound().body("Group not found")
     }
+}
+
+#[get("/all_age_group_results")]
+async fn get_all_age_group_results(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: web::Query<AgeGroupIDs>,
+) -> impl Responder {
+
+    let mut pdfs: Vec<PDF> = Vec::new();
+    let age_group_ids= query.into_inner().convert();
+    
+    match age_group_ids {
+        Ok(age_group_ids) => {
+            for age_group_id in age_group_ids {
+                let age_group = match data.get_age_group(&age_group_id).await {
+                    Some(age_group) => age_group,
+                    None =>  {
+                        println!("Age group not found");
+                        continue;
+                    }
+                };
+                let certificate = match PDF::build_from_age_group_result(&age_group){
+                    Ok(pdf) => pdf,
+                    Err(e) =>{
+                        println!("Not able to generate pdf: {e}");
+                        continue;
+                    }
+                };
+                pdfs.push(certificate);
+            }
+        },
+        Err(e) => return HttpResponse::InternalServerError().body(format!("Error converting Age group ids: {}", e))
+    };
+
+    let final_pdf = match merge_pdfs(pdfs){
+        Ok(content) => {
+            PDFMessage::new(content)
+        },
+        Err(e) => return HttpResponse::InternalServerError().body(format!("Error merging Pdfs: {}", e))
+    };
+
+
+    HttpResponse::Ok()
+            .content_type("application/pdf")
+            .body(final_pdf)
+    
 }
