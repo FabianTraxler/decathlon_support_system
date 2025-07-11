@@ -174,6 +174,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                                 alert("Noch nicht alle Starthöhen eingetragen")
                             }
                         }}
+                        athletes={disciplineState.current_order}
                     >
                         <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
                             <div

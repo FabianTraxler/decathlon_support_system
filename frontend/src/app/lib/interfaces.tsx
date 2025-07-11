@@ -32,7 +32,14 @@ export class AthleteID {
     }
 }
 
-export class AthleteTimeResult extends AthleteID {
+export interface IAthleteID {
+    name: string;
+    surname: string;
+    age_group: string;
+    starting_number?: number;
+}
+
+export class AthleteTimeResult extends AthleteID implements IAthleteID{
     starting_number?: number;
     final_result?: number | string;
 
@@ -42,7 +49,7 @@ export class AthleteTimeResult extends AthleteID {
     }
 }
 
-export class AthleteDistanceResults extends AthleteID {
+export class AthleteDistanceResults extends AthleteID implements IAthleteID{
     discipline_name: string;
     discipline_unit: string;
     starting_number?: number;

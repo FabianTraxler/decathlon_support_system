@@ -98,7 +98,8 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                             throwError(new Error("Error starting discipline"));
                         }
                     }
-                    }>
+                    }
+                    athletes={[]}>
                 </BeforeStartInfoBox>
             }
             {

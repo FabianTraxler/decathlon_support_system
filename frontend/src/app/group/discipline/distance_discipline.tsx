@@ -193,6 +193,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                                 }
                             }
                         }}
+                        athletes={disciplineState.current_order}
                     ></BeforeStartInfoBox>
                 }
                 {

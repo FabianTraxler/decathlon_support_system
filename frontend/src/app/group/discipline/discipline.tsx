@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Discipline } from "@/app/lib/interfaces";
+import { Discipline, IAthleteID } from "@/app/lib/interfaces";
 import Title_Footer_Layout from "../subpage_layout";
 import { german_discipline_states } from "@/app/lib/config";
 import TimeDiscipline from "./time_discipline";
@@ -87,7 +87,10 @@ export default function Disciplines({ group_name, discipline_name }: { group_nam
 }
 
 
-export function BeforeStartInfoBox({ discipline, start_discipline, ready, children }: { discipline: Discipline, start_discipline: () => void, ready: boolean, children?: React.ReactNode }) {
+export function BeforeStartInfoBox({ discipline, start_discipline, athletes, ready, children }: { discipline: Discipline, start_discipline: () => void, athletes: IAthleteID[], ready: boolean, children?: React.ReactNode }) {
+    const [showAthletes, setShowAthletes] = useState<boolean>(false);
+
+    
     return (
         <div className="w-full border rounded-md p-4 sm:p-8">
             <div className="font-bold text-center text-2xl sm:text-4xl">Info</div>
@@ -125,7 +128,66 @@ export function BeforeStartInfoBox({ discipline, start_discipline, ready, childr
                     Disiplin starten
                 </div>
             </div>
+            
+            {(athletes && athletes.length > 0) &&
+            <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
+                <div
+                    className={"border rounded-md  w-fit p-2 sm:p-4 hover:cursor-pointer active:bg-slate-500 active:shadow-none" +
+                                (ready ? " bg-slate-400 shadow-lg shadow-gray-800": " bg-slate-100 shadow-none")}
+                    onClick={() => setShowAthletes(true)}
+                >
+                    Startreihenfolge anzeigen
+                </div>
+                
+            </div>
+            }
+
             {children && children}
+
+            {showAthletes && 
+                <div className="fixed flex inset-0 z-50 h-screen items-center justify-center bg-black bg-opacity-40">
+                    <div className="relative min-h-12 max-h-[75%] overflow-scroll bg-white rounded-lg shadow-lg p-6 m-2 w-full max-w-md">
+                        <button
+                            className="absolute w-10 h-10 top-5 right-5 text-red-500 hover:text-red-800 text-4xl font-bold border border-red-300 border-solid rounded-md"
+                            onClick={() => setShowAthletes(false)}
+                            aria-label="Close"
+                        >
+                            <div className="flex items-center justify-center h-full">
+                                <div>
+                                &times;
+
+                                </div>
+                            </div>
+                        </button>
+                        <div className="text-2xl font-semibold mb-4 text-center">Startreihenfolge</div>
+                        { (athletes && athletes.length > 0) ?
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr>
+                                    <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
+                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Nummer</th>
+                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
+                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {athletes.map((athlete, idx) => (
+                                    <tr key={athlete.starting_number} className="cursor-move even:bg-slate-200 odd:bg-slate-400">
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{idx + 1}.</td>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2 ">{athlete.name}</td>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2 ">{athlete.surname}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        :
+                        <div>Keine Athleten gefunden</div>
+                        }
+
+                    </div>
+                </div>
+            }
         </div>
     )
 }
