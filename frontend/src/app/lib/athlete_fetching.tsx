@@ -197,10 +197,14 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
       break;
   }
 
-  if (return_value == 0) { // sort by starting number on equality
+  if (return_value == 0) { // sort by starting number on equality and then on surname
     if (a.starting_number < b.starting_number) return_value = -1
     else if (a.starting_number > b.starting_number) return_value = 1
-    else return_value = 0
+    else {
+      if (a.surname < b.surname) return_value = -1
+      else if (a.surname > b.surname) return_value = 1
+      else return_value = 0
+    }
   }
 
   return sort_query.ascending ? return_value : -1 * return_value;
