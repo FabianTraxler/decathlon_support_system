@@ -88,6 +88,10 @@ impl Discipline {
     pub fn starting_order(&self) -> &StartingOrder {
         &self.starting_order
     }
+
+    pub fn is_finished(&self) -> bool{
+        &self.state == &DisciplineState::Finished
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

@@ -134,9 +134,7 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
     case "JG":
       let keyA = new Date(a.birth_date * 1000)
       let keyB = new Date(b.birth_date * 1000)
-      if (!a.starting_number) return_value = 1
-      else if (!b.starting_number) return_value = -1
-      else if (keyA < keyB) return_value = -1
+      if (keyA < keyB) return_value = -1
       else if (keyA > keyB) return_value = 1
       else return_value = 0
       break;

@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
+use serde::{ Deserialize, Serialize};
 use std::collections::HashSet;
+use std::error::Error;
 
 use super::{Athlete, AthleteID, CompetitionType};
 
@@ -159,5 +160,22 @@ impl AgeGroupID {
         AgeGroupID {
             age_identifier: Some(age_identifier.to_string()),
         }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AgeGroupIDs {
+    pub age_identifiers: Option<String>,
+}
+
+impl AgeGroupIDs{
+    pub fn convert(&self) -> Result<Vec<AgeGroupID>, Box<dyn Error>> {
+        let mut ids: Vec<AgeGroupID> = vec![];
+        let id_strings = self.age_identifiers.clone().ok_or("Empty string")?;
+        for id_string in id_strings.split(",") {
+            ids.push(AgeGroupID::new(id_string ));
+        }
+
+        return Ok(ids);
     }
 }

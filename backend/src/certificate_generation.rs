@@ -14,9 +14,9 @@ use std::str::FromStr;
 use serde_json::{Map, Value};
 pub use age_group_utils::AgeGroupSelector;
 pub use athletes::{Athlete, AthleteID};
-pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore, SwitchGroupID};
+pub use groups::{AgeGroup, AgeGroupID, Group, GroupID, GroupStore, SwitchGroupID, AgeGroupIDs};
 pub use achievements::{Achievement, AchievementID};
-pub use pdf::PDF;
+pub use pdf::{PDF, merge_pdfs, PDFMessage};
 use async_trait::async_trait;
 
 #[async_trait]

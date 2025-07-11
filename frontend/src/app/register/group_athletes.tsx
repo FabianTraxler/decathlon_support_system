@@ -3,17 +3,13 @@ import { Athlete, fetch_all_athletes, fetch_group_athletes } from "../lib/athlet
 import AthleteTable from "./search_table"
 import { groups, youth_groups } from "../lib/config";
 import { LoadingAnimation } from "../lib/loading";
-
-export interface SearchQuery {
-    query: string,
-    column: string
-}
+import { SearchQuery, Search } from "../lib/search";
 
 export const AthleteContext = createContext({ update_athlete: (a: Athlete) => { }, reload_athletes: () => { } });
 
 export default function GroupAthletes({ groupName }: { groupName: string }) {
     const [athletes, setAthletes] = useState<Athlete[]>([])
-    const [searchQuery, setSearchQuery] = useState<SearchQuery[]>([])
+    const [searchQuery, setSearchQuery] = useState<SearchQuery>({global: false, queries: []})
     let load_athlete = () => { };
     if (groupName == "Übersicht") {
         load_athlete = () => fetch_all_athletes(setAthletes)
@@ -55,39 +51,6 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
     )
 }
 
-function Search({ updateQuery }: { updateQuery: (query: SearchQuery[]) => void }) {
-
-    const onChange = function () {
-        let form: HTMLFormElement | null = document.getElementById("searchForm") as HTMLFormElement
-        let search_query: SearchQuery[] = []
-
-        Array.from(form.elements).forEach((element) => {
-            let el: HTMLInputElement = element as HTMLInputElement
-            if (el.value) search_query.push({ query: el.value, column: el.name })
-
-        })
-        updateQuery(search_query)
-    }
-
-    return (
-        <div>
-            <h2 className="font-bold text-center text-xl">Suche</h2>
-            <form id="searchForm" onChange={onChange}>
-                <label>Startnummer: </label> <br />
-                <input className="max-w-12 shadow-md bg-slate-200" name="starting_number"></input><br />
-                <hr />
-
-                <label>Vorname: </label> <br />
-                <input className="max-w-32 sm:max-w-fit shadow-md bg-slate-200" name="name"></input><br />
-                <hr />
-
-                <label>Nachname: </label> <br />
-                <input className="max-w-32 sm:max-w-fit shadow-md bg-slate-200" name="surname"></input><br />
-                <hr />
-            </form>
-        </div>
-    )
-}
 
 function AddAthlete({ groupName }: { groupName: string }) {
     const [formState, setFormState] = useState("ready")

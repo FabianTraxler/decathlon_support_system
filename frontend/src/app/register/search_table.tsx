@@ -1,42 +1,11 @@
 import { Athlete, sort_athletes } from "../lib/athlete_fetching";
 import { useState, useEffect, useContext } from "react";
-import { AthleteContext, SearchQuery } from "./group_athletes";
-
-
-class AthleteQuery {
-    queries: SearchQuery[]
-
-    constructor(queries: SearchQuery[]) {
-        this.queries = queries
-    }
-
-    matchAthlete(athlete: Athlete): boolean {
-        let match = true;
-        this.queries.forEach(query => {
-            switch (query.column) {
-                case "name":
-                    match = match && athlete.name.toLocaleLowerCase().includes(query.query.toLocaleLowerCase())
-                    break
-                case "surname":
-                    match = match && athlete.surname.toLocaleLowerCase().includes(query.query.toLocaleLowerCase())
-                    break
-                case "starting_number":
-                    match = match && (!!athlete.starting_number && athlete.starting_number.toString().includes(query.query.toLocaleLowerCase()))
-                    break
-                case "birth_day":
-                    let athlete_bd = new Date(athlete.birth_date * 1000)
-                    let query_date = new Date(query.query)
-                    match = match && athlete_bd.getDate() == query_date.getDate()
-                    break
-            }
-        })
-        return match;
-    }
-}
+import { AthleteContext } from "./group_athletes";
+import { SearchQuery, AthleteQuery } from "../lib/search";
 
 
 export default function AthleteTable({ athletes, searchQuery }:
-    { athletes: Athlete[], searchQuery: SearchQuery[] }) {
+    { athletes: Athlete[], searchQuery: SearchQuery }) {
     const [sorted, setSorted] = useState({ name: "#", ascending: true })
 
     let query = new AthleteQuery(searchQuery)
