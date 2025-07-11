@@ -2,7 +2,7 @@ import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_
 import { AchievementValue } from "@/app/lib/athlete_fetching";
 import { useContext, useState } from "react";
 import { AchievementContext } from "./athletes";
-import { long_distance_disciplines } from "@/app/lib/config";
+import { long_distance_disciplines, MAX_DISCIPLINE_PERFORMANCE } from "@/app/lib/config";
 
 
 export default function AchievementDisplay({ athlete_number, name, type, achievement, athlete_name }: { athlete_number: number, name: string, type: string, achievement?: AchievementValue, athlete_name: string }) {
@@ -35,6 +35,31 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
 
     var saveChanges = function (new_achievement?: AchievementValue) {
         if (new_achievement) {
+            let max_value = MAX_DISCIPLINE_PERFORMANCE.get(name) || 9999;
+            if(new_achievement.Distance && new_achievement.Distance.final_result) {
+                let result = new_achievement.Distance.final_result.integral + (new_achievement.Distance.final_result.fractional || 0) / 100;
+                if(result > max_value) {
+                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                        return;
+                    }
+                }
+            }
+            if(new_achievement.Time && new_achievement.Time.final_result) {
+                let result = new_achievement.Time.final_result.integral + (new_achievement.Time.final_result.fractional || 0) / 100;
+                if(result < max_value) {
+                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                        return;
+                    }
+                }
+            }
+            if(new_achievement.Height && new_achievement.Height.final_result) {
+                let result = new_achievement.Height.final_result;
+                if(result > max_value) {
+                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                        return;
+                    }
+                }
+            }
             updateAchievement(athlete_number, name, new_achievement)
             setAchievement({ showEdit: false, value: new_achievement })
         } else {
