@@ -1,14 +1,16 @@
-import { AthleteID, AthleteTimeResult, Discipline, StartingOrder } from "@/app/lib/interfaces";
+import { AthleteID, AthleteTimeResult, Discipline, IAthleteID, StartingOrder } from "@/app/lib/interfaces";
 import { useEffect, useState } from "react";
-import { BeforeStartInfoBox, start_discipline } from "./discipline";
+import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "./discipline";
 import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
-import { Athlete } from "@/app/lib/athlete_fetching";
-import { LoadingAnimation } from "@/app/lib/loading";
+import { AchievementValue, Athlete, TimeAchievement } from "@/app/lib/athlete_fetching";
+import { LoadingAnimation, LoadingButton } from "@/app/lib/loading";
 import { finish_discipline } from "@/app/lib/discipline_edit";
 import { useAsyncError } from "@/app/lib/asyncError";
 
 export default function TimeDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [current_discipline, setDiscipline] = useState<Discipline>({ ...discipline, starting_order: { Track: [] } })
+    const [resultsPopUp, setResultsPopUp] = useState<{show: boolean, athletes: IAthleteID[]}>({show: false, athletes: []});
+
     const throwError = useAsyncError();
 
     useEffect(() => {
@@ -81,6 +83,33 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
         })
     }
 
+    const showResults = function (stop_load: () => void) {
+    // fetch results
+    get_group_achievements(group_name, (fetched_athletes: Athlete[]) => {
+        
+        let athletes: IAthleteID[] = []; 
+        fetched_athletes.forEach((athlete: Athlete) => {
+            Object.values(athlete.achievements).forEach((achievement: AchievementValue) => {
+                let discipline_name = achievement.Time?.name || ""; 
+                if (discipline_name == current_discipline.name) {
+                    athletes.push({
+                        name: athlete.name,
+                        surname: athlete.surname,
+                        starting_number: athlete.starting_number,
+                        age_group: "",
+                        achievement: {
+                            Time: achievement.Time,
+                            athlete_name: athlete.name + " " + athlete.surname,
+                        },
+                    } as IAthleteID);
+                }
+            })
+        })
+        stop_load();
+        setResultsPopUp({show: true, athletes: athletes});
+    })
+    }
+
     return (
         <div className="h-full">
             {
@@ -128,9 +157,28 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
             }
             {
                 current_discipline.state == "Finished" &&
-                <div className="flex h-full text-2xl font-bold items-center justify-center">
-                    <span>Abgeschlossen</span>
+                <div className="flex flex-col h-full text-2xl font-bold items-center justify-center">
+                    <div>Abgeschlossen</div>
+                        <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
+                        <LoadingButton size={"10"} onclick={(stop_load) => showResults(stop_load)}>
+                        <div
+                            className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none" }
+                        >
+                            Ergebnisse anzeigen
+                        </div>
+
+                        </LoadingButton>
+                    </div>
                 </div>
+            }
+            {
+                resultsPopUp.show &&
+                <AthleteResultsPopUp 
+                    athletes={resultsPopUp.athletes} 
+                    type="Time" 
+                    setShowResultsPopUp={(setShow: boolean) => setResultsPopUp({...resultsPopUp, show: setShow})}
+                    unit="s"
+                ></AthleteResultsPopUp>
             }
         </div>
     )

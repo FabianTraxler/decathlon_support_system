@@ -1,6 +1,6 @@
-import { AthleteDistanceResults, AthleteID, Discipline } from "@/app/lib/interfaces";
+import { AthleteDistanceResults, AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { BeforeStartInfoBox, start_discipline } from "./discipline";
+import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "./discipline";
 import { get_group_achievements, save_distance_achievement, skip_distance_discipline } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { NavigationContext } from "../navigation";
@@ -34,6 +34,8 @@ const AthleteResults = createContext<{ state: DistanceDisciplineState, update_st
 
 export default function DistanceDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [disciplineState, setDisciplineState] = useState<DistanceDisciplineState>({ ...empty_state, discipline: discipline })
+    const [showResultsPopUp, setShowResultsPopUp] = useState<boolean>(false)
+
     const throwError = useAsyncError();
 
     useEffect(() => {
@@ -227,9 +229,48 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 }
                 {
                     disciplineState.discipline.state == "Finished" &&
-                    <div className="flex h-full text-2xl font-bold items-center justify-center">
-                        <span>Abgeschlossen</span>
+                    <div className="flex flex-col h-full text-2xl font-bold items-center justify-center">
+                        <div>Abgeschlossen!</div>
+                        <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
+                            <div
+                                className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none" }
+                                onClick={() => setShowResultsPopUp(true)}
+                            >
+                                Ergebnisse anzeigen
+                            </div>
+                        </div>
                     </div>
+                }
+                {
+                    showResultsPopUp &&
+                    <AthleteResultsPopUp 
+                        athletes={disciplineState.results.values().filter(a => a.starting_number).map((athlete) => {
+                                                    return {
+                                                        name: athlete.name,
+                                                        surname: athlete.surname,
+                                                        starting_number: athlete.starting_number,
+                                                        age_group: "",
+                                                        achievement: {
+                                                            Distance: {
+                                                                first_try: athlete.first_try,
+                                                                second_try: athlete.second_try,
+                                                                third_try: athlete.third_try,
+                                                                best_try: athlete.best_try,
+                                                                final_result: {
+                                                                    integral: Math.floor(athlete.best_try || 0),
+                                                                    fractional: Math.round((athlete.best_try || 0) * 100) % 100
+                                                                },
+                                                                name: athlete.discipline_name,
+                                                                unit: athlete.discipline_unit
+                                                            },
+                                                            athlete_name: athlete.name + " " + athlete.surname,
+                                                        } 
+                                                    } as IAthleteID
+                                                } ).toArray()}
+                        type="Distance" 
+                        setShowResultsPopUp={setShowResultsPopUp}
+                        unit="m"
+                    ></AthleteResultsPopUp>
                 }
             </div>
         </AthleteResults.Provider>

@@ -1,6 +1,6 @@
-import { AthleteHeightID, AthleteHeightResults, AthleteID, Discipline } from "@/app/lib/interfaces";
+import { AthleteHeightID, AthleteHeightResults, AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { BeforeStartInfoBox, start_discipline } from "../discipline";
+import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "../discipline";
 import { get_group_achievements } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { StartHeightInput } from "./starting_height";
@@ -51,6 +51,8 @@ export const AthleteResults = createContext<{ state: HeightDisciplineState, upda
 
 
 export default function HeightDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
+        const [showResultsPopUp, setShowResultsPopUp] = useState<boolean>(false)
+
     const min_start_height = discipline.name == "Hochsprung" ? 80 : 120 // TODO: Get from API Call (stored in central config) 
     const height_increase = discipline.name == "Hochsprung" ? 4 : 20 // TODO: Get from API Call (stored in central config) 
     const max_start_increase = discipline.name == "Hochsprung" ? 200 : 400 // TODO: Get from API Call (stored in central config) 
@@ -215,9 +217,44 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                 }
                 {
                     disciplineState.discipline.state == "Finished" &&
-                    <div className="flex h-full text-2xl font-bold items-center justify-center">
-                        <span>Abgeschlossen</span>
+                    <div className="flex flex-col h-full text-2xl font-bold items-center justify-center">
+                        <div>Abgeschlossen!</div>
+                        <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
+                            <div
+                                className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none" }
+                                onClick={() => setShowResultsPopUp(true)}
+                            >
+                                Ergebnisse anzeigen
+                            </div>
+                        </div>
                     </div>
+                }
+                {
+                    showResultsPopUp &&
+                    <AthleteResultsPopUp 
+                        athletes={disciplineState.results.values().filter(a => a.starting_number).map((athlete) => {
+                            return {
+                                name: athlete.name,
+                                surname: athlete.surname,
+                                starting_number: athlete.starting_number,
+                                age_group: "",
+                                achievement: {
+                                    Height: {
+                                        name: athlete.discipline_name,
+                                        unit: athlete.discipline_unit,
+                                        start_height: athlete.start_height,
+                                        height_increase: athlete.height_increase,
+                                        tries: athlete.tries,
+                                        final_result: athlete.final_result,
+                                    },
+                                    athlete_name: athlete.name + " " + athlete.surname,
+                                } 
+                            } as IAthleteID
+                        } ).toArray()}
+                        type="Height" 
+                        setShowResultsPopUp={setShowResultsPopUp}
+                        unit="m"
+                    ></AthleteResultsPopUp>
                 }
             </div>
         </AthleteResults.Provider>

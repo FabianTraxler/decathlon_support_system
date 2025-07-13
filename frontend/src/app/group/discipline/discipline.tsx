@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Discipline, IAthleteID } from "@/app/lib/interfaces";
+import { AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import Title_Footer_Layout from "../subpage_layout";
 import { german_discipline_states } from "@/app/lib/config";
 import TimeDiscipline from "./time_discipline";
@@ -8,6 +8,8 @@ import DistanceDiscipline from "./distance_discipline";
 import HeightDiscipline from "./height/height_discipline";
 import { LoadingAnimation } from "@/app/lib/loading";
 import { useAsyncError } from "@/app/lib/asyncError";
+import { AchievementValue } from "@/app/lib/athlete_fetching";
+import EditPopup from "@/app/lib/achievement_edit/popup";
 
 export default function Disciplines({ group_name, discipline_name }: { group_name: string, discipline_name: string | undefined }) {
     const [discipline, setDiscipline] = useState<Discipline>();
@@ -87,7 +89,7 @@ export default function Disciplines({ group_name, discipline_name }: { group_nam
 }
 
 
-export function BeforeStartInfoBox({ discipline, start_discipline, athletes, ready, children }: { discipline: Discipline, start_discipline: () => void, athletes: IAthleteID[], ready: boolean, children?: React.ReactNode }) {
+export function BeforeStartInfoBox({ discipline, start_discipline, athletes, ready, children }: { discipline: Discipline, start_discipline: () => void, athletes: AthleteID[], ready: boolean, children?: React.ReactNode }) {
     const [showAthletes, setShowAthletes] = useState<boolean>(false);
 
     
@@ -219,4 +221,96 @@ export async function start_discipline(group_name: string, discipline: Disciplin
         .catch((e) => {
             return Promise.reject(e)
         })
+}
+
+interface AchievementDisplayProps {
+    athlete_name: string, type: string, achievement: AchievementValue, 
+}
+
+export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit }: { athletes: IAthleteID[], type: string, setShowResultsPopUp: (show: boolean) => void, unit: string }) {
+    const [editPopup, setEditPopup] = useState<{show: boolean, athlete?: AchievementDisplayProps}>({show: false});
+    const [athletesState, setAthletesState] = useState<IAthleteID[]>(athletes);
+
+    const changeResult = function(athlete: IAthleteID) {
+        let athlete_achievement = {
+            athlete_name: athlete.name + "_" + athlete.surname,
+            type: type,
+            achievement: athlete.achievement as AchievementValue
+        } as AchievementDisplayProps;
+        setEditPopup({ show: true, athlete: athlete_achievement});
+    }
+
+    const saveChanges = function (new_achievement?: AchievementValue) {
+        let newState = athletesState.map((athlete) => {
+            if ((athlete.name + "_" + athlete.surname) === editPopup.athlete?.athlete_name) {
+                return {
+                    ...athlete,
+                    achievement: new_achievement || athlete.achievement
+                }
+            }
+            return athlete;
+        });
+        setAthletesState(newState);
+        setEditPopup({ show: false, athlete: undefined });
+    }
+
+    return (
+        <div className="fixed flex inset-0 z-50 h-screen items-center justify-center bg-black bg-opacity-40">
+            <div className="relative min-h-12 max-h-[75%] overflow-scroll bg-white rounded-lg shadow-lg p-6 m-2 w-full max-w-md">
+                <button
+                    className="absolute w-10 h-10 top-5 right-5 text-red-500 hover:text-red-800 text-4xl font-bold border border-red-300 border-solid rounded-md"
+                    onClick={() => setShowResultsPopUp(false)}
+                    aria-label="Close"
+                >
+                    <div className="flex items-center justify-center h-full">
+                        <div>
+                        &times;
+
+                        </div>
+                    </div>
+                </button>
+                <div className="text-2xl font-semibold mb-4 text-center">Ergebnisse</div>
+                { (athletesState && athletesState.length > 0) ?
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">Name</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2">Leistung</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {athletesState.map((athlete, idx) => {
+                            var result = "";
+
+                            var final_result = athlete.achievement.Time?.final_result || athlete.achievement.Distance?.final_result || athlete.achievement.Height?.final_result;
+
+                            if(final_result){
+                                if (typeof final_result === "number") {
+                                    result = final_result.toString();
+                                }else{
+                                    result = final_result.integral + "," + (final_result.fractional || "00");
+                                }
+                            }
+                            return <tr onClick={() => changeResult(athlete)} key={athlete.starting_number} className="even:bg-slate-200 odd:bg-slate-400">
+                                <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
+                                <td className="border border-slate-600 p-1 pl-2 pr-2 ">{athlete.name + " " + athlete.surname}</td>
+                                <td className="border border-slate-600 p-1 pl-2 pr-2 text-right ">{result} {unit}</td>
+                            </tr>
+                        })}
+                    </tbody>
+                </table>
+                :
+                <div>Keine Athleten gefunden</div>
+                }
+
+            </div>
+
+            {(editPopup.show && editPopup.athlete) &&
+                <EditPopup achievement={editPopup.athlete.achievement} achievementType={editPopup.athlete.type}
+                    athleteName={editPopup.athlete.athlete_name} onClose={saveChanges}></EditPopup>
+            }
+        </div>
+    )
 }

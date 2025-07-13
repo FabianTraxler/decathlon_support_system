@@ -1,3 +1,6 @@
+import { Achievement } from "next-auth/providers/42-school";
+import { AchievementValue } from "./athlete_fetching";
+
 export interface Discipline {
     name: string,
     location: string,
@@ -20,6 +23,7 @@ export class AthleteID {
     name: string;
     surname: string;
     age_group: string;
+    starting_number?: number;
 
     constructor(name: string, surname: string, age_group: string) {
         this.name = name;
@@ -37,9 +41,10 @@ export interface IAthleteID {
     surname: string;
     age_group: string;
     starting_number?: number;
+    achievement: AchievementValue
 }
 
-export class AthleteTimeResult extends AthleteID implements IAthleteID{
+export class AthleteTimeResult extends AthleteID{
     starting_number?: number;
     final_result?: number | string;
 
@@ -49,7 +54,7 @@ export class AthleteTimeResult extends AthleteID implements IAthleteID{
     }
 }
 
-export class AthleteDistanceResults extends AthleteID implements IAthleteID{
+export class AthleteDistanceResults extends AthleteID{
     discipline_name: string;
     discipline_unit: string;
     starting_number?: number;

@@ -26,7 +26,6 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
     const [current_achievement, setAchievement] = useState<{ showEdit: boolean, value?: AchievementValue }>({ 
         showEdit: false, 
         value: achievement })
-    let { updateAchievement } = useContext(AchievementContext);
 
 
     if (current_achievement.value) {
@@ -35,32 +34,7 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
 
     var saveChanges = function (new_achievement?: AchievementValue) {
         if (new_achievement) {
-            let max_value = MAX_DISCIPLINE_PERFORMANCE.get(name) || 9999;
-            if(new_achievement.Distance && new_achievement.Distance.final_result) {
-                let result = new_achievement.Distance.final_result.integral + (new_achievement.Distance.final_result.fractional || 0) / 100;
-                if(result > max_value) {
-                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
-                        return;
-                    }
-                }
-            }
-            if(new_achievement.Time && new_achievement.Time.final_result) {
-                let result = new_achievement.Time.final_result.integral + (new_achievement.Time.final_result.fractional || 0) / 100;
-                if(result < max_value) {
-                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
-                        return;
-                    }
-                }
-            }
-            if(new_achievement.Height && new_achievement.Height.final_result) {
-                let result = new_achievement.Height.final_result;
-                if(result > max_value) {
-                    if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
-                        return;
-                    }
-                }
-            }
-            updateAchievement(athlete_number, name, new_achievement)
+            alert("Achievement not saved in this part! Please check!!")
             setAchievement({ showEdit: false, value: new_achievement })
         } else {
             setAchievement({ ...current_achievement, showEdit: false })

@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { HeightAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 import { useAsyncError } from "../asyncError";
+import { MAX_DISCIPLINE_PERFORMANCE } from "../config";
 
 
 type AchievementState = {
@@ -46,6 +47,16 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
     const form_submit = function (form_event: FormEvent<HTMLFormElement>) {
         form_event.preventDefault();
         let formData = new FormData(form_event.target as HTMLFormElement);
+
+        
+        let new_value = parseFloat(formData.get("final_result")?.toString() || "0");
+        let max_value = MAX_DISCIPLINE_PERFORMANCE.get(achievement?.name || "") || 9999;
+
+        if( new_value > max_value) {
+            if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                return achievement
+            }
+        }
 
         let new_achievement = {
             Height: {
