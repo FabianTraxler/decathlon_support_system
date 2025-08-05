@@ -10,6 +10,7 @@ import Timetable from "./timetable";
 import Disciplines from "./discipline/discipline";
 import { Navigation, NavigationContext, NavigationItem } from "./navigation";
 import Rules from "./rules";
+import NotesPage from "./notes";
 
 
 
@@ -34,6 +35,7 @@ export default function Group() {
     "Platzübersicht",
     "Zeitplan",
     "Regelwerk",
+    "Notizen",
     "Aktuelle Disziplin"
   ]
 
@@ -77,6 +79,9 @@ export default function Group() {
         }
         {currentTab == "Regelwerk" &&
           <Rules group_name={groupName}></Rules>
+        }
+        {currentTab == "Notizen" &&
+          <NotesPage discipline={"general"} group_name={groupName} ></NotesPage>
         }
         {currentTab == "Aktuelle Disziplin" &&
           <Disciplines group_name={groupName} discipline_name={selected_discipline}></Disciplines>
