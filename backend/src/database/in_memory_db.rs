@@ -1,5 +1,6 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID};
+use crate::notes::{NoteID, NoteStorage};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -331,6 +332,17 @@ impl AuthenticateStorage for InMemoryDB {
 
     async fn store_role(&self, _role: Role) -> Result<String, Box<dyn Error>>{
         Err(Box::from("Not implemented"))
+    }
+}
+
+#[async_trait]
+impl NoteStorage for InMemoryDB {
+    async fn get_note(&self, note_id: NoteID) -> Result<Option<String>, Box<dyn Error>> {
+        todo!("Implement")
+    }
+
+    async fn save_note(&self, note_id: NoteID, note: String) -> Result<String, Box<dyn Error>> {
+        todo!("Implement")
     }
 }
 
