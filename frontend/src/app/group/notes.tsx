@@ -3,6 +3,7 @@ import { discipline_mapping } from "../lib/config";
 import { useEffect, useState } from "react";
 import { useAsyncError } from "../lib/asyncError";
 import { Discipline } from "../lib/interfaces";
+import { set } from "zod";
 
 export default function NotesPage({discipline, group_name}:{discipline: string, group_name: string}) {
 
@@ -17,6 +18,7 @@ export function Notes({page, group_name}:{page: string, group_name: string}) {
     const [selectedDiscipline, setSelectedDiscipline] = useState("Allgemein");
     const [content, setContent] = useState("");
     const [disciplines, setGroupDisciplines] = useState<string[]>([]);
+    const [noteSaved, setNoteSaved] = useState(true);
     const throwError = useAsyncError();
 
     useEffect(() => {
@@ -51,6 +53,9 @@ export function Notes({page, group_name}:{page: string, group_name: string}) {
             .then(res => {
                 if (res.ok) {
                     return res.text();
+                } else if (res.status === 404) {
+                    // If the note does not exist, return an empty string
+                    return "";
                 } else {
                     throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
                 }
@@ -75,7 +80,7 @@ export function Notes({page, group_name}:{page: string, group_name: string}) {
         })
         .then(res => {
             if (res.ok) {
-                alert("Notiz gespeichert!");
+                setNoteSaved(true);
             } else {
                 throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
             }
@@ -84,6 +89,11 @@ export function Notes({page, group_name}:{page: string, group_name: string}) {
             console.error("Error saving note:", e);
             alert("Fehler beim Speichern der Notiz.");
         });
+    }
+
+    const noteUpdated = (content: string) => {
+        setContent(content);
+        setNoteSaved(false);
     }
 
     return (
@@ -100,15 +110,15 @@ export function Notes({page, group_name}:{page: string, group_name: string}) {
                     ))}
                 </select>
             </div>
-            <div className="flex flex-col items-right w-full min-h-24 text-lg p-4 mt-4 rounded-md shadow-md shadow-slate-700 bg-gray-100">
+            <div className="flex flex-col items-right w-full text-lg p-4 mt-4 rounded-md shadow-md shadow-slate-700 bg-gray-100">
                 <textarea 
                 key="note"
-                className="w-full h-full p-2 rounded border border-gray-300 bg-white" 
+                className="w-full min-h-[35vh] p-2 rounded border border-gray-300 bg-white" 
                 placeholder="Hier Notizen eingeben..."
                 value={content}
-                onChange={(e) => setContent(e.target.value)}>
+                onChange={(e) => noteUpdated(e.target.value)}>
                 </textarea>
-                <button onClick={saveNote} className="border border-black p-2 shadow-md bg-stw_green rounded">Speichern</button>
+                <button onClick={saveNote} className={"border border-black p-2 shadow-md rounded " + (noteSaved ? "bg-stw_green " : "bg-stw_orange")}>Speichern</button>
             </div>
         </div>
     )

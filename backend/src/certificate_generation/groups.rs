@@ -1,5 +1,5 @@
 use serde::{ Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 
 use super::{Athlete, AthleteID, CompetitionType};
@@ -11,6 +11,7 @@ pub struct GroupStore {
     pub name: String,
     pub athlete_ids: HashSet<AthleteID>,
     pub competition_type: CompetitionType,
+    pub notes: HashMap<String, String>
 }
 
 impl GroupStore {
@@ -27,6 +28,7 @@ pub struct Group {
     name: String,
     athletes: Vec<Athlete>,
     competition_type: CompetitionType,
+    notes: HashMap<String, String>,
 }
 
 impl Group {
@@ -35,6 +37,7 @@ impl Group {
             name: groupname.to_string(),
             athletes,
             competition_type,
+            notes: HashMap::new(),
         }
     }
 
@@ -43,13 +46,16 @@ impl Group {
             name: age_group.age_identifier.clone(),
             athletes: age_group.athletes.clone(),
             competition_type,
+            notes: HashMap::new(),
         }
     }
 
     pub fn competition_type(&self) -> CompetitionType {
         self.competition_type.clone()
     }
-
+    pub fn notes(&self) -> &HashMap<String, String> {
+        &self.notes
+    }
     pub fn name(&self) -> &str {
         self.name.as_str()
     }

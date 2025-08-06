@@ -402,6 +402,7 @@ impl AchievementStorage for DynamoDB {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
             competition_type: group.competition_type(),
+            notes: group.notes().clone(),
         };
 
         self.write_group_store(group_id, group_store).await
