@@ -20,6 +20,9 @@ export default function PrintUtilities() {
       {(group_name.startsWith("G") || group_name.startsWith("U")) &&
         <CertificateCard></CertificateCard>
       }
+      {(group_name.startsWith("G") || group_name.startsWith("U")) &&
+        <ReorderCard></ReorderCard>
+      }
     </div>
   )
 }
@@ -253,5 +256,48 @@ function CertificateCard() {
       </LoadingButton>
 
     </div>
+  )
+}
+
+function ReorderCard() {
+  const [showDone, setShowDone] = useState(false);
+  let searchParams = useSearchParams();
+  let group_name = searchParams.get('group') ?? "Test";
+
+  const handle_click = function (done: () => void) {
+  fetch(`/api/update_run_order?name=${group_name}`, {method: "PUT"} )
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+      }
+    })
+    .then(() => {
+      done();
+      setShowDone(true); 
+      setTimeout(() => {
+        setShowDone(false);
+      }, 2000); // Reset after 2 seconds
+    })
+    .catch(error => {
+      console.error('Error fetching or opening the PDF:', error);
+    });
+  }
+
+  return (
+  <div className={" border-black border rounded-md w-fit  shadow-xl hover:bg-red-400" + (showDone ? " bg-green-200" : " bg-red-100")}>
+    <LoadingButton size="4" onclick={handle_click}>
+      {showDone ?
+        <div className="p-5 flex items-center justify-center text-xl" >
+          <span className='pr-3 pl-3'> &#10003;</span>
+        </div>
+        :
+        <div className="p-5 flex items-center justify-center" >
+          <span className='pr-3'>Reset Startreihenfolge</span>
+        </div>
+      }
+
+    </LoadingButton>
+
+  </div>
   )
 }

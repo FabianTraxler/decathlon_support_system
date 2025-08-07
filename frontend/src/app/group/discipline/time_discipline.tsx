@@ -77,7 +77,8 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
     }, [group_name])
 
     const saveNewStartingOrder = function (new_order: StartingOrder) {
-        saveStartingOrder(new_order, group_name, () => { })
+        let is_hurdles = discipline.name.includes("Hürden");
+        saveStartingOrder(new_order, group_name, () => { }, is_hurdles)
         .catch((e) => {
             throwError(e);
         })

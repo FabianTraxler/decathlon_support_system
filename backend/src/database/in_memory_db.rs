@@ -323,6 +323,9 @@ impl TimePlanStorage for InMemoryDB {
             .insert(TimeGroupID::from_time_group(&group), group);
         Ok(String::from("New group stored"))
     }
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>{
+        !todo!("Implement method to get all athlete states")
+    }
 }
 
 #[async_trait]

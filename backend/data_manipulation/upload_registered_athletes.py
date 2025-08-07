@@ -218,7 +218,8 @@ def upload_athlete(name: str, surname: str,
 		"competition_type": competition_type,
 		"starting_number": starting_number,
 		"t_shirt": t_shirt,
-  		"paid": paid
+  		"paid": paid,
+		"deregistered": False
 	}
 	if birth_day is not None:
 		post_body["birth_date"] = birth_day

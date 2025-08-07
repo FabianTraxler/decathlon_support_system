@@ -10,6 +10,7 @@ export interface Athlete {
   competition_type: string,
   t_shirt?: string,
   paid?: boolean
+  deregistered?: boolean,
 }
 
 export interface AchievementValue {

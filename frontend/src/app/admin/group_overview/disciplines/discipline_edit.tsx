@@ -114,7 +114,8 @@ function StartingOrderEditPopup({ group_name, disciplineName, startingOrder, onC
   const throwError = useAsyncError();
 
   const saveNewStartingOrder = function (new_order: StartingOrder) {
-    saveStartingOrder(new_order, group_name, onClose)
+    let is_hurdles = disciplineName.includes("Hürden");
+    saveStartingOrder(new_order, group_name, onClose, is_hurdles)
     .catch((e) => {
       throwError(e);
   })

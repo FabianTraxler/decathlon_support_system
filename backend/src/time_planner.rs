@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
+use env_logger::filter;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
+use std::hash::Hash;
 
 #[async_trait]
 pub trait TimePlanStorage {
@@ -13,6 +15,8 @@ pub trait TimePlanStorage {
     async fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>>;
 
     async fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
+
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -34,6 +38,13 @@ impl Athlete {
     pub fn full_name(&self) -> String {
         format!(
             "{} {}",
+            self.name.clone().unwrap_or("".to_string()),
+            self.surname.clone().unwrap_or("".to_string())
+        )
+    }
+    pub fn athlete_id(&self) -> String {
+        format!(
+            "{}_{}",
             self.name.clone().unwrap_or("".to_string()),
             self.surname.clone().unwrap_or("".to_string())
         )
@@ -284,6 +295,9 @@ impl TimeGroup {
 
         Ok(group)
     }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
     pub fn get_disciplines(&self) -> &Vec<Discipline> {
         &self.disciplines
     }
@@ -372,7 +386,7 @@ impl TimeGroup {
     pub fn get_default_track_order(&self) -> StartingOrder {
         StartingOrder::Track(self.default_run_order.clone())
     }
-    pub fn change_starting_order(&mut self, new_order: StartingOrder) {
+    pub fn change_starting_order(&mut self, new_order: StartingOrder, change_only_hurdle: Option<bool>) {
         match new_order.clone() {
             StartingOrder::Default(athletes) => self.default_athlete_order = athletes,
             StartingOrder::Track(runs) => self.default_run_order = runs,
@@ -380,6 +394,14 @@ impl TimeGroup {
         }
 
         for discipline in &mut self.disciplines {
+            if discipline.name().contains("Hürden") && !change_only_hurdle.unwrap_or(false) {
+                // If the discipline is 110 Meter Hürden, we do not change the starting order
+                // unless change_hurdle is set to true
+                continue;
+            }else if (change_only_hurdle.unwrap_or(false) && !discipline.name().contains("Hürden")) {
+                // If change_hurdle is set to true, we only change the starting order for hurdles
+                continue;
+            }
             match discipline.state {
                 DisciplineState::Finished => continue,
                 _ => {
@@ -452,6 +474,28 @@ impl TimeGroup {
         }
 
         Ok(())
+    }
+    pub fn reshuffle_run_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
+        let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
+        let mut athletes = self.default_athlete_order.clone();
+        
+        if only_registered_athletes {
+            athletes.retain(|athlete: &Athlete| {
+                if let Some(state) = athlete_states.get(&athlete.athlete_id()) {
+                    *state
+                } else {
+                    false
+                }
+            });
+        }
+
+        let (_, run_order, hurdle_order) =
+            create_default_athlete_order(Some(athletes), youth_group);
+
+        self.change_starting_order(StartingOrder::Track(run_order), Some(false));
+        self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
+
+        Ok("Updated".to_string())
     }
 }
 
@@ -611,6 +655,7 @@ fn create_default_athlete_order(
     )
 }
 
+
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
 pub struct TimeGroupID {
     pub name: Option<String>,
@@ -625,6 +670,12 @@ impl TimeGroupID {
     pub fn new(name: String) -> Self {
         TimeGroupID { name: Some(name) }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
+pub struct DisciplineUpdateId {
+    pub group_name: String,
+    pub change_hurdle: Option<bool>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]

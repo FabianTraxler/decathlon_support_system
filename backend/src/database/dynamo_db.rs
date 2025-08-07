@@ -229,7 +229,24 @@ impl AchievementStorage for DynamoDB {
                 }
             }
         }
+        if let Some(starting_number) = json_value.get("deregistered") {
+            update_expressions.push(String::from(" deregistered = :de"));
 
+            match Value::as_bool(starting_number) {
+                Some(val) => {
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":de"),
+                        AttributeValue::Bool(val),
+                    );
+                }
+                None => {
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":st"),
+                        AttributeValue::Null(true),
+                    );
+                }
+            }
+        }
         if update_expressions.len() > 0 {
             update_call =
                 update_call.update_expression(format!("SET {}", update_expressions.join(",")));
@@ -842,6 +859,24 @@ impl TimePlanStorage for DynamoDB {
             .await?;
 
         Ok(String::from("New group stored"))
+    }
+    
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>{
+        let items = self
+            .client
+            .scan()
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
+            .send()
+            .await;
+        let item_map = items?.items().to_vec();
+        let athletes: Vec<Athlete> = serde_dynamo::from_items(item_map)?;
+
+        let mut athlete_states: HashMap<String, bool> = HashMap::new();
+        for athlete in athletes {
+            athlete_states.insert(athlete.athlete_id(), athlete.is_active());
+        }
+
+        return Ok(athlete_states);
     }
 }
 

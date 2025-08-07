@@ -269,7 +269,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   }
 
   return (
-    <tr key={full_name}>
+    <tr key={full_name} className={(athlete.deregistered ? "  bg-red-200" : "")}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{age_group}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
@@ -301,6 +301,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
 }
 
 function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () => void }) {
+  const [athleteState, setAthleteState] = useState<Athlete>(athlete);
   const birthdate = new Date(athlete.birth_date * 1000);
   const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
   const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
@@ -445,6 +446,24 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       });
   }
 
+  const deregisterAthlete = function () {
+      fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+          method: "PUT",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ deregistered: !athleteState.deregistered })
+      }).then(res => {
+          if (res.ok) {
+              setAthleteState({ ...athleteState, deregistered: !athleteState.deregistered });
+          } else {
+              throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+          }
+      }).catch(e => {
+          alert(`Athlet konnte nicht abgemeldet werden! -> ${e}`)
+      }) 
+  }
+
 
   return (
     <div className='p-2'>
@@ -500,12 +519,22 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
           <LoadingButton size={"2"} onclick={switchGroup} >&#9989;</LoadingButton>
         </div>
       </div>
-      <div className='flex justify-end mt-5'>
+      <div className='flex justify-between mt-5'>
         <div
           className='p-2 font-bold shadow-lg bg-red-500 rounded-md'
           onClick={deleteAthlete}
         >
           Löschen
+        </div>
+        <div
+          className={'p-2 font-bold shadow-lg rounded-md ' + (athleteState.deregistered ? "bg-green-300" : "bg-red-300")}
+          onClick={deregisterAthlete}
+        >
+        {athleteState.deregistered ?
+            "Abmeldung Rückgängig machen"
+            :
+            "Abmelden"
+        }
         </div>
       </div>
 
