@@ -170,6 +170,31 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
         )
     }
 
+    let athlete_w_starting_number = Array.from(disciplineState.results.values()).filter(a => a.starting_number)
+
+    let all_athlete_results: IAthleteID[]= athlete_w_starting_number.map((athlete) => {
+                            return {
+                                name: athlete.name,
+                                surname: athlete.surname,
+                                starting_number: athlete.starting_number,
+                                age_group: "",
+                                achievement: {
+                                    Distance: {
+                                        first_try: athlete.first_try,
+                                        second_try: athlete.second_try,
+                                        third_try: athlete.third_try,
+                                        best_try: athlete.best_try,
+                                        final_result: {
+                                            integral: Math.floor(athlete.best_try || 0),
+                                            fractional: Math.round((athlete.best_try || 0) * 100) % 100
+                                        },
+                                        name: athlete.discipline_name,
+                                        unit: athlete.discipline_unit
+                                    },
+                                    athlete_name: athlete.name + " " + athlete.surname,
+                                } 
+                            } as IAthleteID
+                        } )
 
     return (
         <AthleteResults.Provider value={{
@@ -244,29 +269,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 {
                     showResultsPopUp &&
                     <AthleteResultsPopUp 
-                        athletes={disciplineState.results.values().filter(a => a.starting_number).map((athlete) => {
-                                                    return {
-                                                        name: athlete.name,
-                                                        surname: athlete.surname,
-                                                        starting_number: athlete.starting_number,
-                                                        age_group: "",
-                                                        achievement: {
-                                                            Distance: {
-                                                                first_try: athlete.first_try,
-                                                                second_try: athlete.second_try,
-                                                                third_try: athlete.third_try,
-                                                                best_try: athlete.best_try,
-                                                                final_result: {
-                                                                    integral: Math.floor(athlete.best_try || 0),
-                                                                    fractional: Math.round((athlete.best_try || 0) * 100) % 100
-                                                                },
-                                                                name: athlete.discipline_name,
-                                                                unit: athlete.discipline_unit
-                                                            },
-                                                            athlete_name: athlete.name + " " + athlete.surname,
-                                                        } 
-                                                    } as IAthleteID
-                                                } ).toArray()}
+                        athletes={all_athlete_results}
                         type="Distance" 
                         setShowResultsPopUp={setShowResultsPopUp}
                         unit="m"
