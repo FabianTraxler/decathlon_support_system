@@ -401,7 +401,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                         <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
                                                             ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
                                                         }
-                                                            draggable
+                                                            draggable="true"
                                                             onDrop={(e) => handleDragDrop(e, run_id, athlete_id, true)}
                                                             onDragStart={(e) => handleDragStart(e, run_id, athlete_id, true)}
                                                             onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}

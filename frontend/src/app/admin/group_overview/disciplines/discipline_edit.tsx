@@ -183,7 +183,7 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
             {currentRows.map((athlete, i) => {
               return (
                 <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' + (i == lastDraggedOver && " bg-white")}
-                  draggable
+                  draggable="true"
                   onDrop={(e) => handleDragDrop(e, i)}
                   onDragStart={(e) => handleDragStart(e, i)}
                   onDragOver={(e) => handleDragOver(e, i)}
@@ -378,7 +378,7 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
                   if (athlete == null) {
                     return (<tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
                       ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
-                      draggable
+                      draggable="true"
                       onDrop={(e) => handleDragDrop(e, run_id, track_number, true)}
                       onDragStart={(e) => handleDragStart(e, run_id, track_number, true)}
                       onDragOver={(e) => handleDragOver(e, run_id, track_number)}
@@ -397,7 +397,7 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
                     return (
                       <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
                         ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
-                        draggable
+                        draggable="true"
                         onDrop={(e) => handleDragDrop(e, run_id, track_number, false)}
                         onDragStart={(e) => handleDragStart(e, run_id, track_number, false)}
                         onDragOver={(e) => handleDragOver(e, run_id, track_number)}
