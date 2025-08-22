@@ -12,7 +12,7 @@ from tqdm import tqdm
 import pytz
 import gspread
 
-URL = "http://localhost:3001"
+URL = "https://app.jedermannzehnkampf.at"
 
 
 def parse_args() -> Namespace:
@@ -307,17 +307,17 @@ def upload_teams(google_sheets_name: str):
  
 	
 	for _, row in tqdm(team_df.iterrows(), total=len(team_df)):
-		url = URL + "/api/teams"
+		url = URL + "/api/team"
 
 		post_body = {
-			"name": row["Teamname"],
+			"team_name": row["Teamname"],
 			"paid": row["Geld eingelangt"] in [1,2,3],
 			"athletes": []
 		}
 		for i in range(1,6):
 			athlete_name = row.get(f"Person {i}")
 			if isinstance(athlete_name, str) and athlete_name.strip() != "":
-				post_body["athletes"].append(athlete_name.strip())
+				post_body["athletes"].append(athlete_name.strip().replace(" ", "_"))
     
 		response = requests.post(url,
 								json=post_body)

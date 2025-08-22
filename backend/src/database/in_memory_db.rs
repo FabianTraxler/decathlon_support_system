@@ -1,6 +1,7 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID};
 use crate::notes::{NoteID, NoteStorage};
+use crate::teams::{TeamStorage, Team, TeamID};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -347,6 +348,25 @@ impl NoteStorage for InMemoryDB {
 
     async fn save_note(&self, note_id: NoteID, note: String) -> Result<String, Box<dyn Error>> {
         todo!("Implement")
+    }
+}
+
+#[async_trait]
+impl TeamStorage for InMemoryDB {
+    async fn get_teams(&self) -> Result<Vec<Team>, Box<dyn Error>> {
+        todo!("Implement method to get all teams")
+    }
+    async fn get_team(&self, team_id: &TeamID) ->  Result<Option<Team>, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn save_team(&self, team: &Team) ->  Result<String, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn update_team(&self, team_id: &TeamID, team_update: &String) ->  Result<String, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn delete_team(&self, team_id: &TeamID) ->  Result<(), Box<dyn Error>>{
+        todo!("Implement method to get all teams")
     }
 }
 
