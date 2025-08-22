@@ -146,6 +146,28 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
             <div className="flex justify-center items-center h-full w-full"><LoadingAnimation></LoadingAnimation></div>
         )
     }
+    let athlete_w_starting_number = Array.from(disciplineState.results.values()).filter(a => a.starting_number)
+
+    let all_athlete_results: IAthleteID[]= athlete_w_starting_number.map((athlete) => {
+                            return {
+                                name: athlete.name,
+                                surname: athlete.surname,
+                                starting_number: athlete.starting_number,
+                                age_group: "",
+                                achievement: {
+                                    Height: {
+                                        name: athlete.discipline_name,
+                                        unit: athlete.discipline_unit,
+                                        start_height: athlete.start_height,
+                                        height_increase: athlete.height_increase,
+                                        tries: athlete.tries,
+                                        final_result: athlete.final_result,
+                                    },
+                                    athlete_name: athlete.name + " " + athlete.surname,
+                                } 
+                            } as IAthleteID
+                        } 
+                    )
 
     return (
         <AthleteResults.Provider value={{
@@ -232,25 +254,7 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
                 {
                     showResultsPopUp &&
                     <AthleteResultsPopUp 
-                        athletes={disciplineState.results.values().filter(a => a.starting_number).map((athlete) => {
-                            return {
-                                name: athlete.name,
-                                surname: athlete.surname,
-                                starting_number: athlete.starting_number,
-                                age_group: "",
-                                achievement: {
-                                    Height: {
-                                        name: athlete.discipline_name,
-                                        unit: athlete.discipline_unit,
-                                        start_height: athlete.start_height,
-                                        height_increase: athlete.height_increase,
-                                        tries: athlete.tries,
-                                        final_result: athlete.final_result,
-                                    },
-                                    athlete_name: athlete.name + " " + athlete.surname,
-                                } 
-                            } as IAthleteID
-                        } ).toArray()}
+                        athletes={all_athlete_results}
                         type="Height" 
                         setShowResultsPopUp={setShowResultsPopUp}
                         unit="m"
