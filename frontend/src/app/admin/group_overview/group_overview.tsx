@@ -111,8 +111,10 @@ function FinalResults(){
     let name = type
     let url = ""
 
+    var age_groups = decathlon_age_groups.map((group) => group.replace("AK-", ""))
+
     if(type == "age_groups"){
-      url = "/api/all_age_group_results?age_identifiers=" + decathlon_age_groups
+      url = "/api/all_age_group_results?age_identifiers=" + age_groups
       name = "Gesamtergebnis"
     }else if (type == "teams"){
       url = "/api/certificates?name=all_teams"

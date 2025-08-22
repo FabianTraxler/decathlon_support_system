@@ -103,6 +103,8 @@ export default function Timetable({ group_name }: { group_name: string }) {
                 .catch((e) => {
                     console.error('Error fetching or opening the PDF:', e);
                 })
+        } else {
+            done();
         }
     }
 
