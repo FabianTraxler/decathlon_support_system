@@ -300,11 +300,36 @@ def upload_timetable(timetable_path: str) -> bool:
 	else:
 		return False
 
+def upload_teams(google_sheets_name: str):
+	sheet = get_google_sheet(google_sheets_name)
+	worksheet = sheet.worksheet("Teams")
+	team_df = pd.DataFrame(worksheet.get_all_records())
+ 
+	
+	for _, row in tqdm(team_df.iterrows(), total=len(team_df)):
+		url = URL + "/api/teams"
+
+		post_body = {
+			"name": row["Teamname"],
+			"paid": row["Geld eingelangt"] in [1,2,3],
+			"athletes": []
+		}
+		for i in range(1,6):
+			athlete_name = row.get(f"Person {i}")
+			if isinstance(athlete_name, str) and athlete_name.strip() != "":
+				post_body["athletes"].append(athlete_name.strip())
+    
+		response = requests.post(url,
+								json=post_body)
+		if not response.ok:
+			print(f"Team: {row['Teamname']} not uploaded")
+		time.sleep(0.1)
+
 def main(args: Namespace):
 	upload_timetable(args.timetable)
 	upload_decathlon(args.register_table)
 	upload_kids(args.register_table)
-
+	upload_teams(args.register_table)
 
 if __name__ == "__main__":
 	args = parse_args()
