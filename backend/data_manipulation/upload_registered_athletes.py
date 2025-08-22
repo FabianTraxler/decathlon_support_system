@@ -12,7 +12,7 @@ from tqdm import tqdm
 import pytz
 import gspread
 
-URL = "https://backup.jedermannzehnkampf.at"
+URL = "http://localhost:3001"
 
 
 def parse_args() -> Namespace:
@@ -218,7 +218,8 @@ def upload_athlete(name: str, surname: str,
 		"competition_type": competition_type,
 		"starting_number": starting_number,
 		"t_shirt": t_shirt,
-  		"paid": paid
+  		"paid": paid,
+		"deregistered": False
 	}
 	if birth_day is not None:
 		post_body["birth_date"] = birth_day
@@ -263,7 +264,8 @@ def upload_group(name: str, competition_type: str) -> bool:
 	post_body = {
 		"name": name,
 		"athlete_ids": [],
-		"competition_type": competition_type
+		"competition_type": competition_type,
+		"notes": {}
 	}
 	response = requests.post(url,
 							 json=post_body)

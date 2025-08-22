@@ -4,7 +4,7 @@ export default function Overview({ groupname, allTabs, changeTab }: { groupname:
       <div className="w-fit p-4 rounded border bg-cyan-100 shadow-sm text-4xl font-bold text-center">
         {groupname}
       </div>
-      <div className="w-full mt-12">
+      <div className="w-full mt-6">
         {allTabs.map((key) => {
           return (
             <button key={key} onClick={_ => changeTab(key)}

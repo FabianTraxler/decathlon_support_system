@@ -2,7 +2,7 @@ import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_
 import { AchievementValue } from "@/app/lib/athlete_fetching";
 import { useContext, useState } from "react";
 import { AchievementContext } from "./athletes";
-import { long_distance_disciplines } from "@/app/lib/config";
+import { long_distance_disciplines, MAX_DISCIPLINE_PERFORMANCE } from "@/app/lib/config";
 
 
 export default function AchievementDisplay({ athlete_number, name, type, achievement, athlete_name }: { athlete_number: number, name: string, type: string, achievement?: AchievementValue, athlete_name: string }) {
@@ -26,7 +26,6 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
     const [current_achievement, setAchievement] = useState<{ showEdit: boolean, value?: AchievementValue }>({ 
         showEdit: false, 
         value: achievement })
-    let { updateAchievement } = useContext(AchievementContext);
 
 
     if (current_achievement.value) {
@@ -35,7 +34,7 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
 
     var saveChanges = function (new_achievement?: AchievementValue) {
         if (new_achievement) {
-            updateAchievement(athlete_number, name, new_achievement)
+            alert("Achievement not saved in this part! Please check!!")
             setAchievement({ showEdit: false, value: new_achievement })
         } else {
             setAchievement({ ...current_achievement, showEdit: false })

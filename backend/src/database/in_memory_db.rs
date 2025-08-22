@@ -1,5 +1,6 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID};
+use crate::notes::{NoteID, NoteStorage};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
@@ -130,7 +131,8 @@ impl AchievementStorage for InMemoryDB {
         let group_store = GroupStore {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
-            competition_type: group.competition_type()
+            competition_type: group.competition_type(),
+            notes: group.notes().clone(),
         };
 
         self.write_group_store(group_id, group_store).await
@@ -321,6 +323,9 @@ impl TimePlanStorage for InMemoryDB {
             .insert(TimeGroupID::from_time_group(&group), group);
         Ok(String::from("New group stored"))
     }
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>{
+        !todo!("Implement method to get all athlete states")
+    }
 }
 
 #[async_trait]
@@ -331,6 +336,17 @@ impl AuthenticateStorage for InMemoryDB {
 
     async fn store_role(&self, _role: Role) -> Result<String, Box<dyn Error>>{
         Err(Box::from("Not implemented"))
+    }
+}
+
+#[async_trait]
+impl NoteStorage for InMemoryDB {
+    async fn get_note(&self, note_id: NoteID) -> Result<Option<String>, Box<dyn Error>> {
+        todo!("Implement")
+    }
+
+    async fn save_note(&self, note_id: NoteID, note: String) -> Result<String, Box<dyn Error>> {
+        todo!("Implement")
     }
 }
 

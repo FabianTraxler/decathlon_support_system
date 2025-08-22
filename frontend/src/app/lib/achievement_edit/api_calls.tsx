@@ -2,8 +2,8 @@ import { AchievementValue, Athlete, HeightAchievement } from "../athlete_fetchin
 import { AthleteDistanceResults, AthleteHeightResults, AthleteID, Discipline, StartingOrder } from "../interfaces";
 import { convert_to_integral_fractional } from "../parsing";
 
-export async function saveStartingOrder(order: StartingOrder, group_name: string, callback_fn: (order: StartingOrder) => void) {
-  await fetch(`/api/change_starting_order?name=${group_name}`, {
+export async function saveStartingOrder(order: StartingOrder, group_name: string, callback_fn: (order: StartingOrder) => void, is_hurdles: boolean = false) {
+  await fetch(`/api/change_starting_order?group_name=${group_name}&change_hurdle=${is_hurdles}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

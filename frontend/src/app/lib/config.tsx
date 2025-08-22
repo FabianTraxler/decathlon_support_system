@@ -76,3 +76,16 @@ export const unit_mapping: Map<string, string> = new Map([
     ["cm", "cm"],
     ["m", "m"]
 ])
+
+export const MAX_DISCIPLINE_PERFORMANCE: Map<string, number> = new Map([
+    ["100 Meter Lauf", 9.5],
+    ["Weitsprung", 8.5],
+    ["Kugelstoß", 23.56 ],
+    ["Hochsprung", 245],
+    ["400 Meter Lauf", 43],
+    ["110 Meter Hürden", 11],
+    ["Diskuswurf", 70],
+    ["Stabhochsprung", 650],
+    ["Speerwurf", 80],
+    ["1500 Meter Lauf", 240]
+])

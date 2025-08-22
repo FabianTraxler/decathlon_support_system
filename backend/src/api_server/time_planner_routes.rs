@@ -4,7 +4,7 @@ use actix_web::web::Query;
 use serde_json::Value;
 use crate::api_server::parse_json_body;
 use crate::certificate_generation::{GroupID, PDF};
-use crate::time_planner::{DisciplineID, StartingOrder, TimeGroupID};
+use crate::time_planner::{DisciplineID, DisciplineUpdateId, StartingOrder, TimeGroupID};
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_discipline);
@@ -17,6 +17,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(change_starting_order);
     cfg.service(upload_time_table);
     cfg.service(change_discipline_state);
+    cfg.service(update_run_order);
 }
 
 #[get("/discipline")]
@@ -211,10 +212,11 @@ async fn get_track_starting_order(
 #[put("/change_starting_order")]
 async fn change_starting_order(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
-    query: Query<TimeGroupID>,
+    query: Query<DisciplineUpdateId>,
     body: web::Payload,
 ) -> impl Responder {
-    let group_id = query.into_inner();
+    let discipline_id = query.into_inner();
+    let group_id = TimeGroupID::new(discipline_id.group_name);
     let group = data.get_time_group(&group_id).await;
 
     match group {
@@ -223,7 +225,7 @@ async fn change_starting_order(
             let starting_order: serde_json::error::Result<StartingOrder> = serde_json::from_str(json_string.as_str());
             match starting_order {
                 Ok(starting_order) => {
-                    group.change_starting_order(starting_order);
+                    group.change_starting_order(starting_order, discipline_id.change_hurdle);
                     match data.store_time_group(group).await {
                         Ok(_) => HttpResponse::Ok().body("Starting Order changed"),
                         Err(e) => HttpResponse::InternalServerError()
@@ -256,5 +258,35 @@ async fn upload_time_table(
         Err(e) => {
             HttpResponse::BadRequest().body(format!("Could not parse time table: {}", e))
         }
+    }
+}
+
+
+#[put("/update_run_order")]
+async fn update_run_order(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: Query<TimeGroupID>,
+) -> impl Responder {
+    let group_id = query.into_inner();
+    let group = data.get_time_group(&group_id).await;
+
+    let athlete_states = match data.get_all_athlete_states().await {
+        Ok(states) => states,
+        Err(e) => return HttpResponse::InternalServerError().body(format!("Error fetching athlete states: {}", e))
+    };
+
+    match group {
+        Some(mut group) => {
+            match group.reshuffle_run_order(group.name().to_string(), true, athlete_states) {
+                Ok(msg) => {
+                    match data.store_time_group(group).await {
+                        Ok(_) => HttpResponse::Ok().body(msg),
+                        Err(e) => HttpResponse::InternalServerError().body(format!("Error storing updated group: {e}"))
+                    }
+                }
+                Err(e) => HttpResponse::BadRequest().body(format!("Error updating run order: {e}"))
+            }
+        }
+        None => HttpResponse::NotFound().body("Group Not Found")
     }
 }

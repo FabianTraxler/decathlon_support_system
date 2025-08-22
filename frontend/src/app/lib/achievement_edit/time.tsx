@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
 import { AchievementValue, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { convert_to_integral_fractional } from "@/app/lib/parsing";
-import { long_distance_disciplines } from "../config";
+import { long_distance_disciplines, MAX_DISCIPLINE_PERFORMANCE } from "../config";
 import { useAsyncError } from "../asyncError";
 
 
@@ -24,6 +24,15 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
             let sec = parseInt(final_result_string.split(":")[1].split(",")[0])
             let full_sec = min * 60 + sec;
             final_result_string = full_sec.toString() + "," + final_result_string.split(",")[1]
+        }
+
+        let new_value = parseFloat(final_result_string);
+        let max_value = MAX_DISCIPLINE_PERFORMANCE.get(achievement?.name || "") || 9999;
+
+        if( new_value > max_value) {
+            if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                return achievement
+            }
         }
 
         let final_result = convert_to_integral_fractional(final_result_string)

@@ -1,6 +1,6 @@
-import { AthleteDistanceResults, AthleteID, Discipline } from "@/app/lib/interfaces";
+import { AthleteDistanceResults, AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { BeforeStartInfoBox, start_discipline } from "./discipline";
+import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "./discipline";
 import { get_group_achievements, save_distance_achievement, skip_distance_discipline } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { NavigationContext } from "../navigation";
@@ -8,6 +8,7 @@ import { LoadingAnimation } from "@/app/lib/loading";
 import AthleteEditPopup from "./athlete_edit_popup";
 import { finish_discipline } from "@/app/lib/discipline_edit";
 import { useAsyncError } from "@/app/lib/asyncError";
+import { MAX_DISCIPLINE_PERFORMANCE } from "@/app/lib/config";
 
 
 interface DistanceDisciplineState {
@@ -33,6 +34,8 @@ const AthleteResults = createContext<{ state: DistanceDisciplineState, update_st
 
 export default function DistanceDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [disciplineState, setDisciplineState] = useState<DistanceDisciplineState>({ ...empty_state, discipline: discipline })
+    const [showResultsPopUp, setShowResultsPopUp] = useState<boolean>(false)
+
     const throwError = useAsyncError();
 
     useEffect(() => {
@@ -193,6 +196,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                                 }
                             }
                         }}
+                        athletes={disciplineState.current_order}
                     ></BeforeStartInfoBox>
                 }
                 {
@@ -225,9 +229,48 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 }
                 {
                     disciplineState.discipline.state == "Finished" &&
-                    <div className="flex h-full text-2xl font-bold items-center justify-center">
-                        <span>Abgeschlossen</span>
+                    <div className="flex flex-col h-full text-2xl font-bold items-center justify-center">
+                        <div>Abgeschlossen!</div>
+                        <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
+                            <div
+                                className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none" }
+                                onClick={() => setShowResultsPopUp(true)}
+                            >
+                                Ergebnisse anzeigen
+                            </div>
+                        </div>
                     </div>
+                }
+                {
+                    showResultsPopUp &&
+                    <AthleteResultsPopUp 
+                        athletes={disciplineState.results.values().filter(a => a.starting_number).map((athlete) => {
+                                                    return {
+                                                        name: athlete.name,
+                                                        surname: athlete.surname,
+                                                        starting_number: athlete.starting_number,
+                                                        age_group: "",
+                                                        achievement: {
+                                                            Distance: {
+                                                                first_try: athlete.first_try,
+                                                                second_try: athlete.second_try,
+                                                                third_try: athlete.third_try,
+                                                                best_try: athlete.best_try,
+                                                                final_result: {
+                                                                    integral: Math.floor(athlete.best_try || 0),
+                                                                    fractional: Math.round((athlete.best_try || 0) * 100) % 100
+                                                                },
+                                                                name: athlete.discipline_name,
+                                                                unit: athlete.discipline_unit
+                                                            },
+                                                            athlete_name: athlete.name + " " + athlete.surname,
+                                                        } 
+                                                    } as IAthleteID
+                                                } ).toArray()}
+                        type="Distance" 
+                        setShowResultsPopUp={setShowResultsPopUp}
+                        unit="m"
+                    ></AthleteResultsPopUp>
                 }
             </div>
         </AthleteResults.Provider>
@@ -242,6 +285,10 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 
     const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) {
         let selected_athlete = state.current_order[0]
+        if (typeof new_value == "string") {
+            new_value = parseFloat(new_value)
+        }
+
         navigation.history.push({
             name: "Save Achievement",
             reset_function: () => {
@@ -250,9 +297,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             }
         })
         let athlete_result = state.results.get(athlete.full_name())
-        if (typeof new_value == "string") {
-            new_value = parseFloat(new_value)
-        }
+
         if (athlete_result) {
             let full_name = athlete_result.full_name()
             let update_result = { ...athlete_result, full_name: () => full_name }
@@ -409,6 +454,24 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
     }
     const [selectedTry, setSelectedTry] = useState({ try_number: state.current_try, try_value: try_value })
 
+    const save_and_check_try = function (try_number: number, new_value: number | string) {
+        if (new_value == "") {
+            new_value = -1
+        } else if (typeof new_value == "string") {
+            new_value = parseFloat(new_value)
+        }
+        let max_value = MAX_DISCIPLINE_PERFORMANCE.get(state.discipline.name) || 9999;
+
+        if( new_value > max_value) {
+            if(confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                save_athlete_try(athlete, try_number, new_value, false)
+            }else{
+                return; 
+            }
+        }
+        save_athlete_try(athlete, try_number, new_value, false)
+    } 
+
     return (
         <div className="grid grid-rows-8 h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md">
             <div className="flex flex-row items-center justify-between text-xl sm:text-4xl p-2 bg-slate-700 text-slate-100 rounded-md">
@@ -473,7 +536,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         current_try={state.current_try == try_number}
                         selected_try={selectedTry.try_number == try_number}
                         setSelectedTry={setSelectedTry}
-                        save_value={(try_number: number, new_value: number | string) => save_athlete_try(athlete, try_number, new_value, false)}>
+                        save_value={save_and_check_try}>
                     </Try>
                 )
             })}

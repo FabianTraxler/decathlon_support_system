@@ -3,6 +3,7 @@ use crate::certificate_generation::{Achievement, AchievementID, AchievementStora
     AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID
 };
 use crate::database::db_errors::ItemNotFound;
+use crate::notes::{NoteID, NoteStorage};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
@@ -70,7 +71,7 @@ impl AchievementStorage for DynamoDB {
 
         match item {
             Ok(item) => {
-                let item_map = item.item()?;
+                let item_map: &HashMap<String, AttributeValue> = item.item()?;
                 let athlete: Athlete = serde_dynamo::from_item(item_map.clone()).unwrap_or(None)?;
                 Some(athlete)
             }
@@ -228,7 +229,24 @@ impl AchievementStorage for DynamoDB {
                 }
             }
         }
+        if let Some(starting_number) = json_value.get("deregistered") {
+            update_expressions.push(String::from(" deregistered = :de"));
 
+            match Value::as_bool(starting_number) {
+                Some(val) => {
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":de"),
+                        AttributeValue::Bool(val),
+                    );
+                }
+                None => {
+                    update_call = update_call.expression_attribute_values(
+                        String::from(":st"),
+                        AttributeValue::Null(true),
+                    );
+                }
+            }
+        }
         if update_expressions.len() > 0 {
             update_call =
                 update_call.update_expression(format!("SET {}", update_expressions.join(",")));
@@ -401,6 +419,7 @@ impl AchievementStorage for DynamoDB {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
             competition_type: group.competition_type(),
+            notes: group.notes().clone(),
         };
 
         self.write_group_store(group_id, group_store).await
@@ -841,7 +860,81 @@ impl TimePlanStorage for DynamoDB {
 
         Ok(String::from("New group stored"))
     }
+    
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>{
+        let items = self
+            .client
+            .scan()
+            .table_name(std::env::var("DB_NAME_ATHLETE").unwrap_or("athlete_store".to_string()))
+            .send()
+            .await;
+        let item_map = items?.items().to_vec();
+        let athletes: Vec<Athlete> = serde_dynamo::from_items(item_map)?;
+
+        let mut athlete_states: HashMap<String, bool> = HashMap::new();
+        for athlete in athletes {
+            athlete_states.insert(athlete.athlete_id(), athlete.is_active());
+        }
+
+        return Ok(athlete_states);
+    }
 }
+
+
+#[async_trait]
+impl NoteStorage for DynamoDB {
+    async fn get_note(&self, note_id: NoteID) -> Result<Option<String>, Box<dyn Error>> {
+        let group_name = note_id.group_name.clone();
+        let discipline = note_id.discipline.clone();
+        let item = self
+            .client
+            .get_item()
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
+            .key("name", AttributeValue::S(group_name))
+            .projection_expression("notes")
+            .send()
+            .await?;
+
+        let item_map = item.item().ok_or(ItemNotFound::new("Key not found", "404"))?;
+        // The field is "note" -> which is a map, and discipline is the key inside it
+        match item_map.get("notes") {
+            Some(note_map) => {
+                match note_map {
+                    AttributeValue::M(note_map) => {
+                        match note_map.get(&discipline) {
+                            Some(AttributeValue::S(note)) => return Ok(Some(note.clone())),
+                            _ => return Ok(None),
+                        }
+                    }
+                    _ => return Ok(None)
+                }
+            }
+            None => return Ok(None)
+        }
+    }
+
+    async fn save_note(&self, note_id: NoteID, note: String) -> Result<String, Box<dyn Error>> {
+        let mut update_call = self
+            .client
+            .update_item()
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
+            .key("name", AttributeValue::S(note_id.group_name.clone()));
+
+        update_call = update_call.expression_attribute_values(
+                String::from(":n"),
+                AttributeValue::S(note)
+        );
+        update_call = update_call.expression_attribute_names(
+                String::from("#noteName"),
+                note_id.discipline
+        );
+        update_call = update_call.update_expression("SET notes.#noteName = :n");
+
+        update_call.send().await?;
+        Ok(String::from("Note added"))
+    }
+}
+
 
 #[async_trait]
 impl AuthenticateStorage for DynamoDB {

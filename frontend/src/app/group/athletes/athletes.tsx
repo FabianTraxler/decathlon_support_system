@@ -17,7 +17,7 @@ export default function Athletes({ group_name }: { group_name: string }) {
 
     const setOverviewAthletes = function (athletes: Athlete[]) {
         let overview_athletes = athletes
-            .filter(athlete => athlete.starting_number)
+            .filter(athlete => athlete.starting_number && !athlete.deregistered)
             .map(athlete => {
                 let overview_athlete = athlete as OverviewAthlete;
                 overview_athlete.achievements = new Map(Object.entries(overview_athlete.achievements))

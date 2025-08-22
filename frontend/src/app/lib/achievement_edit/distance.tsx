@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { DistanceAchievement, AchievementValue } from "@/app/lib/athlete_fetching";
 import { convert_from_integral_fractional, convert_to_integral_fractional } from "@/app/lib/parsing";
 import { useAsyncError } from "../asyncError";
+import { MAX_DISCIPLINE_PERFORMANCE } from "../config";
 
 type AchievementState = {
     [key: string]: number | string,
@@ -22,18 +23,32 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
     let third_try: number | string = ""
     if (achievement) {
         if (achievement.final_result) {
-            final_result = convert_from_integral_fractional(achievement.final_result)
+            if (typeof achievement.final_result === "number") {
+                final_result = achievement.final_result;
+            }else{
+                final_result = convert_from_integral_fractional(achievement.final_result)
+            }
         }
         if (achievement.first_try) {
-            first_try = convert_from_integral_fractional(achievement.first_try)
+            if (typeof achievement.first_try === "number") {
+                first_try = achievement.first_try == -1 ? "X" : achievement.first_try;
+            }else{
+                first_try = convert_from_integral_fractional(achievement.first_try)
+            }
         }
         if (achievement.second_try) {
-            second_try = convert_from_integral_fractional(achievement.second_try)
-
+            if (typeof achievement.second_try === "number") {
+                second_try = achievement.second_try == -1 ? "X" : achievement.second_try;
+            }else{
+                second_try = convert_from_integral_fractional(achievement.second_try)
+            }
         }
         if (achievement.third_try) {
-            third_try = convert_from_integral_fractional(achievement.third_try)
-
+            if (typeof achievement.third_try === "number") {
+                third_try = achievement.third_try == -1 ? "X" : achievement.third_try;
+            }else{
+                third_try = convert_from_integral_fractional(achievement.third_try)
+            }
         }
         unit = achievement.unit;
     }
@@ -50,7 +65,15 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
     const form_submit = function (form_event: FormEvent<HTMLFormElement>) {
         form_event.preventDefault();
         let formData = new FormData(form_event.target as HTMLFormElement);
+        
+        let new_value = parseFloat(formData.get("final_result")?.toString() || "0");
+        let max_value = MAX_DISCIPLINE_PERFORMANCE.get(achievement?.name || "") || 9999;
 
+        if( new_value > max_value) {
+            if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+                return achievement
+            }
+        }
         let new_achievement = {
             Distance: {
                 name: achievement?.name || "",
