@@ -1,7 +1,7 @@
 services:
   next_frontend:
       container_name: next_frontend
-      image: fabsl22/decathlon_support_system:frontend_v1.1
+      image: fabsl22/decathlon_support_system:frontend_v0.2
       build:
         context: ./frontend
         dockerfile: frontend.dockerfile
@@ -14,16 +14,16 @@ services:
       restart: always
   rust_backend:
       container_name: rust_backend
-      image: fabsl22/decathlon_support_system:backend_v1.1
+      image: fabsl22/decathlon_support_system:backend_v0.2
       build:
         context: ./backend
         dockerfile: backend.dockerfile
       environment:
-        DB_NAME_ATHLETE: athlete_store
-        DB_NAME_AUTHENTICATION: authentication
-        DB_NAME_GROUP: group_store
-        DB_NAME_TIMEGROUP: time_group_store
-        DB_NAME_TEAM: team_store
+        DB_NAME_ATHLETE: athlete_store_test
+        DB_NAME_AUTHENTICATION: authentication_test
+        DB_NAME_GROUP: group_store_test
+        DB_NAME_TIMEGROUP: time_group_store_test
+        DB_NAME_TEAM: team_store_test
       ports:
         - '3001:3001'
       volumes:
