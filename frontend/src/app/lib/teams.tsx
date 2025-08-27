@@ -4,7 +4,7 @@ import { Athlete, fetch_all_athletes } from "@/app/lib/athlete_fetching";
 import { LoadingAnimation, LoadingButton } from "@/app/lib/loading";
 import { useEffect, useState } from "react";
 
-export function TeamsTable() {
+export function TeamsTable({show_points}: {show_points?: boolean}) {
     return (
         <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
             <div className="items-center justify-between p-1 w-full ">
@@ -13,7 +13,7 @@ export function TeamsTable() {
                         <span>Teams</span>
                     </div>
                     <div className={"mt-5 text-sm 2xl:text-md font-normal overflow-x-scroll h-full"}>
-                        <Teams></Teams>
+                        <Teams show_points={show_points}></Teams>
                     </div>
                 </div>
             </div>
@@ -23,7 +23,7 @@ export function TeamsTable() {
 
 
 
-function Teams() {
+function Teams({show_points}: {show_points?: boolean}) {
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
     const [addTeamPopupOpen, setAddTeamPopupOpen] = useState(false);
@@ -66,9 +66,10 @@ function Teams() {
                 :
                 <table className="min-w-full border-collapse border border-gray-300">
                     <thead>
-                        <tr>
+                        <tr className="bg-gray-300">
                             <th className="border border-gray-300 px-4 py-2">Team Name</th>
-                            <th className="border border-gray-300 px-4 py-2">Gesamt-Punkte</th>
+                            <th className="border border-gray-300 px-4 py-2">Bezahlt</th>
+                            {show_points && <th className="border border-gray-300 px-4 py-2">Gesamt-Punkte</th>}
                             <th className="border border-gray-300 px-4 py-2">Mitglied 1</th>
                             <th className="border border-gray-300 px-4 py-2">Mitglied 2</th>
                             <th className="border border-gray-300 px-4 py-2">Mitglied 3</th>
@@ -78,7 +79,7 @@ function Teams() {
                     </thead>
                     <tbody>
                         {teams.map((team, index) => (
-                            <TeamRow key={index} team={team} index={index} refresh={refreshTeams} />
+                            <TeamRow key={index} team={team} index={index} refresh={refreshTeams} show_points={show_points}/>
                         ))}
                     </tbody>
                 </table>
@@ -96,7 +97,7 @@ function Teams() {
     );
 }
 
-function TeamRow({ team, index, refresh }: { team: Team, index: number, refresh: () => void }) {
+function TeamRow({ team, index, refresh, show_points}: { team: Team, index: number, refresh: () => void, show_points?: boolean }) {
     const [popupOpen, setPopupOpen] = useState(false);
 
     let athletes = team.athlete_infos ? team.athlete_infos : [];
@@ -105,10 +106,13 @@ function TeamRow({ team, index, refresh }: { team: Team, index: number, refresh:
             <td className="border border-gray-300 px-4 py-2 text-center hover:bg-slate-400 hover:cursor-pointer" onClick={() => setPopupOpen(true)}>
                 {team.team_name}
             </td>
-            <td className="border border-gray-300 px-4 py-2 text-center">{team.total_points}</td>
+            <td className="border border-gray-300 px-4 py-2 text-center">
+                {team.paid ? <span>&#9989;</span> : <span>&#10060;</span>}
+            </td>
+            {show_points && <td className="border border-gray-300 px-4 py-2 text-center">{team.total_points}</td>}
             {athletes.map((athlete, idx) => (
                 <td key={idx} className="border border-gray-300 px-4 py-2 text-center">
-                    {athlete.name} {athlete.surname} ({athlete.total_points} Pkt.)
+                    {athlete.name} {athlete.surname} {show_points && <span>({athlete.total_points} Pkt.)</span> }
                 </td>
             )
             )}
