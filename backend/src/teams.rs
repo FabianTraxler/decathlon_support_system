@@ -21,6 +21,17 @@ pub struct Team {
 }
 
 impl Team {
+    pub fn new(team_name: String, paid: bool, athlete_infos: Vec<Athlete>) -> Self {
+        let athletes: Vec<String> = athlete_infos.iter().map(|a| a.athlete_id().clone()).collect();
+        let total_points: u32 = athlete_infos.iter().map(|a| a.total_point()).sum();
+        Team {
+            team_name: Some(team_name),
+            paid: Some(paid),
+            athletes: Some(athletes),
+            total_points: Some(total_points),
+            athlete_infos: Some(athlete_infos),
+        }
+    }
     pub fn from_json(json_str: &str) -> Result<Self, Box<dyn Error>> {
         Ok(serde_json::from_str(json_str)?)
     }    

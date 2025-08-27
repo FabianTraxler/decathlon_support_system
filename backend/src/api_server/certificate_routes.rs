@@ -10,6 +10,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(get_age_group_results);
     cfg.service(get_certificates);
     cfg.service(get_all_age_group_results);
+    cfg.service(get_team_results);
 }
 
 #[get("/certificate")]
@@ -169,4 +170,26 @@ async fn get_all_age_group_results(
             .content_type("application/pdf")
             .body(final_pdf)
     
+}
+
+#[get("/team_results")]
+async fn get_team_results(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+) -> impl Responder {
+    let teams = data.get_teams().await;
+
+    match teams {
+        Ok(teams) => {
+            let results = PDF::new_team_result(&teams);
+            let pdf_message = results.to_http_message();
+            match pdf_message {
+                Ok(pdf_message) => HttpResponse::Ok()
+                    .content_type("application/pdf")
+                    .body(pdf_message),
+                Err(e) => HttpResponse::InternalServerError().body(format!("Error generating PDF: {}", e))
+            }
+
+        },
+        Err(e) => HttpResponse::InternalServerError().body(format!("Error retrieving teams {}", e)),
+    }
 }

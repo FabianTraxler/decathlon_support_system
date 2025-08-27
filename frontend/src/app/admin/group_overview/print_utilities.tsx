@@ -174,7 +174,31 @@ function GroupResultsCard() {
           console.error('Error fetching or opening the PDF:', error);
         });
     }
-  } else {
+  }else if (group_name == "teams") {
+    handle_click = function (done: () => void) {
+      fetch(`/api/team_results`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status} - ${response.statusText}`);
+          }
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a blob URL for the PDF
+          const pdfBlobUrl = URL.createObjectURL(blob);
+          done();
+          // Open the PDF in a new window  
+          var link = document.createElement("a");
+          link.href = pdfBlobUrl;
+          link.download =  `Ergebnisse: Teams`
+          link.click();
+        })
+        .catch(error => {
+          console.error('Error fetching or opening the PDF:', error);
+        });
+    }
+  }
+  else {
     handle_click = function (done: () => void) {
       let age_identifier = group_name.replace("AK-", "");
       fetch(`/api/age_group_results?age_identifier=${age_identifier}`)
