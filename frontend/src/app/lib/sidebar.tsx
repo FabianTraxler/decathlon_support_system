@@ -129,7 +129,7 @@ function SuperItem({ name, children }: { name: string, children: ReactNode }) {
     return (
         <div className="w-full">
             <div className="flex text-center w-full">
-                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 ">
+                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 hover:text-slate-300">
                     <p>{name}</p>
                     <svg id="icon1" className={"rotate-180" + (showContent ? "rotate-180" : "")} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -177,7 +177,7 @@ function Teams(){
     }
     return (
         <div className="flex text-center w-full" >
-            <div onClick={handle_click} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 hover:cursor-pointer">
+            <div onClick={handle_click} className="focus:outline-none text-left hover:text-slate-300 text-white flex justify-between items-center w-full py-5 space-x-14 hover:cursor-pointer">
                 <p>Teams</p>
             </div>
         </div>
