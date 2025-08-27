@@ -11,7 +11,7 @@ export default function Admin() {
   
   return (
     <main className="flex min-h-screen flex-col sm:flex-row">
-        <Sidebar showGroups={true} showAgeGroups={true} showLateRegister={false} updateSearchQuery={setSearchQuery}></Sidebar>
+        <Sidebar showGroups={true} showAgeGroups={true} showLateRegister={false} showTeams={true} updateSearchQuery={setSearchQuery}></Sidebar>
         <Overview searchQuery={searchQuery}></Overview>
     </main>
   )

@@ -10,8 +10,8 @@ export const NavContext = createContext((x: boolean) => { });
 
 
 export default function Sidebar(
-    { showGroups, showAgeGroups, showLateRegister, updateSearchQuery }: 
-    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
+    { showGroups, showAgeGroups, showLateRegister, showTeams, updateSearchQuery }: 
+    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, showTeams: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
     const [showNav, setshowNav] = useState(false);
     const pathname = usePathname();
     const { replace } = useRouter();
@@ -99,6 +99,12 @@ export default function Sidebar(
                             </div>
                         </div>
                     }
+                    {showTeams &&
+                        <div className="p-1 w-full">
+                            <hr />
+                            <Teams></Teams>
+                        </div>
+                    }
 
                     {updateSearchQuery &&
                         <div  className="p-2 w-full">
@@ -155,6 +161,25 @@ function Youth() {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
             {youth_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+        </div>
+    )
+}
+
+function Teams(){
+    const pathname = usePathname();
+    const { replace } = useRouter();
+    let updateAthlete = useContext(NavContext);
+
+
+    const handle_click = function (e: React.MouseEvent) {
+        updateAthlete(false)
+        replace(`${pathname}?group=teams`);
+    }
+    return (
+        <div className="flex text-center w-full" >
+            <div onClick={handle_click} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 hover:cursor-pointer">
+                <p>Teams</p>
+            </div>
         </div>
     )
 }

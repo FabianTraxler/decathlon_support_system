@@ -27,9 +27,9 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
         }
 
         let new_value = parseFloat(final_result_string);
-        let max_value = MAX_DISCIPLINE_PERFORMANCE.get(achievement?.name || "") || 9999;
+        let min_value = MAX_DISCIPLINE_PERFORMANCE.get(achievement?.name || "") || 9999;
 
-        if( new_value > max_value) {
+        if( new_value < min_value) {
             if(!confirm(`Neuer Weltrekord! Ganz sicher?`)) {
                 return achievement
             }

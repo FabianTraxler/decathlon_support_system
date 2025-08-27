@@ -9,6 +9,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Disciplines from './disciplines/disciplines';
 import { SearchQuery } from '@/app/lib/search';
 import { LoadingButton } from '@/app/lib/loading';
+import { TeamsTable } from './teams';
 
 export default function Overview( {searchQuery }: {searchQuery?: SearchQuery}) {
   let searchParams = useSearchParams();
@@ -33,7 +34,15 @@ export default function Overview( {searchQuery }: {searchQuery?: SearchQuery}) {
         </div>
       </div>
     )
-  } else {
+  } else if (groupName == "teams"){
+    return (
+      <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
+        <Title title={"Teams"}></Title>
+        <PrintUtilities></PrintUtilities>
+        <TeamsTable></TeamsTable>
+      </div>
+    )
+  }else {
     return (
       <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
         <Title title={groupName}></Title>

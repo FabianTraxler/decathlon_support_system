@@ -2,17 +2,22 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
+use crate::certificate_generation::Athlete;
+
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TeamID {
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Team {
     pub team_name: Option<String>,
     pub paid: Option<bool>,
-    pub athletes: Option<Vec<String>>
+    pub athletes: Option<Vec<String>>,
+    pub total_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub athlete_infos: Option<Vec<Athlete>>
 }
 
 impl Team {
@@ -23,8 +28,10 @@ impl Team {
         let updates: Team = serde_json::from_str(json_str)?;
         let mut team_name_changed = false;
         if let Some(new_name) = updates.team_name.clone(){
-            self.team_name = Some(new_name);
-            team_name_changed = true;
+            if new_name != self.team_name.clone().unwrap_or("".to_string()) {
+                self.team_name = Some(new_name);
+                team_name_changed = true;
+            }
         }
         if let Some(new_paid) = updates.paid {
             self.paid = Some(new_paid);

@@ -56,6 +56,16 @@ impl DynamoDB {
 
         Ok(String::from("Achievement added"))
     }
+
+    async fn get_athletes_by_ids(&self, athlete_ids: &Vec<AthleteID>) -> Vec<Athlete> {
+        let mut athletes = Vec::new();
+        for athlete_id in athlete_ids {
+            if let Some(athlete) = self.get_athlete(athlete_id).await {
+                athletes.push(athlete);
+            }
+        }
+        athletes
+    }
 }
 
 #[async_trait]
@@ -995,7 +1005,36 @@ impl TeamStorage for DynamoDB {
             .send()
             .await;
         let item_map = items?.items().to_vec();
-        let teams: Vec<Team> = serde_dynamo::from_items(item_map)?;
+        let mut teams: Vec<Team> = serde_dynamo::from_items(item_map)?;
+
+        let athlete_ids: Vec<AthleteID> = teams.iter().flat_map(|team| {
+            let athletes = team.athletes.clone().unwrap_or(vec![]);
+            let athlete_ids = athletes.iter().map(|id| {
+                let split = id.split("_").collect::<Vec<&str>>();
+                AthleteID::new(split[0], split[1])
+            }).collect::<Vec<AthleteID>>();
+            athlete_ids.into_iter()
+        }).collect();
+
+        let athlete_infos: Vec<Athlete> = self.get_athletes_by_ids(&athlete_ids).await;
+
+        for team in &mut teams {
+            if let Some(athlete_ids) = &team.athletes {
+                let mut athletes: Vec<Athlete> = vec![];
+                let mut total_points = 0;
+                for athlete_id in athlete_ids {
+                    if let Some(athlete) = athlete_infos.iter().find(|a| a.athlete_id() == *athlete_id) {
+                        let mut athlete_clone = athlete.clone();
+                        athlete_clone.compute_total_points();
+                        total_points += athlete.total_point();
+
+                        athletes.push(athlete_clone);
+                    }
+                }
+                team.athlete_infos = Some(athletes);
+                team.total_points = Some(total_points);
+            }
+        }
 
         return Ok(teams);
     }
