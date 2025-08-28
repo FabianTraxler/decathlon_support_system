@@ -4,6 +4,7 @@ use crate::certificate_generation::{Achievement, AchievementID, AchievementStora
 };
 use crate::database::db_errors::ItemNotFound;
 use crate::notes::{NoteID, NoteStorage};
+use crate::teams::{Team, TeamID, TeamStorage};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
@@ -54,6 +55,16 @@ impl DynamoDB {
         update_call.send().await?;
 
         Ok(String::from("Achievement added"))
+    }
+
+    async fn get_athletes_by_ids(&self, athlete_ids: &Vec<AthleteID>) -> Vec<Athlete> {
+        let mut athletes = Vec::new();
+        for athlete_id in athlete_ids {
+            if let Some(athlete) = self.get_athlete(athlete_id).await {
+                athletes.push(athlete);
+            }
+        }
+        athletes
     }
 }
 
@@ -967,6 +978,125 @@ impl AuthenticateStorage for DynamoDB {
             .await?;
         Ok(String::from("Role inserted or available"))
     }
+}
+
+#[async_trait]
+impl TeamStorage for DynamoDB {
+    async fn get_team(&self, team_id: &TeamID) -> Result<Option<Team>, Box<dyn Error>> {
+        let team_name = team_id.name.clone();
+        let item = self
+            .client
+            .get_item()
+            .table_name(std::env::var("DB_NAME_TEAM").unwrap_or("team_store".to_string()))
+            .key("team_name", AttributeValue::S(team_name))
+            .send()
+            .await?;
+        let item_map = item.item().ok_or(ItemNotFound::new("Key not found", "404"))?;
+        let team: Team = serde_dynamo::from_item(item_map.clone())?;
+        Ok(Some(team))
+    }
+
+    
+    async fn get_teams(&self) -> Result<Vec<Team>, Box<dyn Error>> {
+        let items = self
+            .client
+            .scan()
+            .table_name(std::env::var("DB_NAME_TEAM").unwrap_or("team_store".to_string()))
+            .send()
+            .await;
+        let item_map = items?.items().to_vec();
+        let mut teams: Vec<Team> = serde_dynamo::from_items(item_map)?;
+
+        let athlete_ids: Vec<AthleteID> = teams.iter().flat_map(|team| {
+            let athletes = team.athletes.clone().unwrap_or(vec![]);
+            let athlete_ids = athletes.iter().map(|id| {
+                let split = id.split("_").collect::<Vec<&str>>();
+                AthleteID::new(split[0], split[1])
+            }).collect::<Vec<AthleteID>>();
+            athlete_ids.into_iter()
+        }).collect();
+
+        let athlete_infos: Vec<Athlete> = self.get_athletes_by_ids(&athlete_ids).await;
+
+        for team in &mut teams {
+            if let Some(athlete_ids) = &team.athletes {
+                let mut athletes: Vec<Athlete> = vec![];
+                let mut total_points = 0;
+                for athlete_id in athlete_ids {
+                    if let Some(athlete) = athlete_infos.iter().find(|a| a.athlete_id() == *athlete_id) {
+                        let mut athlete_clone = athlete.clone();
+                        athlete_clone.compute_total_points();
+                        total_points += athlete.total_point();
+
+                        athletes.push(athlete_clone);
+                    }
+                }
+                team.athlete_infos = Some(athletes);
+                team.total_points = Some(total_points);
+            }
+        }
+
+        return Ok(teams);
+    }
+
+    async fn save_team(&self, team: &Team) -> Result<String, Box<dyn Error>> {
+        if let Some(team_name) = team.team_name.clone() {
+            let item = serde_dynamo::to_item(team)?;
+            self.client
+                .put_item()
+                .table_name(std::env::var("DB_NAME_TEAM").unwrap_or("team_store".to_string()))
+                .set_item(Some(item))
+                .item("team_name", AttributeValue::S(team_name))
+                .send()
+                .await?;
+
+            Ok(String::from("New team stored"))
+        } else {
+            Err(Box::from("Team name not given"))
+        }
+
+    }
+
+    async fn update_team(&self, team_id: &TeamID, team_update: &String) ->  Result<String, Box<dyn Error>>{
+        let mut team = self
+            .get_team(team_id)
+            .await?
+            .ok_or(ItemNotFound::new("Team not found", "404"))?;
+
+        let team_name_changed = team.update_values(team_update)?;
+        let team_name = if team_name_changed {
+            team.team_name.clone().ok_or("Team name not given")?
+        } else {
+            team_id.name.clone()
+        };
+
+        let item = serde_dynamo::to_item(&team)?;
+        self.client
+            .put_item()
+            .table_name(std::env::var("DB_NAME_TEAM").unwrap_or("team_store".to_string()))
+            .set_item(Some(item))
+            .item("team_name", AttributeValue::S(team_name))
+            .send()
+            .await?;
+
+        if team_name_changed{
+            // Delete old team entry
+            self.delete_team(team_id).await?;
+        }
+
+        Ok(String::from("Team updated"))
+    }
+
+    async fn delete_team(&self, team_id: &TeamID) -> Result<(), Box<dyn Error>> {
+        self.client
+            .delete_item()
+            .table_name(std::env::var("DB_NAME_TEAM").unwrap_or("team_store".to_string()))
+            .key("team_name", AttributeValue::S(team_id.name.clone()))
+            .send()
+            .await?;
+        Ok(())
+    }
+
 }
 
 impl Storage for DynamoDB {

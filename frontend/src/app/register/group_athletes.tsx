@@ -14,7 +14,7 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
     if (groupName == "Übersicht") {
         load_athlete = () => fetch_all_athletes(setAthletes)
     } else if (groupName == "Nachmeldungen") {
-
+        // Not implemented yet
     } else {
         load_athlete = () => fetch_group_athletes(groupName, setAthletes)
     }

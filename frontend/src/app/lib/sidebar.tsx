@@ -10,8 +10,8 @@ export const NavContext = createContext((x: boolean) => { });
 
 
 export default function Sidebar(
-    { showGroups, showAgeGroups, showLateRegister, updateSearchQuery }: 
-    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
+    { showGroups, showAgeGroups, showLateRegister, showTeams, updateSearchQuery }: 
+    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, showTeams: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
     const [showNav, setshowNav] = useState(false);
     const pathname = usePathname();
     const { replace } = useRouter();
@@ -99,6 +99,12 @@ export default function Sidebar(
                             </div>
                         </div>
                     }
+                    {showTeams &&
+                        <div className="p-1 w-full">
+                            <hr />
+                            <Teams></Teams>
+                        </div>
+                    }
 
                     {updateSearchQuery &&
                         <div  className="p-2 w-full">
@@ -123,7 +129,7 @@ function SuperItem({ name, children }: { name: string, children: ReactNode }) {
     return (
         <div className="w-full">
             <div className="flex text-center w-full">
-                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 ">
+                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 hover:text-slate-300">
                     <p>{name}</p>
                     <svg id="icon1" className={"rotate-180" + (showContent ? "rotate-180" : "")} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -155,6 +161,25 @@ function Youth() {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
             {youth_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+        </div>
+    )
+}
+
+function Teams(){
+    const pathname = usePathname();
+    const { replace } = useRouter();
+    let updateAthlete = useContext(NavContext);
+
+
+    const handle_click = function (e: React.MouseEvent) {
+        updateAthlete(false)
+        replace(`${pathname}?group=teams`);
+    }
+    return (
+        <div className="flex text-center w-full" >
+            <div onClick={handle_click} className="focus:outline-none text-left hover:text-slate-300 text-white flex justify-between items-center w-full py-5 space-x-14 hover:cursor-pointer">
+                <p>Teams</p>
+            </div>
         </div>
     )
 }

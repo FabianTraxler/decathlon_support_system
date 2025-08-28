@@ -2,6 +2,7 @@ mod pdf_generation;
 mod group_results;
 mod certificates;
 mod discipline_protocol;
+mod team_results;
 
 use std::collections::HashSet;
 use std::error::Error;
@@ -19,16 +20,18 @@ use lopdf::content::{Content, Operation};
 use lopdf::{Document, Object, ObjectId, Stream, Bookmark};
 use std::collections::BTreeMap;
 use crate::certificate_generation::pdf::pdf_generation::{add_pdf_page, setup_pdf};
+use crate::certificate_generation::pdf::team_results::new_team_result;
 use crate::certificate_generation::{CompetitionType, Athlete, Group, AgeGroup};
 use crate::certificate_generation::pdf::certificates::{get_certificate, all_group_certificates};
 use crate::certificate_generation::pdf::discipline_protocol::get_discipline_protocol;
 use crate::certificate_generation::pdf::group_results::new_group_result;
+use crate::teams::Team;
 use crate::time_planner::Discipline;
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
-const COMPETITION_NUMBER: &'static str = "29";
-const DATE: &'static str = "28. / 29. September 2024";
+const COMPETITION_NUMBER: &'static str = "30";
+const DATE: &'static str = "27. / 28. September 2025";
 
 pub struct PDFMessage {
     body: Vec<u8>,
@@ -82,6 +85,11 @@ impl PDF {
         let doc = new_group_result(group, disciplines);
         PDF { content: doc }
     }
+
+    pub fn new_team_result(teams: &Vec<Team>) -> Self {
+        let doc = new_team_result(teams);
+        PDF { content: doc }
+    } 
 
     pub fn new_group_certificates(group: &Group) -> Self {
         let doc = all_group_certificates(group);
@@ -315,6 +323,7 @@ mod tests {
     use chrono::{NaiveDateTime, TimeZone, Utc};
     use crate::certificate_generation::{Achievement, Athlete, CompetitionType, Group};
     use crate::certificate_generation::achievements::{DistanceResult, TimeResult};
+    use crate::teams::Team;
     use super::PDF;
 
     fn get_athlete() -> Athlete {
@@ -340,8 +349,8 @@ mod tests {
         "#;
         achievements.insert("100 Meter Lauf".to_string(), Achievement::Time(TimeResult::build(achievement_json).expect("Achievement not loaded")));
         Athlete::new(
-            "Test",
-            "Person",
+            "Test Mensch der sehr sehr lange Name hat",
+            "Person mit auch sehr sehr langem Namen",
             Some(Utc.from_utc_datetime(&birthday)),
             "M",
             achievements,
@@ -456,5 +465,33 @@ mod tests {
             Ok(_) => {}
             Err(err) => panic!("Error while writing PDF to bytes: {err}"),
         }
+    }
+
+    #[test]
+    fn write_team_results() {
+        let mut athletes = Vec::new();
+        athletes.push(get_athlete());
+        let team4 = Team::new("Team Mini".to_string(), true, athletes.clone());
+        athletes.push(get_athlete());
+        let team1 = Team::new("Team 1".to_string(), true, athletes.clone());
+        athletes.push(get_athlete());
+        athletes.push(get_athlete());
+        let team2 = Team::new("Team 2 blalba".to_string(), true, athletes.clone());
+        athletes.push(get_athlete());
+        let team3 = Team::new("Team 2 ist hier und viel zu lange ist der Name ist einfach nur viel viel viel zu lange".to_string(), false, athletes.clone());
+
+        let teams = vec![team1, team2, team3, team4];
+        let pdf = PDF::new_team_result(&teams);
+        let pdf_write_result = pdf._write_pdf("tests/output/write_team_result.pdf");
+        match pdf_write_result {
+            Ok(_) => {}
+            Err(err) => panic!("Error while writing PDF: {err}"),
+        }
+
+        let pdf = PDF::new_team_result(&teams);
+        match pdf.to_http_message() {
+            Ok(_) => {}
+            Err(err) => panic!("Error while writing PDF to bytes: {err}"),
+        };
     }
 }

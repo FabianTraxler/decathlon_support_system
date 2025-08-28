@@ -36,3 +36,4 @@ if __name__ == "__main__":
         truncateTable("authentication")
         truncateTable("group_store")
         truncateTable("time_group_store")
+        truncateTable("team_store")

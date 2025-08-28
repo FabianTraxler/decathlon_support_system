@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation';
 import Title from '../lib/title';
 import GroupAthletes from './group_athletes';
+import { TeamsTable } from '../lib/teams';
 
 export default function Overview() {
     let searchParams = useSearchParams();
@@ -10,7 +11,10 @@ export default function Overview() {
     let title = ""
     if (groupName == "Nachmeldungen") {
         title = groupName
-    } else {
+    }  else if (groupName == "teams") {
+        title = "Teams"
+    } 
+    else {
         title = "Anmeldung " + groupName
     }
 
@@ -18,7 +22,11 @@ export default function Overview() {
     return (
         <div className="h-[95vh] sm:h-screen max-h-screen overflow-scroll flex flex-col items-center p-0 sm:p-42 xl:p-0 w-screen sm:w-full">
             <Title title={title}></Title>
-            <GroupAthletes groupName={groupName}></GroupAthletes>
+            {groupName == "teams" ?
+                <TeamsTable show_points={false}></TeamsTable>
+                :
+                <GroupAthletes groupName={groupName}></GroupAthletes>
+            }
         </div>
     )
 

@@ -20,7 +20,7 @@ const POINTS_WIDTH: f32 = 8.;
 pub fn new_group_result(group: &Group, disciplines: Option<Vec<String>>) -> PdfDocumentReference {
     if group.competition_type() == CompetitionType::Decathlon {
         // One result for full group
-        let (pdf, page, layer) = setup_pdf(format!("Ergebniss {}", group.name()).as_str(), true);
+        let (pdf, page, layer) = setup_pdf(format!("Ergebnis {}", group.name()).as_str(), true);
         add_group_result_to_page(group, pdf, page, layer, disciplines)
     } else {
         // Separated result for M and W
@@ -35,7 +35,7 @@ pub fn new_group_result(group: &Group, disciplines: Option<Vec<String>>) -> PdfD
             group.competition_type(),
         );
         let (mut pdf, mut page, mut layer) =
-            setup_pdf(format!("Ergebniss {}", w_group.name()).as_str(), true);
+            setup_pdf(format!("Ergebnis {}", w_group.name()).as_str(), true);
         pdf = add_group_result_to_page(&w_group, pdf, page, layer, disciplines.clone());
 
         let m_group = Group::new(
@@ -48,7 +48,7 @@ pub fn new_group_result(group: &Group, disciplines: Option<Vec<String>>) -> PdfD
                 .collect(),
             group.competition_type(),
         );
-        (page, layer) = add_pdf_page(&pdf, format!("Ergebniss {}", m_group.name()).as_str(), true);
+        (page, layer) = add_pdf_page(&pdf, format!("Ergebnis {}", m_group.name()).as_str(), true);
         add_group_result_to_page(&m_group, pdf, page, layer, disciplines)
     }
 }
