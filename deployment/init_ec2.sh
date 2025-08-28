@@ -23,4 +23,4 @@ git checkout origin/feature/terraform-iac
 cd deployment
 
 # run application
-docker-compose up -d
+sudo docker-compose up -d
