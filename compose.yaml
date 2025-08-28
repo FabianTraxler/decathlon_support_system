@@ -1,7 +1,7 @@
 services:
   next_frontend:
       container_name: next_frontend
-      image: fabsl22/decathlon_support_system:frontend_v0.2
+      image: fabsl22/decathlon_support_system:frontend_v1.1
       build:
         context: ./frontend
         dockerfile: frontend.dockerfile
@@ -14,7 +14,7 @@ services:
       restart: always
   rust_backend:
       container_name: rust_backend
-      image: fabsl22/decathlon_support_system:backend_v0.2
+      image: fabsl22/decathlon_support_system:backend_v1.1
       build:
         context: ./backend
         dockerfile: backend.dockerfile
