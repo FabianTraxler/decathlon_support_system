@@ -58,16 +58,88 @@ data "aws_ami" "al2023" {
 }
 
 # ---------- EC2 Instance ----------
+locals {
+  private_key = <<-END
+    #cloud-config
+    ${jsonencode({
+      write_files = [
+      {
+        path        = "/home/ec2-user/.certs/private.key"
+        permissions = "0644"
+        owner       = "root:root"
+        encoding    = "b64"
+        content     = filebase64("${path.module}/../../.certs/private.key")
+      },
+      ]
+    })}
+  END
+  public_cert = <<-END
+    #cloud-config
+    ${jsonencode({
+      write_files = [
+      {
+        path        = "/home/ec2-user/.certs/public.cert"
+        permissions = "0644"
+        owner       = "root:root"
+        encoding    = "b64"
+        content     = filebase64("${path.module}/../../.certs/public.cert")
+      },
+      ]
+    })}
+  END
+  env_file = <<-END
+    #cloud-config
+    ${jsonencode({
+      write_files = [
+      {
+        path        = "/home/ec2-user/decathlon_support_system/deployment/backend.env"
+        permissions = "0644"
+        owner       = "root:root"
+        encoding    = "b64"
+        content     = filebase64("${path.module}/backend.env")
+      },
+      ]
+    })}
+  END
+}
+
+data "cloudinit_config" "init_test_ec2" {
+  gzip          = false
+  base64_encode = false
+
+  part {
+    content_type = "text/cloud-config"
+    filename     = "private-key.yaml"
+    content      = local.private_key
+  }
+  part {
+    content_type = "text/cloud-config"
+    filename     = "public-cert.yaml"
+    content      = local.public_cert
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    filename     = "init_ec2.sh"
+    content  = file("${path.module}/../init_ec2.sh")
+  }
+}
+
+
 resource "aws_instance" "test_decathlon_support_system" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = "t2.micro"
   key_name               = aws_key_pair.test_ec2_key.key_name
   vpc_security_group_ids = [aws_security_group.ssh_sg.id]
 
-  user_data = file("${path.module}/../init_ec2.sh")
+  user_data = data.cloudinit_config.init_test_ec2.rendered
 
   tags = {
     Name = "test_decathlon_support_system"
+  }
+
+  root_block_device {
+    volume_size           = 10
   }
 }
 
@@ -79,22 +151,4 @@ resource "aws_eip" "ec2_eip" {
 resource "aws_eip_association" "eip_assoc" {
   allocation_id = aws_eip.ec2_eip.id
   instance_id   = aws_instance.test_decathlon_support_system.id
-}
-
-# ---------- Storage ----------
-
-resource "aws_ebs_volume" "test_extra_volume" {
-  availability_zone = aws_instance.test_decathlon_support_system.availability_zone
-  size              = 15   # GB
-  type              = "gp3"
-
-  tags = {
-    Name = "test-extra-volume"
-  }
-}
-
-resource "aws_volume_attachment" "test_ec2_extra_volume_attach" {
-  device_name = "/dev/xvdf"
-  volume_id   = aws_ebs_volume.test_extra_volume.id
-  instance_id = aws_instance.test_decathlon_support_system.id
 }
