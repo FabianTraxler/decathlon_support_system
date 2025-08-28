@@ -23,8 +23,8 @@ EOT
 
 # ---------- Security Group ----------
 resource "aws_security_group" "ssh_sg" {
-  name        = "test-ec2-ssh"
-  description = "Allow SSH"
+  name        = "test-ec2"
+  description = "Allow SSH and HTTPS inbound traffic"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
@@ -32,7 +32,15 @@ resource "aws_security_group" "ssh_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Restrict this to your own IP!
+    cidr_blocks = ["0.0.0.0/0"] 
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {

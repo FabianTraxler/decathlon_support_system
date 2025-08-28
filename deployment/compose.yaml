@@ -18,13 +18,6 @@ services:
       build:
         context: ../backend
         dockerfile: backend.dockerfile
-      environment:
-        - DB_NAME_ATHLETE
-        - DB_NAME_AUTHENTICATION
-        - DB_NAME_GROUP
-        - DB_NAME_TIMEGROUP
-        - DB_NAME_TEAM
-        - RUST_BACKTRACE
       env_file: /home/ec2-user/.envs/backend.env
       volumes:
         - /home/ec2-user/.aws:/root/.aws
