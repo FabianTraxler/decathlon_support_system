@@ -28,8 +28,6 @@ services:
       env_file: /home/ec2-user/.envs/backend.env
       ports:
         - '3001:3001'
-      volumes:
-        - /home/ec2-user/.aws:/root/.aws
       restart: always
   reverse_proxy:
     container_name: reverse_proxy
