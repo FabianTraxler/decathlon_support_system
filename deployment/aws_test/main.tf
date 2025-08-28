@@ -17,7 +17,7 @@ provider "aws" {
 resource "aws_key_pair" "test_ec2_key" {
   key_name   = "test-ec2-key"
   public_key = <<EOT
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC5DQf4yZUMpWgtBO1GaG+awcscsmo7y3SPlj2Gt7j9Fx4eTubdmHMo9gvA3ayzu9ofsfp6azwVgV2JXR+Ow/JYXV2xuHzalW/r69O7wrw4moq1mP5dbOE+I/hX9i82uAl892mjXMqS5yBow8F8sKbOfrWVN02EGLROt1PGhdv1/JZ9aI5/joY9PsncyCBLM4V7nmoks3z8zfOwWW/j9vC461t6Fhx0ij/dfozIghx2dvz3vpL5P+xTQHr1XeiTj1bYa03PN/I6QWaPzKM1qxjI+0BdSpiBV0AI2w5NoEiCT+j+p+3XUwvrVhT8ch9aSAlNI4NqqBu99FYtOjyR6In6suWF6x2sNT0zkwsvW79Xz5TqoFU17MPK/cjkiaAuYR8F1xhFCqHr7Btygnb1LEeNh/II5tErR/dN8SCIsBmjuhQP5M+MiyhFoqjwseWgCn2qn67C1XcjU3vYX85G8fHUXB4s4yVkNoAIXpkSjePnbikUIl9J8rYSv9qRacEKL7s= fabian@Fabians-MBP.home
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCom6i1wZLZru4dfOMoFzYyfM/Lf68xadBKh5A+VYBl8ohr1W1In1GKoTfsxtMEffhzEUi5SoTHin7f/mW7XY6urj0AxakT50A3xTLzTW0pjZU+bkVcm/JK+1KuSXZsWlX8S6n+ZehAELG7nqX+chW4lV/poLRRx5UKVn4rRBRN6M+Unaw9Imb4iAG+w+YAmn+IMvkdEVVhMyEdlT83sqWayL3VoJRJhpl0OQtsRN+caQlp9O0QKMZPGAz/LsxjkyDSiZZ0xBBxOf2izxDuwhI419sLymDF0ytbaSppasQS6kuUBg1w00aFt4O0f+4NP+2g2xU8V6i9e/0cs2T/G0y7iJhPyawNWfvcIIGKMd4j1j4CEG347rI5hq223emscyrD9YzbKHIr2RsRczp7PALDBgcm1DAmkoJl8pgALKm/XLKiBp9qTZSqvtTsZPYq4KztioLVSWFin3iu0r5gVI6XO0i/FhW0PqoG82BH5wq+C76PGu7kLqNgNq5wwhAA0SE= fabian@ubuntus
 EOT
 }
 
@@ -59,7 +59,7 @@ data "aws_ami" "al2023" {
 
 # ---------- EC2 Instance ----------
 locals {
-  private_key = <<-END
+  files = <<-END
     #cloud-config
     ${jsonencode({
       write_files = [
@@ -70,29 +70,15 @@ locals {
         encoding    = "b64"
         content     = filebase64("${path.module}/../../.certs/private.key")
       },
-      ]
-    })}
-  END
-  public_cert = <<-END
-    #cloud-config
-    ${jsonencode({
-      write_files = [
       {
-        path        = "/home/ec2-user/.certs/public.cert"
+        path        = "/home/ec2-user/.certs/public.crt"
         permissions = "0644"
         owner       = "root:root"
         encoding    = "b64"
-        content     = filebase64("${path.module}/../../.certs/public.cert")
+        content     = filebase64("${path.module}/../../.certs/public.crt")
       },
-      ]
-    })}
-  END
-  env_file = <<-END
-    #cloud-config
-    ${jsonencode({
-      write_files = [
       {
-        path        = "/home/ec2-user/decathlon_support_system/deployment/backend.env"
+        path        = "/home/ec2-user/.envs/backend.env"
         permissions = "0644"
         owner       = "root:root"
         encoding    = "b64"
@@ -109,15 +95,9 @@ data "cloudinit_config" "init_test_ec2" {
 
   part {
     content_type = "text/cloud-config"
-    filename     = "private-key.yaml"
-    content      = local.private_key
+    filename     = "file-upload.yaml"
+    content      = local.files
   }
-  part {
-    content_type = "text/cloud-config"
-    filename     = "public-cert.yaml"
-    content      = local.public_cert
-  }
-
   part {
     content_type = "text/x-shellscript"
     filename     = "init_ec2.sh"

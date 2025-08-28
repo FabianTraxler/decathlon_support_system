@@ -15,7 +15,12 @@ sudo chmod +x /usr/local/bin/docker-compose
 cd /home/ec2-user
 # clone repo
 git clone https://github.com/FabianTraxler/decathlon_support_system.git
-cd decathlon_support_system/deployment
+cd decathlon_support_system
+# switch to deployment branch
+git checkout origin/feature/terraform-iac
+
+# go to deployment folder
+cd deployment
 
 # run application
 sudo docker-compose up -d
