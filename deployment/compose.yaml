@@ -25,23 +25,23 @@ services:
         - DB_NAME_TIMEGROUP
         - DB_NAME_TEAM
         - RUST_BACKTRACE
-      env_file: /home/${USER}/.envs/backend.env
+      env_file: /home/ec2-user/.envs/backend.env
       ports:
         - '3001:3001'
       volumes:
-        - /home/${USER}/.aws:/root/.aws
+        - /home/ec2-user/.aws:/root/.aws
       restart: always
   reverse_proxy:
     container_name: reverse_proxy
     image: fabsl22/decathlon_support_system:reverse_proxy
     build:
-      context: ./deployment
+      context: ../deployment
       dockerfile: nginx.dockerfile
     ports:
       - '80:80'
       - '443:443'
     volumes:
-      - /home/${USER}/.certs/:/etc/nginx/ssl:ro
+      - /home/ec2-user/.certs/:/etc/nginx/ssl:ro
     depends_on:
         - next_frontend
     restart: always

@@ -8,6 +8,7 @@ use crate::teams::{Team, TeamID, TeamStorage};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
+use aws_config::BehaviorVersion;
 use aws_sdk_dynamodb::types::{AttributeValue, KeysAndAttributes};
 use aws_sdk_dynamodb::Client;
 use serde_json::Value;
@@ -21,7 +22,7 @@ pub struct DynamoDB {
 
 impl DynamoDB {
     pub fn new() -> Self {
-        let config = futures::executor::block_on(aws_config::load_from_env());
+        let config = futures::executor::block_on(aws_config::load_defaults(BehaviorVersion::latest()));
         let client = Client::new(&config);
         DynamoDB { client }
     }

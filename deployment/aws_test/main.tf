@@ -104,6 +104,35 @@ data "cloudinit_config" "init_test_ec2" {
     content  = file("${path.module}/../init_ec2.sh")
   }
 }
+# --------------------------
+# IAM Role for EC2 instance
+# --------------------------
+resource "aws_iam_role" "test_role" {
+  name = "test_role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+# Attach DynamoDB full access policy
+resource "aws_iam_role_policy_attachment" "ec2_dynamodb_attach" {
+  role       = aws_iam_role.test_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
+}
+
+# Instance profile (bridge between EC2 and IAM Role)
+resource "aws_iam_instance_profile" "test_profile" {
+  name = "tf-ec2-instance-profile"
+  role = aws_iam_role.test_role.name
+}
 
 
 resource "aws_instance" "test_decathlon_support_system" {
@@ -113,7 +142,7 @@ resource "aws_instance" "test_decathlon_support_system" {
   vpc_security_group_ids = [aws_security_group.ssh_sg.id]
 
   user_data = data.cloudinit_config.init_test_ec2.rendered
-
+  iam_instance_profile = aws_iam_instance_profile.test_profile.name
   tags = {
     Name = "test_decathlon_support_system"
   }
