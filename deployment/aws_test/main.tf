@@ -84,6 +84,13 @@ locals {
         encoding    = "b64"
         content     = filebase64("${path.module}/backend.env")
       },
+      {
+        path        = "/home/ec2-user/.aws/config"
+        permissions = "0644"
+        owner       = "root:root"
+        encoding    = "b64"
+        content     = filebase64("${path.module}/../aws_config")
+      }
       ]
     })}
   END

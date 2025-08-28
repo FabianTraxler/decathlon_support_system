@@ -26,6 +26,8 @@ services:
         - DB_NAME_TEAM
         - RUST_BACKTRACE
       env_file: /home/ec2-user/.envs/backend.env
+      volumes:
+        - /home/ec2-user/.aws:/root/.aws
       ports:
         - '3001:3001'
       restart: always
