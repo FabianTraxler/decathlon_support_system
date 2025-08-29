@@ -25,12 +25,12 @@ resource "aws_iam_role_policy_attachment" "dynamodb_autoscale_policy_attach" {
 resource "aws_dynamodb_table" "athlete_store_test" {
   name           = "athlete_store_test"
   billing_mode   = "PROVISIONED"
-  hash_key       = "athlete_name"
+  hash_key       = "athlete_id"
   read_capacity  = 3
   write_capacity = 3
 
   attribute {
-    name = "athlete_name"
+    name = "athlete_id"
     type = "S"
   }
 
