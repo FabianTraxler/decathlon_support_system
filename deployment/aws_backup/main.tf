@@ -14,16 +14,16 @@ provider "aws" {
 
 # ---------- EC2 SSH Key ----------
 # Insert your own public key below (e.g. from id_rsa.pub)
-resource "aws_key_pair" "prod_ec2_key" {
-  key_name   = "prod-ec2-key"
+resource "aws_key_pair" "backup_ec2_key" {
+  key_name   = "backup-ec2-key"
   public_key = <<EOT
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCom6i1wZLZru4dfOMoFzYyfM/Lf68xadBKh5A+VYBl8ohr1W1In1GKoTfsxtMEffhzEUi5SoTHin7f/mW7XY6urj0AxakT50A3xTLzTW0pjZU+bkVcm/JK+1KuSXZsWlX8S6n+ZehAELG7nqX+chW4lV/poLRRx5UKVn4rRBRN6M+Unaw9Imb4iAG+w+YAmn+IMvkdEVVhMyEdlT83sqWayL3VoJRJhpl0OQtsRN+caQlp9O0QKMZPGAz/LsxjkyDSiZZ0xBBxOf2izxDuwhI419sLymDF0ytbaSppasQS6kuUBg1w00aFt4O0f+4NP+2g2xU8V6i9e/0cs2T/G0y7iJhPyawNWfvcIIGKMd4j1j4CEG347rI5hq223emscyrD9YzbKHIr2RsRczp7PALDBgcm1DAmkoJl8pgALKm/XLKiBp9qTZSqvtTsZPYq4KztioLVSWFin3iu0r5gVI6XO0i/FhW0PqoG82BH5wq+C76PGu7kLqNgNq5wwhAA0SE= fabian@ubuntus
 EOT
 }
 
 # ---------- Security Group ----------
-resource "aws_security_group" "ssh_sg_prod" {
-  name        = "prod-ec2"
+resource "aws_security_group" "ssh_sg_backup" {
+  name        = "backup-ec2"
   description = "Allow SSH and HTTPS inbound traffic"
   vpc_id      = data.aws_vpc.default.id
 
@@ -104,7 +104,7 @@ locals {
   END
 }
 
-data "cloudinit_config" "init_prod_ec2" {
+data "cloudinit_config" "init_backup_ec2" {
   gzip          = false
   base64_encode = false
 
@@ -150,16 +150,16 @@ resource "aws_iam_instance_profile" "test_profile" {
 }
 
 
-resource "aws_instance" "prod_decathlon_support_system" {
+resource "aws_instance" "backup_decathlon_support_system" {
   ami                    = data.aws_ami.al2023.id
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.prod_ec2_key.key_name
-  vpc_security_group_ids = [aws_security_group.ssh_sg_prod.id]
+  key_name               = aws_key_pair.backup_ec2_key.key_name
+  vpc_security_group_ids = [aws_security_group.ssh_sg_backup.id]
 
-  user_data = data.cloudinit_config.init_prod_ec2.rendered
+  user_data = data.cloudinit_config.init_backup_ec2.rendered
   iam_instance_profile = aws_iam_instance_profile.test_profile.name
   tags = {
-    Name = "prod_decathlon_support_system"
+    Name = "backup_decathlon_support_system"
   }
 
   root_block_device {
@@ -174,5 +174,10 @@ resource "aws_eip" "ec2_eip" {
 
 resource "aws_eip_association" "eip_assoc" {
   allocation_id = aws_eip.ec2_eip.id
-  instance_id   = aws_instance.prod_decathlon_support_system.id
+  instance_id   = aws_instance.backup_decathlon_support_system.id
+}
+
+# ---------- Outputs ----------
+output "ec2_public_ip" {
+  value = aws_eip.ec2_eip.public_ip
 }

@@ -33,7 +33,7 @@ services:
     container_name: reverse_proxy
     image: fabsl22/decathlon_support_system:reverse_proxy
     build:
-      context: ./deployment
+      context: ./reverse_proxy
       dockerfile: nginx.dockerfile
     ports:
       - '80:80'

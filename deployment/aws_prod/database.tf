@@ -16,7 +16,7 @@ resource "aws_iam_role" "dynamodb_autoscale_role" {
 
 resource "aws_iam_role_policy_attachment" "dynamodb_autoscale_policy_attach" {
   role       = aws_iam_role.dynamodb_autoscale_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonDynamoDBFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
 # ---------- DynamoDB Tables ----------
@@ -25,17 +25,21 @@ resource "aws_iam_role_policy_attachment" "dynamodb_autoscale_policy_attach" {
 resource "aws_dynamodb_table" "athlete_store" {
   name           = "athlete_store"
   billing_mode   = "PROVISIONED"
-  hash_key       = "athlete_name"
+  hash_key       = "athlete_id"
   read_capacity  = 15
   write_capacity = 15
 
   attribute {
-    name = "athlete_name"
+    name = "athlete_id"
     type = "S"
   }
 
   tags = {
     Name = "athlete_store"
+  }
+
+  point_in_time_recovery {
+    enabled = true
   }
 }
 
