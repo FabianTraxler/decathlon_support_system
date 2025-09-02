@@ -35,7 +35,7 @@ export default function GroupAthletes({ groupName }: { groupName: string }) {
             <div className="flex flex-col sm:flex-row justify-center items-center">
                 <div className="flex flex-col sm:flex-col justify-between items-center p-2 w-screen sm:w-fit">
                     <div className="h-fit border border-black p-2 2xl:p-5 m-2 2xl:m-5 shadow-md rounded-md">
-                        <Search updateQuery={setSearchQuery}></Search>
+                        <Search updateQuery={setSearchQuery} showGlobal={false}></Search>
                     </div>
                     <div className=" h-fit border border-black p-2 mt-1 2xl:mt-5 2xl:p-5 2xl:m-5 shadow-md rounded-md">
                         <AddAthlete groupName={groupName}></AddAthlete>

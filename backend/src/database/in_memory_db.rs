@@ -7,6 +7,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::Mutex;
+use actix_web::web::to;
 use async_trait::async_trait;
 use log::warn;
 use serde::{Deserialize, Serialize};
@@ -252,6 +253,11 @@ impl AchievementStorage for InMemoryDB {
         self.write_athlete(AthleteID::from_athlete(&athlete), athlete).await?;
         Ok(String::from("Achievement updated"))
     }
+
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>{
+        !todo!("Implement method to get athlete group")
+    }
+
 }
 
 #[async_trait]

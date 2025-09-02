@@ -12,6 +12,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(update_athlete);
     cfg.service(delete_athlete);
     cfg.service(post_athlete_with_group);
+    cfg.service(get_athlete_group);
 }
 
 #[get("/athletes")]
@@ -120,6 +121,21 @@ async fn post_athlete_with_group(
     }
 }
 
+#[get("/athlete_group")]
+async fn get_athlete_group(
+    data: web::Data<Box<dyn Storage + Send + Sync>>,
+    query: web::Query<AthleteID>,
+) -> impl Responder {
+    let athlete_id = query.into_inner();
+    let group: Option<GroupID> = data.get_athlete_group(&athlete_id).await;
+
+    match group {
+        Some(group) => {
+            HttpResponse::Ok().body(serde_json::to_string(&group).expect("Athlete should be serializable"))
+        }
+        None => HttpResponse::NotFound().body("Not in group")
+    }
+}
 
 async fn add_athlete_to_group(athlete_str: &str, data: web::Data<Box<dyn Storage + Send + Sync>>) -> Result<String, Box<dyn Error>> {
     let value: Value = serde_json::from_str(athlete_str)?;

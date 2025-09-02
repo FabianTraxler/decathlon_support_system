@@ -10,14 +10,19 @@ export const NavContext = createContext((x: boolean) => { });
 
 
 export default function Sidebar(
-    { showGroups, showAgeGroups, showLateRegister, showTeams, updateSearchQuery }: 
-    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, showTeams: boolean, updateSearchQuery?: (query: SearchQuery) => void  }) {
+    { showGroups, showAgeGroups, showLateRegister, showTeams, updateSearchQuery, searchQuery }: 
+    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, showTeams: boolean, updateSearchQuery?: (query: SearchQuery) => void, searchQuery?: SearchQuery }) {
     const [showNav, setshowNav] = useState(false);
     const pathname = usePathname();
     const { replace } = useRouter();
 
+    const resetSearchQuery = function () {
+        updateSearchQuery && updateSearchQuery({ global: false, queries: [] })
+    }
+
     const getHome = function () {
         setshowNav(false)
+        resetSearchQuery()
         replace(`${pathname}`);
 
     }
@@ -75,15 +80,15 @@ export default function Sidebar(
                 <div className={(showNav ? "flex" : "hidden") + " flex-col justify-start items-center border-b border-gray-600 w-full font-bold bg-gray-600"}>
                     {showAgeGroups &&
                         <div className="p-1 w-full">
-                            <SuperItem name="Altersklassen"><AgeGroup></AgeGroup></SuperItem>
+                            <SuperItem name="Altersklassen"><AgeGroup resetSearchQuery={resetSearchQuery}></AgeGroup></SuperItem>
                             <hr />
                         </div>
                     }
                     {showGroups &&
                         <div className="p-1 w-full">
-                            <SuperItem name="Gruppen"><Groups></Groups></SuperItem>
+                            <SuperItem name="Gruppen"><Groups resetSearchQuery={resetSearchQuery}></Groups></SuperItem>
                             <hr />
-                            <SuperItem name="Jugend"><Youth></Youth></SuperItem>
+                            <SuperItem name="Jugend"><Youth resetSearchQuery={resetSearchQuery}></Youth></SuperItem>
                         </div>
                     }
 
@@ -102,7 +107,7 @@ export default function Sidebar(
                     {showTeams &&
                         <div className="p-1 w-full">
                             <hr />
-                            <Teams></Teams>
+                            <Teams resetSearchQuery={resetSearchQuery}></Teams>
                         </div>
                     }
 
@@ -111,7 +116,7 @@ export default function Sidebar(
                             <hr />
                             <div className="mt-2 p-2  border-white border rounded-md" >
                                 <div className="overflow-hidden text-white"> 
-                                    <Search updateQuery={updateSearchQuery}></Search>
+                                    <Search updateQuery={updateSearchQuery} searchQuery={searchQuery} showGlobal={true}></Search>
                                 </div>
                             </div>
                         </div>
@@ -143,29 +148,29 @@ function SuperItem({ name, children }: { name: string, children: ReactNode }) {
     )
 }
 
-function AgeGroup() {
+function AgeGroup({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col  w-full justify-start font-bold bg-gray-400">
-            {decathlon_age_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+            {decathlon_age_groups.map(name => <GroupSelection key={name} name={name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
         </div>
     )
 }
-function Groups() {
+function Groups({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
-            {groups.map(name => <GroupSelection key={name} name={"Gruppe " + name}></GroupSelection>)}
+            {groups.map(name => <GroupSelection key={name} name={"Gruppe " + name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
         </div>
     )
 }
-function Youth() {
+function Youth({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
-            {youth_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+            {youth_groups.map(name => <GroupSelection key={name} name={name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
         </div>
     )
 }
 
-function Teams(){
+function Teams({resetSearchQuery}: {resetSearchQuery?: () => void}){
     const pathname = usePathname();
     const { replace } = useRouter();
     let updateAthlete = useContext(NavContext);
@@ -173,6 +178,7 @@ function Teams(){
 
     const handle_click = function (e: React.MouseEvent) {
         updateAthlete(false)
+        resetSearchQuery && resetSearchQuery()
         replace(`${pathname}?group=teams`);
     }
     return (
@@ -186,6 +192,7 @@ function Teams(){
 
 type GroupProps = {
     name: string
+    resetSearchQuery?: () => void
 }
 
 function GroupSelection(props: GroupProps) {
@@ -196,6 +203,7 @@ function GroupSelection(props: GroupProps) {
 
     const handle_click = function (group_name: string) {
         updateAthlete(false)
+        props.resetSearchQuery && props.resetSearchQuery()
         replace(`${pathname}?group=${group_name}`);
     }
 

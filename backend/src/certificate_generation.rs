@@ -36,6 +36,7 @@ pub trait AchievementStorage {
     async fn delete_achievement(&self, achievement_id: &AchievementID) -> Result<String, Box<dyn Error>>;
     async fn write_achievement(&self, achievement_id: AchievementID, achievement: Achievement) -> Result<String, Box<dyn Error>>;
     async fn update_achievement(&self, achievement_id: AchievementID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>;
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]

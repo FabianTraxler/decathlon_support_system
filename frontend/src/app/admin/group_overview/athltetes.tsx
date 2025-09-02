@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
-import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
+import { LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, groups, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines, youth_groups } from '@/app/lib/config';
 import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes, fetch_all_athletes } from '@/app/lib/athlete_fetching';
 import { PopUp } from '@/app/lib/achievement_edit/popup';
-import { AthleteID, Discipline } from '@/app/lib/interfaces';
-import { useSearchParams } from 'next/navigation';
+import { Discipline } from '@/app/lib/interfaces';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { AthleteQuery, SearchQuery } from '@/app/lib/search';
 
 export default function Athletes({ group_name, query, show_athletes = false }: { group_name: string,  query?: SearchQuery, show_athletes?: boolean}) {
   const [showAthletes, set_showAthletes] = useState(show_athletes);
+  useEffect(() => {
+    set_showAthletes(show_athletes)
+  }, [show_athletes])
 
   return (
     <div className="items-center justify-between p-1 w-full ">
@@ -26,9 +29,11 @@ export default function Athletes({ group_name, query, show_athletes = false }: {
             </svg>
           </button>
         </div>
-        <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
-          <GroupAthletes group_name={group_name} query={query}></GroupAthletes>
-        </div>
+        {showAthletes &&
+          <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
+            <GroupAthletes group_name={group_name} query={query}></GroupAthletes>
+          </div>
+        }
       </div>
     </div>
 
@@ -221,7 +226,7 @@ function GroupAthletes({ group_name, query }: { group_name: string, query?: Sear
         {
           selectedAthletes.map((athlete, i) => {
                 return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
-                  disciplineEdit={disciplineEdit.discipline}></AthleteTableRow>
+                  disciplineEdit={disciplineEdit.discipline} query={query}></AthleteTableRow>
           })
         }
           
@@ -231,8 +236,8 @@ function GroupAthletes({ group_name, query }: { group_name: string, query?: Sear
 }
 
 
-function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
-  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
+function AthleteTableRow({ index, athlete, disciplines, disciplineEdit, query}:
+  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string, query?: SearchQuery  }) {
   const [popupOpen, setPopupOpen] = useState(false)
   var achievements = new Map(Object.entries(athlete.achievements));
   const birthdate = new Date(athlete.birth_date * 1000);
@@ -291,7 +296,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
         {
           popupOpen &&
           <PopUp title="Athleten Einstellungen" onClose={() => setPopupOpen(false)}>
-            <AthleteEditPopup athlete={athlete} onClose={() => setPopupOpen(false)}></AthleteEditPopup>
+            <AthleteEditPopup athlete={athlete} onClose={() => setPopupOpen(false)} query={query}></AthleteEditPopup>
 
           </PopUp>
         }
@@ -300,15 +305,50 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   )
 }
 
-function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () => void }) {
+function AthleteEditPopup({ athlete, onClose, query}: { athlete: Athlete, onClose: () => void, query?: SearchQuery  }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  
   const [athleteState, setAthleteState] = useState<Athlete>(athlete);
   const birthdate = new Date(athlete.birth_date * 1000);
   const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
   const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
-
   let searchParams = useSearchParams();
-  const groupName = searchParams.get('group') ?? "";
-  const [newGroup, changeNewGroup] = useState<string>(groupName)
+  let initial_group = searchParams.get('group') ?? ""
+  let group_loaded = true;
+  if (!initial_group.startsWith("G") && !initial_group.startsWith("U")) {
+    group_loaded = false;
+  }
+  if (query?.global){
+    group_loaded = false;
+  }
+  const [groupInfo, setGroupInfo] = useState<{ 
+    oldGroup: string, 
+    newGroup: string, 
+    groupLoaded: boolean }>({ 
+      oldGroup: initial_group, 
+      newGroup: "",
+      groupLoaded: group_loaded
+    });
+
+    useEffect(() => {
+        if (!groupInfo.groupLoaded){
+      fetch("/api/athlete_group?name=" + athlete.name + "&surname=" + athlete.surname)
+        .then(res => {
+          if (res.ok) {
+            return res.json()
+          } else {
+            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+          }
+        })
+        .then(res => {
+          setGroupInfo((prevState) => ({ ...prevState, oldGroup: res.name, groupLoaded: true }))
+        })
+        .catch(e => {
+          console.error(e)
+        })
+      }
+    }, [athlete.name, athlete.surname]);
 
   const deleteAthlete = function () {
     if (confirm("Athlet:in löschen?")) {
@@ -355,10 +395,10 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
   }
   const handleGroupChange = function (e: React.ChangeEvent<HTMLSelectElement>) {
     if (e.target.value.length == 0) {
-      changeNewGroup("")
+      setGroupInfo((prevState) => ({ ...prevState, newGroup: "" }))
     }
-     else {
-      changeNewGroup(e.target.value)
+    else {
+      setGroupInfo((prevState) => ({ ...prevState, newGroup: e.target.value }))
     }
   }
 
@@ -405,14 +445,14 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
   }
 
   const switchGroup = function (stop_load: () => void) {
-    if (newGroup.includes("U")){
+    if (groupInfo.newGroup.includes("U")){
       // Yotuh group
             // 2. Check if group matches birth year
       let max_age;
-      if(newGroup == "U4/U6"){
+      if(groupInfo.newGroup == "U4/U6"){
         max_age = 6
       }else {
-        max_age = parseInt(newGroup.replace("U", "")) || 16
+        max_age = parseInt(groupInfo.newGroup.replace("U", "")) || 16
       }
       
       let age = new Date().getFullYear() - ((typeof birthyear == "string") ? parseInt(birthyear) : birthyear)
@@ -423,7 +463,7 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       }
     }
 
-    fetch(`/api/switch_group?to=${newGroup}&from=${groupName}`, {
+    fetch(`/api/switch_group?to=${groupInfo.newGroup}&from=${groupInfo.oldGroup}`, {
       method: "PUT",
       body: JSON.stringify({
         athlete_ids: [
@@ -464,6 +504,17 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       }) 
   }
 
+  const goToGroup = function () {
+    let query_items: string[] = []
+    query?.queries.forEach((query, _) => {
+      query_items.push(query.column + ":" + query.query);
+    })
+    let athlete_query = query_items.join(";")
+    router.push(`${pathname}?group=${groupInfo.oldGroup}&athlete_query=${athlete_query}`);
+    location.reload();
+    //router.refresh()
+  }
+
 
   return (
     <div className='p-2'>
@@ -495,30 +546,44 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       </div>
       <div className='grid grid-cols-3'>
         <div className='mr-2 font-bold'>Gruppe wechseln:</div>
-        <select
-          className='border-black border rounded w-24 text-center shadow-md'
-          onChange={handleGroupChange}
-          defaultValue={groupName}
-        >
-          {groupName.includes("Gruppe") &&
-            groups.map(group_number => {
-              return (
-                <option key={group_number}>Gruppe {group_number}</option>
-              )
-            })
-          }
-          {groupName.includes("U") &&
-            youth_groups.map(group_name => {
-              return (
-                <option key={group_name}>{group_name}</option>
-              )
-            })
-          }
-        </select>
+        {groupInfo.groupLoaded &&
+          <select
+            className='border-black border rounded w-24 text-center shadow-md'
+            onChange={handleGroupChange}
+            defaultValue={groupInfo.oldGroup}
+          >
+            {groupInfo.oldGroup.includes("Gruppe") &&
+              groups.map(group_number => {
+                return (
+                  <option key={group_number}>Gruppe {group_number}</option>
+                )
+              })
+            }
+            {groupInfo.oldGroup.includes("U") &&
+              youth_groups.map(group_name => {
+                return (
+                  <option key={group_name}>{group_name}</option>
+                )
+              })
+            }
+          </select>
+        }        
         <div className='text-lg'>
           <LoadingButton size={"2"} onclick={switchGroup} >&#9989;</LoadingButton>
         </div>
       </div>
+      {
+        query?.global &&
+        <div className='flex justify-center mt-5'>
+          <div
+            className='p-2 font-bold shadow-lg bg-slate-300 rounded-md hover:cursor-pointer hover:bg-slate-400'
+            onClick={goToGroup}
+          >
+            Zur Gruppenansich wechseln
+          </div>
+        </div>
+      }
+
       <div className='flex justify-between mt-5'>
         <div
           className='p-2 font-bold shadow-lg bg-red-500 rounded-md'

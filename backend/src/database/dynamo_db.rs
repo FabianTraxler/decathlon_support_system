@@ -733,6 +733,33 @@ impl AchievementStorage for DynamoDB {
             .await?;
         Ok(String::from("Achievement updated"))
     }
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>{
+        let athlete_map: HashMap<String, AttributeValue>  = serde_dynamo::to_item(athlete_id).ok()?;  
+        let results = self.client
+            .scan()
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
+            .filter_expression("contains (athlete_ids, :m)")
+            .expression_attribute_values(":m", AttributeValue::M(athlete_map))
+            .send()
+            .await;
+
+        match results {
+            Ok(items) => {
+                if let Some(items) = items.items {
+                    for item in items{
+                        let group_store: GroupStore =
+                            serde_dynamo::from_item(item.clone()).unwrap_or(None)?;
+                        return Some(GroupID::from_group_store(&group_store));
+                    }
+                    None
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
 }
 
 #[async_trait]
