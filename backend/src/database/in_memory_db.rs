@@ -140,7 +140,7 @@ impl AchievementStorage for InMemoryDB {
         self.write_group_store(group_id, group_store).await
     }
 
-    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
+    async fn update_group(&self, group_id: GroupID, json_string: &str, only_time_group: bool) -> Result<String, Box<dyn Error>> {
         // TODO: Implement check if key is updated and then update key also
         let mut group = self.get_group(&group_id).await.ok_or(ItemNotFound::new("Key not found", "404"))?;
 

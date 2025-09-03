@@ -17,7 +17,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(change_starting_order);
     cfg.service(upload_time_table);
     cfg.service(change_discipline_state);
-    cfg.service(update_run_order);
+    cfg.service(reset_athlete_order);
 }
 
 #[get("/discipline")]
@@ -262,8 +262,8 @@ async fn upload_time_table(
 }
 
 
-#[put("/update_run_order")]
-async fn update_run_order(
+#[put("/reset_athlete_order")]
+async fn reset_athlete_order(
     data: web::Data<Box<dyn Storage + Send + Sync>>,
     query: Query<TimeGroupID>,
 ) -> impl Responder {
@@ -277,7 +277,7 @@ async fn update_run_order(
 
     match group {
         Some(mut group) => {
-            match group.reshuffle_run_order(group.name().to_string(), true, athlete_states) {
+            match group.reshuffle_athlete_order(group.name().to_string(), true, athlete_states) {
                 Ok(msg) => {
                     match data.store_time_group(group).await {
                         Ok(_) => HttpResponse::Ok().body(msg),

@@ -163,11 +163,11 @@ export function BeforeStartInfoBox({ discipline, start_discipline, athletes, rea
                         </button>
                         <div className="text-2xl font-semibold mb-4 text-center">Startreihenfolge</div>
                         { (athletes && athletes.length > 0) ?
-                        <table className="min-w-full divide-y divide-gray-200">
+                        <table className="min-w-full max-w-full divide-y divide-gray-200">
                             <thead>
                                 <tr>
+                                    <th className="border border-slate-600 p-1 pl-2 pr-2"></th>
                                     <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
-                                    <th className="border border-slate-600 p-1 pl-2 pr-2">Nummer</th>
                                     <th className="border border-slate-600 p-1 pl-2 pr-2">Vorname</th>
                                     <th className="border border-slate-600 p-1 pl-2 pr-2">Nachname</th>
                                 </tr>

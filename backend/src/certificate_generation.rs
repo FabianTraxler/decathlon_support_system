@@ -29,7 +29,7 @@ pub trait AchievementStorage {
     async fn get_group(&self, group_id: &GroupID) -> Option<Group>;
     async fn write_group_store(&self, group_id: GroupID, group_store: GroupStore) -> Result<String, Box<dyn Error>>;
     async fn write_group(&self, group_id: GroupID, group: Group) -> Result<String, Box<dyn Error>>;
-    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
+    async fn update_group(&self, group_id: GroupID, json_string: &str, only_time_group: bool) -> Result<String, Box<dyn Error>>;
     async fn switch_group(&self, group_info: SwitchGroupID, json_string: &str) -> Result<String, Box<dyn Error>>;
     async fn get_age_group(&self, age_group_id: &AgeGroupID) -> Option<AgeGroup>;
     async fn get_achievement(&self, achievement_id: &AchievementID) -> Option<Achievement>;

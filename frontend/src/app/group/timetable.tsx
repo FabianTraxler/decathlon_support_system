@@ -6,7 +6,6 @@ import Title_Footer_Layout from "./subpage_layout";
 import { LoadingAnimation, LoadingButton } from "../lib/loading";
 import { NavigationContext } from "./navigation";
 import { useAsyncError } from "../lib/asyncError";
-import { group } from "console";
 
 export default function Timetable({ group_name }: { group_name: string }) {
     const [disciplines, setDisciplines] = useState<Map<string, Discipline[]>>(new Map());
@@ -89,7 +88,7 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
     const reset_start_order = function (done: () => void) {
         if(confirm("Bist du sicher, dass du die Startreihenfolge zurücksetzen möchtest?")) {
-            fetch(`/api/update_run_order?name=${group_name}`, { method: "PUT" })
+            fetch(`/api/reset_athlete_order?name=${group_name}`, { method: "PUT" })
                 .then(res => {
                     done(); 
                     load_group_info(group_name)
@@ -191,7 +190,8 @@ export default function Timetable({ group_name }: { group_name: string }) {
                             })
                         }
                     </div>
-                    <div className="h-[10%] flex justify-center items-center">
+                    
+                    {/* <div className="h-[10%] flex justify-center items-center">
                         <LoadingButton size="4" onclick={reset_start_order}>
                             <div className={" border-black border rounded-md w-fit shadow-xl  hover:bg-red-400  " + (showDone ? " bg-green-200" : " bg-red-200")}>
                                 {showDone ?
@@ -207,7 +207,8 @@ export default function Timetable({ group_name }: { group_name: string }) {
 
                         </LoadingButton>
 
-                    </div>
+                    </div> */}
+                    
                 </div>
             </Title_Footer_Layout>
         )

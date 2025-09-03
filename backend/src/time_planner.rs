@@ -475,7 +475,7 @@ impl TimeGroup {
 
         Ok(())
     }
-    pub fn reshuffle_run_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
+    pub fn reshuffle_athlete_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
         let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
         let mut athletes = self.default_athlete_order.clone();
         
@@ -489,11 +489,12 @@ impl TimeGroup {
             });
         }
 
-        let (_, run_order, hurdle_order) =
+        let (default_order, run_order, hurdle_order) =
             create_default_athlete_order(Some(athletes), youth_group);
 
         self.change_starting_order(StartingOrder::Track(run_order), Some(false));
         self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
+        self.change_starting_order(StartingOrder::Default(default_order), None);
 
         Ok("Updated".to_string())
     }
