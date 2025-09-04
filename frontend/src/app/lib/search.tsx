@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Athlete } from "../lib/athlete_fetching";
 
 
@@ -13,47 +14,131 @@ export interface SearchQuery {
 }
 
 
-export function Search({ updateQuery }: { updateQuery: (query: SearchQuery) => void }) {
+export function Search({ updateQuery, searchQuery, showGlobal }: { updateQuery: (query: SearchQuery) => void, searchQuery?: SearchQuery, showGlobal: boolean }) {
+    const [formState, setFormState] = useState<{
+        global: boolean;
+        name: string;
+        surname: string;
+        starting_number: string;
+    }>({
+        global: false,
+        name: "",
+        surname: "",
+        starting_number: "",
+    });
 
-    const onChange = function () {
-        let form: HTMLFormElement | null = document.getElementById("searchForm") as HTMLFormElement
-        let search_query: SearchQuery = {global: false, queries: []}
-
-        Array.from(form.elements).forEach((element) => {
-            let el: HTMLInputElement = element as HTMLInputElement
-            if (el.value && el.name != "global") search_query.queries.push({ query: el.value, column: el.name })
-            if(el.name == "global"){
-                search_query.global = el.checked
+    // Initialize state from searchQuery on mount/update
+    useEffect(() => {
+        let n = "", s = "", sn = "";
+        searchQuery?.queries.forEach((query) => {
+            switch (query.column) {
+                case "name":
+                    n = query.query;
+                    break;
+                case "surname":
+                    s = query.query;
+                    break;
+                case "starting_number":
+                    sn = query.query;
+                    break;
             }
-        })
-        updateQuery(search_query)
-    }
+        });
+        setFormState({
+            global: searchQuery?.global ?? false,
+            name: n,
+            surname: s,
+            starting_number: sn,
+        });
+    }, [searchQuery]);
+    
+    // Handle input changes and update form state and search query
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, type, checked } = e.target;
+        const newFormState = {
+            ...formState,
+            [name]: type === "checkbox" ? checked : value,
+        };
+        setFormState(newFormState);
+
+        // Build new SearchQuery from form state
+        const queries: Query[] = [];
+        if (newFormState.name) queries.push({ query: newFormState.name, column: "name" });
+        if (newFormState.surname) queries.push({ query: newFormState.surname, column: "surname" });
+        if (newFormState.starting_number) queries.push({ query: newFormState.starting_number, column: "starting_number" });
+
+        updateQuery({ global: newFormState.global, queries });
+    };
+
+    const handleReset = () => {
+        setFormState({
+            global: false,
+            name: "",
+            surname: "",
+            starting_number: "",
+        });
+        updateQuery({ global: false, queries: [] });
+    };
+
+    const { global, name, surname, starting_number } = formState;
 
     return (
         <div>
             <h2 className="font-bold text-center text-xl">Suche</h2>
-            <form id="searchForm" onChange={onChange}>
+            <form>
                 <div className="columns-2">
                     <div>
                         <label>Nummer: </label> <br />
-                        <input className="max-w-12 shadow-md bg-slate-200 text-black" name="starting_number"></input><br />
+                        <input
+                            className="max-w-12 shadow-md bg-slate-200 text-black"
+                            name="starting_number"
+                            value={starting_number}
+                            onChange={handleInputChange}
+                        /><br />
                     </div>
+                    {showGlobal ?
                     <div className="right">
                         <label>Global: </label> <br />
-                        <input type="checkbox" className="max-w-12 shadow-md bg-slate-200 text-black" name="global"></input><br />
+                        <input
+                            type="checkbox"
+                            className="max-w-12 shadow-md bg-slate-200 text-black"
+                            name="global"
+                            checked={global}
+                            onChange={handleInputChange}
+                        /><br />
                     </div>
+                    :
+                    <div className="right">
+                    </div>
+                    }
                 </div>
 
                 <hr />
 
                 <label>Vorname: </label> <br />
-                <input className="max-w-32 sm:max-w-fit shadow-md bg-slate-200 text-black" name="name"></input><br />
+                <input
+                    className="max-w-32 sm:max-w-fit shadow-md bg-slate-200 text-black"
+                    name="name"
+                    value={name}
+                    onChange={handleInputChange}
+                /><br />
                 <hr />
 
                 <label>Nachname: </label> <br />
-                <input className="max-w-32 sm:max-w-fit shadow-md bg-slate-200 text-black" name="surname"></input><br />
+                <input
+                    className="max-w-32 sm:max-w-fit shadow-md bg-slate-200 text-black"
+                    name="surname"
+                    value={surname}
+                    onChange={handleInputChange}
+                /><br />
                 <hr />
             </form>
+            <div className="flex justify-center p-2 text-black">
+                <button
+                    type="button"
+                    className="p-2 border-black rounded-md bg-red-300 shadow-md shadow-slate-400 hover:cursor-pointer hover:bg-red-600"
+                    onClick={handleReset}
+                >Reset</button>
+            </div>
         </div>
     )
 }

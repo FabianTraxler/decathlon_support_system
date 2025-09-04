@@ -402,7 +402,10 @@ fn add_group_athletes(
         if group.name().contains("U4/U6") || group.name().contains("U8"){
             points = "".to_string();
         }else{
-            points = athlete.total_point().to_string();
+            points = match &included_disciplines{
+                Some(discinplines) => athlete.total_point_for_disciplines(discinplines).to_string(),
+                None => athlete.total_point().to_string(),
+            }
         }
         pdf_layer.use_text(
             points,

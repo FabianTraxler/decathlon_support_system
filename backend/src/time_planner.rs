@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::hash::Hash;
 
+use crate::run;
+
 #[async_trait]
 pub trait TimePlanStorage {
     async fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup>;
@@ -387,11 +389,12 @@ impl TimeGroup {
         StartingOrder::Track(self.default_run_order.clone())
     }
     pub fn change_starting_order(&mut self, new_order: StartingOrder, change_only_hurdle: Option<bool>) {
-        match new_order.clone() {
-            StartingOrder::Default(athletes) => self.default_athlete_order = athletes,
-            StartingOrder::Track(runs) => self.default_run_order = runs,
-            StartingOrder::NoOrder => {}
-        }
+        // Do not change default starting order!
+        // match new_order.clone() {
+        //     StartingOrder::Default(athletes) => self.default_athlete_order = athletes,
+        //     StartingOrder::Track(runs) => self.default_run_order = runs,
+        //     StartingOrder::NoOrder => {}
+        // }
 
         for discipline in &mut self.disciplines {
             if discipline.name().contains("Hürden") && !change_only_hurdle.unwrap_or(false) {
@@ -444,38 +447,89 @@ impl TimeGroup {
         Ok(())
     }
     pub fn delete_athlete(&mut self, athlete: Athlete) -> Result<(), Box<dyn Error>> {
-        let all_athletes: &mut Vec<Athlete> = &mut self.default_athlete_order;
-
-        let index = all_athletes
+        let index = self.default_athlete_order
             .iter()
             .position(|x| x == &athlete)
             .ok_or("Athlete not found")?;
-        all_athletes.remove(index);
+        self.default_athlete_order.remove(index);
 
-        let youth_group = self.disciplines.len() < 10;
-        let (default_athlete_order, default_run_order, default_hurdle_order) =
-            create_default_athlete_order(Some(all_athletes.clone()), youth_group);
-
-        self.default_athlete_order = default_athlete_order.clone();
-        self.default_run_order = default_run_order.clone();
-
+        let run_index = self.default_run_order.iter().position(|run| {
+            run.athletes.0.as_ref() == Some(&athlete)
+                || run.athletes.1.as_ref() == Some(&athlete)
+                || run.athletes.2.as_ref() == Some(&athlete)
+                || run.athletes.3.as_ref() == Some(&athlete)
+                || run.athletes.4.as_ref() == Some(&athlete)
+                || run.athletes.5.as_ref() == Some(&athlete)
+        });
+        match run_index {
+            Some(run_index) => {
+                let run: &mut Run = self.default_run_order.get_mut(run_index).expect("Run should exist");
+                if run.athletes.0.as_ref() == Some(&athlete) {
+                    run.athletes.0 = None;
+                } else if run.athletes.1.as_ref() == Some(&athlete) {
+                    run.athletes.1 = None;
+                } else if run.athletes.2.as_ref() == Some(&athlete) {
+                    run.athletes.2 = None;
+                } else if run.athletes.3.as_ref() == Some(&athlete) {
+                    run.athletes.3 = None;
+                } else if run.athletes.4.as_ref() == Some(&athlete) {
+                    run.athletes.4 = None;
+                } else if run.athletes.5.as_ref() == Some(&athlete) {
+                    run.athletes.5 = None;
+                }
+            }
+            None => (),
+        };
+        
         for discipline in &mut self.disciplines {
-            discipline.starting_order = match discipline.starting_order {
+            discipline.starting_order = match &discipline.starting_order {
                 StartingOrder::NoOrder => StartingOrder::NoOrder,
-                StartingOrder::Default(_) => StartingOrder::Default(default_athlete_order.clone()),
-                StartingOrder::Track(_) => {
-                    if discipline.name() == "110 Meter Hürden" {
-                        StartingOrder::Track(default_hurdle_order.clone())
-                    } else {
-                        StartingOrder::Track(default_run_order.clone())
-                    }
+                StartingOrder::Default(current_order) => {
+                    let mut new_order = current_order.clone();
+                    let index = current_order
+                        .iter()
+                        .position(|x| x == &athlete)
+                        .ok_or("Athlete not found")?;
+                    new_order.remove(index);
+                    StartingOrder::Default(new_order)
+                    },
+                StartingOrder::Track(current_order) => {
+                    let mut new_order = current_order.clone();
+                    let run_index = new_order.iter().position(|run| {
+                        run.athletes.0.as_ref() == Some(&athlete)
+                            || run.athletes.1.as_ref() == Some(&athlete)
+                            || run.athletes.2.as_ref() == Some(&athlete)
+                            || run.athletes.3.as_ref() == Some(&athlete)
+                            || run.athletes.4.as_ref() == Some(&athlete)
+                            || run.athletes.5.as_ref() == Some(&athlete)
+                    });
+                    match run_index {
+                        Some(run_index) => {
+                            let run: &mut Run = new_order.get_mut(run_index).expect("Run should exist");
+                            if run.athletes.0.as_ref() == Some(&athlete) {
+                                run.athletes.0 = None;
+                            } else if run.athletes.1.as_ref() == Some(&athlete) {
+                                run.athletes.1 = None;
+                            } else if run.athletes.2.as_ref() == Some(&athlete) {
+                                run.athletes.2 = None;
+                            } else if run.athletes.3.as_ref() == Some(&athlete) {
+                                run.athletes.3 = None;
+                            } else if run.athletes.4.as_ref() == Some(&athlete) {
+                                run.athletes.4 = None;
+                            } else if run.athletes.5.as_ref() == Some(&athlete) {
+                                run.athletes.5 = None;
+                            }
+                        }
+                        None => (),
+                    };
+                    StartingOrder::Track(new_order)
                 }
             }
         }
 
         Ok(())
     }
-    pub fn reshuffle_run_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
+    pub fn reshuffle_athlete_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
         let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
         let mut athletes = self.default_athlete_order.clone();
         
@@ -489,11 +543,12 @@ impl TimeGroup {
             });
         }
 
-        let (_, run_order, hurdle_order) =
+        let (default_order, run_order, hurdle_order) =
             create_default_athlete_order(Some(athletes), youth_group);
 
         self.change_starting_order(StartingOrder::Track(run_order), Some(false));
         self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
+        self.change_starting_order(StartingOrder::Default(default_order), None);
 
         Ok("Updated".to_string())
     }
@@ -611,7 +666,7 @@ fn create_default_athlete_order(
                     }
                 }
             } else if j == 3 || j == 4 || j == 5 {
-                for age_group in vec!["M", "Staffel"] {
+                for age_group in vec!["M", "S-M", "S-W"] {
                     if let Some(track_athletes) = track_athletes_map.get_mut(age_group) {
                         if track_athletes.len() > 0 {
                             if athletes.3.is_none() {

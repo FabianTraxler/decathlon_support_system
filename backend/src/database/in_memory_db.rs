@@ -7,6 +7,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::Mutex;
+use actix_web::web::to;
 use async_trait::async_trait;
 use log::warn;
 use serde::{Deserialize, Serialize};
@@ -139,7 +140,7 @@ impl AchievementStorage for InMemoryDB {
         self.write_group_store(group_id, group_store).await
     }
 
-    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
+    async fn update_group(&self, group_id: GroupID, json_string: &str, only_time_group: bool) -> Result<String, Box<dyn Error>> {
         // TODO: Implement check if key is updated and then update key also
         let mut group = self.get_group(&group_id).await.ok_or(ItemNotFound::new("Key not found", "404"))?;
 
@@ -252,6 +253,11 @@ impl AchievementStorage for InMemoryDB {
         self.write_athlete(AthleteID::from_athlete(&athlete), athlete).await?;
         Ok(String::from("Achievement updated"))
     }
+
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>{
+        !todo!("Implement method to get athlete group")
+    }
+
 }
 
 #[async_trait]

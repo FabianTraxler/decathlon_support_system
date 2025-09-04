@@ -43,11 +43,12 @@ export default function Overview({ searchQuery }: { searchQuery?: SearchQuery })
       </div>
     )
   } else {
+    let show_athletes = searchQuery != null && searchQuery.queries.length > 0
     return (
       <div className="flex flex-col items-center p-6 pb-10 2xl:p-10 overflow-scroll w-full h-[95vh] sm:h-screen">
         <Title title={groupName}></Title>
         <PrintUtilities></PrintUtilities>
-        <Athletes group_name={groupName} query={searchQuery}></Athletes>
+        <Athletes group_name={groupName} query={searchQuery} show_athletes={show_athletes}></Athletes>
 
         {(groupName.startsWith("Gruppe") || groupName.startsWith("U")) &&
           <Disciplines group_name={groupName}></Disciplines>

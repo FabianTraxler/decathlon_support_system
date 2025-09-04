@@ -151,6 +151,7 @@ impl AchievementStorage for DynamoDB {
         athlete_id: AthleteID,
         json_string: &str,
     ) -> Result<String, Box<dyn Error>> {
+        let mut result = "Athlete updated";
         if let None = self.get_athlete(&athlete_id).await {
             return Err(Box::from("Athlete not found. Insert new athlete"));
         }
@@ -245,6 +246,11 @@ impl AchievementStorage for DynamoDB {
 
             match Value::as_bool(starting_number) {
                 Some(val) => {
+                    if val{
+                        result = "Athlete deregistered";
+                    } else {
+                        result = "Athlete registered";
+                    }
                     update_call = update_call.expression_attribute_values(
                         String::from(":de"),
                         AttributeValue::Bool(val),
@@ -265,7 +271,7 @@ impl AchievementStorage for DynamoDB {
 
         update_call.send().await?;
 
-        Ok(String::from("Athlete updated"))
+        Ok(String::from(result))
     }
 
     async fn delete_athlete(&self, athlete_id: AthleteID) -> Result<String, Box<dyn Error>> {
@@ -440,6 +446,7 @@ impl AchievementStorage for DynamoDB {
         &self,
         group_id: GroupID,
         json_string: &str,
+        only_time_group: bool
     ) -> Result<String, Box<dyn Error>> {
         let mut group = self
             .get_group(&group_id)
@@ -559,11 +566,14 @@ impl AchievementStorage for DynamoDB {
             update_call =
                 update_call.update_expression(format!("SET {}", update_expressions.join(",")));
         }
-
-        update_call.send().await?;
-
         let group_name = group.name().to_string();
-        self.write_group(group_id, group).await?;
+
+        if !only_time_group {
+            update_call.send().await?;
+            self.write_group(group_id, group).await?;
+
+        }
+
         if new_athletes.len() > 0 {
             match self.get_time_group(&TimeGroupID::new(group_name.clone())).await {
                 Some(mut time_group) => {
@@ -615,10 +625,10 @@ impl AchievementStorage for DynamoDB {
         let from_group_id = GroupID::new(group_info.from.ok_or("From group not given")?.as_str());
         let to_group_id = GroupID::new(group_info.to.ok_or("To group not given")?.as_str());
 
-        self.update_group(to_group_id, json_string).await?;
+        self.update_group(to_group_id, json_string, false).await?;
 
         let delete_json_string = json_string.replace("athlete_ids", "delete_athlete_ids");
-        self.update_group(from_group_id, &delete_json_string).await?;
+        self.update_group(from_group_id, &delete_json_string, false).await?;
 
         Ok(String::from("Group updated"))
     }
@@ -733,6 +743,33 @@ impl AchievementStorage for DynamoDB {
             .await?;
         Ok(String::from("Achievement updated"))
     }
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>{
+        let athlete_map: HashMap<String, AttributeValue>  = serde_dynamo::to_item(athlete_id).ok()?;  
+        let results = self.client
+            .scan()
+            .table_name(std::env::var("DB_NAME_GROUP").unwrap_or("group_store".to_string()))
+            .filter_expression("contains (athlete_ids, :m)")
+            .expression_attribute_values(":m", AttributeValue::M(athlete_map))
+            .send()
+            .await;
+
+        match results {
+            Ok(items) => {
+                if let Some(items) = items.items {
+                    for item in items{
+                        let group_store: GroupStore =
+                            serde_dynamo::from_item(item.clone()).unwrap_or(None)?;
+                        return Some(GroupID::from_group_store(&group_store));
+                    }
+                    None
+                } else {
+                    None
+                }
+            }
+            Err(_) => None,
+        }
+    }
+
 }
 
 #[async_trait]
