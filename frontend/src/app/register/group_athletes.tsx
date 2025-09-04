@@ -124,6 +124,7 @@ function AddAthlete({ groupName }: { groupName: string }) {
             setFormState("uploading")
 
             values.push(["achievements", {}])
+            values.push(["deregistered", false])
 
             let api_url = `/api/group_athlete`
     

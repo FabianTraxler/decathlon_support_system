@@ -310,12 +310,24 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             update_result.third_try = undefined
 
             if (try_number == 1) {
+                if (athlete_result.first_try && athlete_result.best_try == athlete_result.first_try) {
+                    athlete_result.best_try = Math.max(new_value, athlete_result.second_try || -1, athlete_result.third_try || -1)
+                    update_result.best_try = athlete_result.best_try 
+                }
                 athlete_result.first_try = new_value
                 update_result.first_try = new_value
             } else if (try_number == 2) {
+                if (athlete_result.second_try && athlete_result.best_try == athlete_result.second_try) {
+                    athlete_result.best_try = Math.max(athlete_result.first_try || -1, new_value, athlete_result.third_try || -1)
+                    update_result.best_try = athlete_result.best_try 
+                }
                 athlete_result.second_try = new_value
                 update_result.second_try = new_value
             } else if (try_number == 3) {
+                if (athlete_result.third_try && athlete_result.best_try == athlete_result.third_try) {
+                    athlete_result.best_try = Math.max(athlete_result.first_try || -1, athlete_result.second_try || -1, new_value)
+                    update_result.best_try = athlete_result.best_try 
+                }
                 athlete_result.third_try = new_value
                 update_result.third_try = new_value
             }

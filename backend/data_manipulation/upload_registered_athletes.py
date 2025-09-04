@@ -72,7 +72,7 @@ def upload_decathlon(google_sheets_name: str):
 		if isinstance(row["Geburtstag"], datetime):
 			birth_day = row["Geburtstag"]
 			birthday_timestamp = int(datetime.timestamp(birth_day))
-		elif isinstance(row["Geburtstag"], str):
+		elif isinstance(row["Geburtstag"], str) and row["Geburtstag"].strip() != "":
 			datetime_str = row["Geburtstag"].strip().split(" ")[0]
 			if "." in datetime_str:
 				birth_day = datetime.strptime(datetime_str, '%d.%m.%Y')
