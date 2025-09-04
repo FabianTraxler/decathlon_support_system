@@ -141,6 +141,15 @@ impl Athlete {
         }
         total_points
     }
+    pub fn total_point_for_disciplines(&self, included_disciplines: &Vec<String>) -> u32 {
+        let mut total_points = 0;
+        for achievement in self.achievements.values() {
+            if included_disciplines.contains(&achievement.name()) {
+                total_points += achievement.points(self)
+            }
+        }
+        total_points
+    }
 
     pub fn compute_total_points(&mut self) {
         let mut total_points = 0;
