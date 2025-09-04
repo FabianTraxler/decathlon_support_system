@@ -3,7 +3,7 @@ services:
       container_name: next_frontend
       image: fabsl22/decathlon_support_system:frontend_v1.1
       build:
-        context: ./frontend
+        context: ../frontend
         dockerfile: frontend.dockerfile
       environment:
           AUTH_SECRET: k305HdO9r7cxDKx8oxNCQAMqzTIM8ipYvXh/iSr6PYA=
@@ -16,30 +16,25 @@ services:
       container_name: rust_backend
       image: fabsl22/decathlon_support_system:backend_v1.1
       build:
-        context: ./backend
+        context: ../backend
         dockerfile: backend.dockerfile
-      environment:
-        DB_NAME_ATHLETE: athlete_store
-        DB_NAME_AUTHENTICATION: authentication
-        DB_NAME_GROUP: group_store
-        DB_NAME_TIMEGROUP: time_group_store
-        DB_NAME_TEAM: team_store
+      env_file: /home/ec2-user/.envs/backend.env
+      volumes:
+        - /home/ec2-user/.aws:/root/.aws
       ports:
         - '3001:3001'
-      volumes:
-        - /home/fabian/.aws:/root/.aws
       restart: always
   reverse_proxy:
     container_name: reverse_proxy
     image: fabsl22/decathlon_support_system:reverse_proxy
     build:
-      context: ./reverse_proxy
+      context: ../reverse_proxy
       dockerfile: nginx.dockerfile
     ports:
       - '80:80'
       - '443:443'
     volumes:
-      - .certs/:/etc/nginx/ssl:ro
+      - /home/ec2-user/.certs/:/etc/nginx/ssl:ro
     depends_on:
         - next_frontend
     restart: always

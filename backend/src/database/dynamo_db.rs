@@ -8,6 +8,7 @@ use crate::teams::{Team, TeamID, TeamStorage};
 use crate::time_planner::{TimeGroup, TimeGroupID, TimePlanStorage};
 use crate::{time_planner, Storage};
 use async_trait::async_trait;
+use aws_config::BehaviorVersion;
 use aws_sdk_dynamodb::types::{AttributeValue, KeysAndAttributes};
 use aws_sdk_dynamodb::Client;
 use serde_json::Value;
