@@ -135,6 +135,7 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
   { StartingOrder: AthleteID[], saveStartingOrder: (order: StartingOrder) => void }) {
   const [currentRows, setCurrentRows] = useState(StartingOrder)
   const [lastDraggedOver, setLastDraggedOver] = useState(NaN)
+  const [draggedRow, setDraggedRow] = useState(NaN)
   const [submitted, setSubmitted] = useState(false)
 
   const handleDragOver = function (e: React.DragEvent, rowIndex: number) {
@@ -145,7 +146,11 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
   const handleDragDrop = function (e: React.DragEvent, rowIndex: number) {
     e.preventDefault();
     setLastDraggedOver(NaN);
-    const dragIndex = e.dataTransfer.getData('rowIndex');
+    let dragIndex = e.dataTransfer.getData('rowIndex');
+    if (!dragIndex) {
+      dragIndex = draggedRow.toString();
+      setDraggedRow(NaN)
+    }
     if (dragIndex !== rowIndex.toString()) {
       const newRows = [...currentRows];
       const [draggedColumn] = newRows.splice(parseInt(dragIndex), 1);
@@ -156,6 +161,7 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
 
   const handleDragStart = function (e: React.DragEvent, rowIndex: number) {
     e.dataTransfer.setData('rowIndex', rowIndex.toString());
+    setDraggedRow(rowIndex);
   }
 
   const handleOnClick = function () {
@@ -181,8 +187,16 @@ function DefaultStartingOrder({ StartingOrder, saveStartingOrder }:
           </thead>
           <tbody>
             {currentRows.map((athlete, i) => {
+              let droppedBelow = false;
+              if (draggedRow < i) {
+                droppedBelow = true;
+              }
               return (
-                <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' + (i == lastDraggedOver && " bg-white")}
+                <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' + 
+                  (i == lastDraggedOver && " bg-white ") +
+                  ((i == lastDraggedOver && droppedBelow) && " border-b-red-600 border-b-4 ") +
+                  ((i == lastDraggedOver && !droppedBelow) && " border-t-red-600 border-t-4") 
+                  }
                   draggable="true"
                   onDrop={(e) => handleDragDrop(e, i)}
                   onDragStart={(e) => handleDragStart(e, i)}
@@ -219,6 +233,8 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
   { StartingOrder: { name: string, athletes: (AthleteID | null)[] }[], saveStartingOrder: (order: StartingOrder) => void }) {
   const [currentRuns, setcurrentRuns] = useState(StartingOrder)
   const [lastDraggedOver, setLastDraggedOver] = useState({ run_index: NaN, row_index: NaN })
+  const [draggedRow, setDraggedRow] = useState({ run_index: NaN, row_index: NaN, cell_empty: false })
+
   const [submitted, setSubmitted] = useState("")
 
   const handleDragOver = function (e: React.DragEvent, runIndex: number, rowIndex: number) {
@@ -247,9 +263,15 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
   const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number, dragStopRowEmpty: boolean) {
     e.preventDefault();
     setLastDraggedOver({ run_index: NaN, row_index: NaN });
-    const dragRowIndex = e.dataTransfer.getData('rowIndex');
-    const dragRunIndex = e.dataTransfer.getData('runIndex');
-    const startCellEmpty = e.dataTransfer.getData('cell_empty');
+    var dragRowIndex = e.dataTransfer.getData('rowIndex');
+    var dragRunIndex = e.dataTransfer.getData('runIndex');
+    var startCellEmpty = e.dataTransfer.getData('cell_empty');
+    if (!dragRowIndex || !dragRunIndex) {
+      dragRowIndex = draggedRow.row_index.toString();
+      dragRunIndex = draggedRow.run_index.toString();
+      startCellEmpty = draggedRow.cell_empty.toString();
+      setDraggedRow({ run_index: NaN, row_index: NaN, cell_empty: false })
+    }
 
     if (dragRowIndex !== rowIndex.toString() || dragRunIndex !== runIndex.toString()) {
       let newRun = currentRuns[runIndex]
@@ -281,6 +303,7 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
     e.dataTransfer.setData('rowIndex', rowIndex.toString());
     e.dataTransfer.setData('runIndex', runIndex.toString());
     e.dataTransfer.setData('cell_empty', cell_empty.toString());
+    setDraggedRow({ run_index: runIndex, row_index: rowIndex, cell_empty: cell_empty });
   }
 
   const addRun = function () {
@@ -375,9 +398,18 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
               </thead>
               <tbody>
                 {run.athletes.map((athlete, track_number) => {
+                  let droppedBelow = false;
+                  if (draggedRow.row_index < track_number) {
+                    droppedBelow = true;
+                  }
+                  if (run_id != draggedRow.run_index){
+                    droppedBelow = false;
+                  }
+                  let isDraggedOver = (track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index)
                   if (athlete == null) {
-                    return (<tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
-                      ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
+                    return (
+                    <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
+                      (isDraggedOver && " bg-white ") }
                       draggable="true"
                       onDrop={(e) => handleDragDrop(e, run_id, track_number, true)}
                       onDragStart={(e) => handleDragStart(e, run_id, track_number, true)}
@@ -396,7 +428,10 @@ function TrackStartingOrder({ StartingOrder, saveStartingOrder }:
                   else {
                     return (
                       <tr className={'cursor-move bg-slate-400 active:bg-slate-600 active:text-slate-50 ' +
-                        ((track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")}
+                        (isDraggedOver && " bg-white ") +
+                        ((isDraggedOver && droppedBelow) && " border-b-red-600 border-b-4 ") +
+                        ((isDraggedOver && !droppedBelow) && " border-t-red-600 border-t-4") 
+                        }
                         draggable="true"
                         onDrop={(e) => handleDragDrop(e, run_id, track_number, false)}
                         onDragStart={(e) => handleDragStart(e, run_id, track_number, false)}
