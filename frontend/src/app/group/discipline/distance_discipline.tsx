@@ -557,7 +557,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
             }
         }
         save_athlete_try(athlete, try_number, new_value, false)
-        if (state.discipline.try_order_type != "Subsequent"){
+        if (state.discipline.try_order_type == "Subsequent"){
             setSelectedTry({ try_number: try_number + 1, try_value: "" })
         }
     }
