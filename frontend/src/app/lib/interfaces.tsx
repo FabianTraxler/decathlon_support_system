@@ -1,4 +1,3 @@
-import { Achievement } from "next-auth/providers/42-school";
 import { AchievementValue } from "./athlete_fetching";
 
 export interface Discipline {
@@ -7,7 +6,8 @@ export interface Discipline {
     start_time: string,
     state: string,
     starting_order: StartingOrder | string,
-    discipline_type: string
+    discipline_type: string,
+    try_order_type: "Standard" | "Once" | "Subsequent"
 }
 
 export interface StartingOrder {
