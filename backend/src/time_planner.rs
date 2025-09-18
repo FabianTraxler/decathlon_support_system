@@ -8,8 +8,6 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::hash::Hash;
 
-use crate::run;
-
 #[async_trait]
 pub trait TimePlanStorage {
     async fn get_time_group(&self, group_id: &TimeGroupID) -> Option<TimeGroup>;
@@ -61,6 +59,15 @@ pub enum DisciplineType {
     Time,
 }
 
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum TryOrderType {
+    Standard,
+    Once, // only one try
+    Subsequent // all tries directly after each other
+}
+
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Discipline {
     name: String,
@@ -69,6 +76,7 @@ pub struct Discipline {
     state: DisciplineState,
     starting_order: StartingOrder,
     discipline_type: DisciplineType,
+    try_order_type: TryOrderType,
     #[serde(skip_serializing_if = "Option::is_none")]
     time_started: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -268,6 +276,19 @@ impl TimeGroup {
                         }
                     };
 
+                    let try_order_type: TryOrderType = match discipline_info.get("try_order_type") {
+                        Some(try_order_value) => match try_order_value.as_str() {
+                            Some(try_order_str) => match try_order_str {
+                                "Standard" => TryOrderType::Standard,
+                                "Once" => TryOrderType::Once,
+                                "Subsequent" => TryOrderType::Subsequent,
+                                _ => TryOrderType::Standard
+                            },
+                            None => TryOrderType::Standard
+                        },
+                        None => TryOrderType::Standard
+                    };
+
                     let discipline = Discipline {
                         name: discipline_name.clone(),
                         location,
@@ -275,6 +296,7 @@ impl TimeGroup {
                         state: DisciplineState::BeforeStart,
                         starting_order,
                         discipline_type,
+                        try_order_type,
                         time_finished: None,
                         time_started: None
                     };

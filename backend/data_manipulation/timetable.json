@@ -393,7 +393,8 @@
       },
       "Schlagball": {
         "location": "Schlagball",
-        "time": "13:30, Samstag"
+        "time": "13:30, Samstag",
+        "try_order_type": "Subsequent"
       },
       "Weitsprung": {
         "location": "Weit 3",
@@ -407,11 +408,13 @@
       },
       "Schlagball": {
         "location": "Schlagball",
-        "time": "13:30, Samstag"
+        "time": "13:30, Samstag",
+        "try_order_type": "Once"
       },
       "Weitsprung": {
         "location": "Weit 2",
-        "time": "14:40, Samstag"
+        "time": "14:40, Samstag",
+        "try_order_type": "Once"
       }
     }
   },

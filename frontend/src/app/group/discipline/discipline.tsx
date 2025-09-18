@@ -162,6 +162,12 @@ export function BeforeStartInfoBox({ discipline, start_discipline, athletes, rea
                             </div>
                         </button>
                         <div className="text-2xl font-semibold mb-4 text-center">Startreihenfolge</div>
+                        { (discipline.try_order_type == "Once") && 
+                            <div className="text-center font-bold text-red-900">Jeweils nur 1 Versuch</div>
+                        }
+                        { (discipline.try_order_type == "Subsequent") && 
+                            <div className="text-center font-bold text-red-900">Alle 3 Versuche direkt hintereinander</div>
+                        }
                         { (athletes && athletes.length > 0) ?
                         <table className="min-w-full max-w-full divide-y divide-gray-200">
                             <thead>

@@ -13,7 +13,8 @@ const general_info: Discipline = {
     start_time: "",
     state: "",
     starting_order: "",
-    discipline_type: ""
+    discipline_type: "",
+    try_order_type: "Standard"
 }
 
 export default function Rules({ group_name }: { group_name: string }) {

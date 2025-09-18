@@ -20,7 +20,7 @@ interface DistanceDisciplineState {
 }
 
 const empty_state = {
-    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "" },
+    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "", try_order_type: "Standard" },
     results: new Map(),
     current_try: 0,
     current_order: [],
@@ -70,7 +70,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         athlete_result.third_try = parseFloat(achievement.third_try.integral + "." + achievement.third_try.fractional)
                         all_results.push(athlete_result.third_try)
                     }
-                    if (all_results.length > 0){
+                    if (all_results.length > 0) {
                         athlete_result.best_try = Math.max(...all_results)
                     }
                     if (achievement.final_result) {
@@ -105,30 +105,62 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                     }
                 })
                 let try_order: AthleteDistanceResults[] = []
-                let not_done = [1, 2, 3].some(try_number => { // Check all tries
-                    current_try = try_number
+                let not_done = false;
+
+                let tries = [1, 2, 3]
+                if (disciplineState.discipline.try_order_type == "Once") {
+                    tries = [1]
+                }
+                if (disciplineState.discipline.try_order_type == "Subsequent") {
                     try_order = [...default_starting_order]
-                    while (try_order.length > 0) {
-                        let athlete = athlete_results.get(try_order[0].full_name())
-                        if (athlete) {
-                            // If athlete has no attempt for this try then start with this person
-                            if (try_number == 1) {
-                                if (!("first_try" in athlete)) {
-                                    return true
+                    athleteLoop:
+                        while (try_order.length > 0) { // Check all athletes
+                            let athlete_result = athlete_results.get(try_order[0].full_name())
+                            while (current_try <= tries.length) {
+                                if (athlete_result) {
+                                    if (current_try == 1 && !("first_try" in athlete_result)) {
+                                        not_done = true
+                                        break athleteLoop;
+                                    } else if (current_try == 2 && !("second_try" in athlete_result)) {
+                                        not_done = true
+                                        break athleteLoop;
+                                    } else if (current_try == 3 && !("third_try" in athlete_result)) {
+                                        not_done = true
+                                        break athleteLoop;
+                                    }
                                 }
-                            } else if (try_number == 2) {
-                                if (!("second_try" in athlete)) {
-                                    return true
-                                }
-                            } else if (try_number == 3) {
-                                if (!("third_try" in athlete)) {
-                                    return true
+                                current_try++
+                            }
+                            try_order.shift()
+                        }
+
+                }else{
+                    not_done = tries.some(try_number => { // Check all tries
+                        current_try = try_number
+                        try_order = [...default_starting_order]
+                        while (try_order.length > 0) {
+                            let athlete = athlete_results.get(try_order[0].full_name())
+                            if (athlete) {
+                                // If athlete has no attempt for this try then start with this person
+                                if (try_number == 1) {
+                                    if (!("first_try" in athlete)) {
+                                        return true
+                                    }
+                                } else if (try_number == 2) {
+                                    if (!("second_try" in athlete)) {
+                                        return true
+                                    }
+                                } else if (try_number == 3) {
+                                    if (!("third_try" in athlete)) {
+                                        return true
+                                    }
                                 }
                             }
+                            try_order.shift()
                         }
-                        try_order.shift()
-                    }
-                })
+                    })
+                }
+
                 if (try_order.length == 0) {
                     let discipline = disciplineState.discipline;
                     discipline.state = "NoAthletes"
@@ -149,9 +181,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
         }
 
         get_group_achievements(group_name, get_discipline_results)
-        .catch((e) => {
-            throwError(e);
-        })
+            .catch((e) => {
+                throwError(e);
+            })
     }, [group_name])
 
 
@@ -172,29 +204,29 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
 
     let athlete_w_starting_number = Array.from(disciplineState.results.values()).filter(a => a.starting_number)
 
-    let all_athlete_results: IAthleteID[]= athlete_w_starting_number.map((athlete) => {
-                            return {
-                                name: athlete.name,
-                                surname: athlete.surname,
-                                starting_number: athlete.starting_number,
-                                age_group: "",
-                                achievement: {
-                                    Distance: {
-                                        first_try: athlete.first_try,
-                                        second_try: athlete.second_try,
-                                        third_try: athlete.third_try,
-                                        best_try: athlete.best_try,
-                                        final_result: {
-                                            integral: Math.floor(athlete.best_try || 0),
-                                            fractional: Math.round((athlete.best_try || 0) * 100) % 100
-                                        },
-                                        name: athlete.discipline_name,
-                                        unit: athlete.discipline_unit
-                                    },
-                                    athlete_name: athlete.name + " " + athlete.surname,
-                                } 
-                            } as IAthleteID
-                        } )
+    let all_athlete_results: IAthleteID[] = athlete_w_starting_number.map((athlete) => {
+        return {
+            name: athlete.name,
+            surname: athlete.surname,
+            starting_number: athlete.starting_number,
+            age_group: "",
+            achievement: {
+                Distance: {
+                    first_try: athlete.first_try,
+                    second_try: athlete.second_try,
+                    third_try: athlete.third_try,
+                    best_try: athlete.best_try,
+                    final_result: {
+                        integral: Math.floor(athlete.best_try || 0),
+                        fractional: Math.round((athlete.best_try || 0) * 100) % 100
+                    },
+                    name: athlete.discipline_name,
+                    unit: athlete.discipline_unit
+                },
+                athlete_name: athlete.name + " " + athlete.surname,
+            }
+        } as IAthleteID
+    })
 
     return (
         <AthleteResults.Provider value={{
@@ -210,9 +242,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         start_discipline={() => {
                             try {
                                 start_discipline(group_name, disciplineState.discipline, setDiscipline)
-                                .catch((e) => {
-                                    throwError(e);
-                                });
+                                    .catch((e) => {
+                                        throwError(e);
+                                    });
                             } catch (e) {
                                 if (e instanceof Error) {
                                     throwError(e)
@@ -258,7 +290,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                         <div>Abgeschlossen!</div>
                         <div className="text-2xl mt-8 sm:mt-14 justify-center flex ">
                             <div
-                                className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none" }
+                                className={"border rounded-md  w-fit p-4 sm:p-4 hover:cursor-pointer text-center bg-stw_green shadow-lg shadow-black active:shadow-none"}
                                 onClick={() => setShowResultsPopUp(true)}
                             >
                                 Ergebnisse anzeigen
@@ -268,9 +300,9 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 }
                 {
                     showResultsPopUp &&
-                    <AthleteResultsPopUp 
+                    <AthleteResultsPopUp
                         athletes={all_athlete_results}
-                        type="Distance" 
+                        type="Distance"
                         setShowResultsPopUp={setShowResultsPopUp}
                         unit="m"
                     ></AthleteResultsPopUp>
@@ -285,6 +317,11 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
     const { state, update_state } = useContext(AthleteResults)
     const navigation = useContext(NavigationContext)
     const throwError = useAsyncError();
+
+    var max_tries = 3
+    if(state.discipline.try_order_type == "Once") {
+        max_tries = 1
+    }
 
     const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) {
         let selected_athlete = state.current_order[0]
@@ -312,21 +349,21 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
             if (try_number == 1) {
                 if (athlete_result.first_try && athlete_result.best_try == athlete_result.first_try) {
                     athlete_result.best_try = Math.max(new_value, athlete_result.second_try || -1, athlete_result.third_try || -1)
-                    update_result.best_try = athlete_result.best_try 
+                    update_result.best_try = athlete_result.best_try
                 }
                 athlete_result.first_try = new_value
                 update_result.first_try = new_value
             } else if (try_number == 2) {
                 if (athlete_result.second_try && athlete_result.best_try == athlete_result.second_try) {
                     athlete_result.best_try = Math.max(athlete_result.first_try || -1, new_value, athlete_result.third_try || -1)
-                    update_result.best_try = athlete_result.best_try 
+                    update_result.best_try = athlete_result.best_try
                 }
                 athlete_result.second_try = new_value
                 update_result.second_try = new_value
             } else if (try_number == 3) {
                 if (athlete_result.third_try && athlete_result.best_try == athlete_result.third_try) {
                     athlete_result.best_try = Math.max(athlete_result.first_try || -1, athlete_result.second_try || -1, new_value)
-                    update_result.best_try = athlete_result.best_try 
+                    update_result.best_try = athlete_result.best_try
                 }
                 athlete_result.third_try = new_value
                 update_result.third_try = new_value
@@ -345,9 +382,9 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                     try_completed(new_results)
                 }
             })
-            .catch((e) => {
-                if (!skip_error) throwError(e);
-            })
+                .catch((e) => {
+                    if (!skip_error) throwError(e);
+                })
         } else {
             if (!skip_error) throwError(new Error("Error while saving achievement: Athlete result not found locally for distance discipline"));
         }
@@ -355,29 +392,52 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
     }
 
     const try_completed = function (new_results: Map<string, AthleteDistanceResults>) {
-        if (state.current_order.length <= 1) {
-            if (state.current_try >= 3) {
-                // Finish discipline
+        if (state.discipline.try_order_type == "Subsequent") {
+            if (state.current_order.length <= 1 && state.current_try >= max_tries) {
                 finish_discipline()
+            }else{
+                if (state.current_try >= max_tries){
+                    // Move to next athlete and set current try to 1 again
+                    update_state({
+                        ...state,
+                        current_try: 1,
+                        current_order: state.current_order.slice(1),
+                        results: new_results
+                    })
+                    setSelectedAthlete(undefined)
+                }else{
+                    // Increase try
+                    update_state({
+                        ...state,
+                        current_try: state.current_try + 1,
+                        results: new_results
+                    })
+                }
+            }
+        }else{
+            if (state.current_order.length <= 1) {
+                if (state.current_try >= max_tries) {
+                    // Finish discipline
+                    finish_discipline()
+                } else {
+                    // increase try
+                    update_state({
+                        ...state,
+                        current_try: state.current_try + 1,
+                        current_order: state.default_order,
+                        results: new_results
+                    })
+                    setSelectedAthlete(undefined)
+                }
             } else {
-                // increase try
                 update_state({
                     ...state,
-                    current_try: state.current_try + 1,
-                    current_order: state.default_order,
+                    current_order: state.current_order.slice(1),
                     results: new_results
                 })
                 setSelectedAthlete(undefined)
             }
-        } else {
-            update_state({
-                ...state,
-                current_order: state.current_order.slice(1),
-                results: new_results
-            })
-            setSelectedAthlete(undefined)
         }
-
     }
 
 
@@ -398,7 +458,11 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
         return (
             <div className="grid grid-rows-2">
                 <div className="grid grid-rows-5">
-                    <div className="font-bold underline text-2xl">{state.current_try}. Versuch: </div>
+                    { state.discipline.try_order_type != "Subsequent" ?
+                        <div className="font-bold underline text-2xl">{state.current_try}. Versuch: </div>
+                        :
+                        <div className="font-bold underline text-2xl">Derzeit am Versuch</div>
+                    }
                     <div className="row-span-1 grid grid-cols-5 text-xl font-bold h-full">
                         <div className="flex items-center justify-center border"><span>#</span></div>
                         <div className="col-span-3 flex items-center justify-center border"><span>Name</span></div>
@@ -415,7 +479,11 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                 <div className="mt-3">
                     {state.current_order.length > 1 &&
                         <div>
-                            <div className="font-bold underline text-xl">In Vorbereitung {state.current_try}. Versuch</div>
+                            { state.discipline.try_order_type != "Subsequent" ?
+                                <div className="font-bold underline text-xl">In Vorbereitung {state.current_try}. Versuch</div>
+                                :
+                                <div className="font-bold underline text-xl">In Vorbereitung</div>
+                            }
                             {
                                 state.current_order.slice(1, 5).map((athlete => {
                                     return (
@@ -429,7 +497,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                         </div>
                     }
 
-                    {(state.current_order.length < 5 && state.current_try < 3) &&
+                    {(state.current_order.length < 5 && state.current_try < max_tries && state.discipline.try_order_type != "Subsequent") &&
                         <div>
                             <div className="font-bold underline text-xl">In Vorbereitung {state.current_try + 1}. Versuch:</div>
                             {
@@ -457,6 +525,10 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
     const [showAthleteEdit, setShowAthleteEdit] = useState(false)
     const athlete_result = state.results.get(athlete.full_name())
     let try_value: number | string = ""
+    var tries = [1, 2, 3]
+    if (state.discipline.try_order_type == "Once") {
+        tries = [1]
+    }
     if (athlete_result) {
         if (state.current_try == 1) {
             try_value = athlete_result.first_try || ""
@@ -477,18 +549,21 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
         }
         let max_value = MAX_DISCIPLINE_PERFORMANCE.get(state.discipline.name) || 9999;
 
-        if( new_value > max_value) {
-            if(confirm(`Neuer Weltrekord! Ganz sicher?`)) {
+        if (new_value > max_value) {
+            if (confirm(`Neuer Weltrekord! Ganz sicher?`)) {
                 save_athlete_try(athlete, try_number, new_value, false)
-            }else{
-                return; 
+            } else {
+                return;
             }
         }
         save_athlete_try(athlete, try_number, new_value, false)
-    } 
+        if (state.discipline.try_order_type == "Subsequent"){
+            setSelectedTry({ try_number: try_number + 1, try_value: "" })
+        }
+    }
 
     return (
-        <div className="grid grid-rows-8 h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md">
+        <div className={"grid h-full w-full z-50 p-2 bg-slate-400 shadow-lg border rounded-md " + (tries.length > 2 ? "grid-rows-8" : "grid-rows-4")}>
             <div className="flex flex-row items-center justify-between text-xl sm:text-4xl p-2 bg-slate-700 text-slate-100 rounded-md">
                 <div onClick={_ => setShowAthleteEdit(true)} className="flex hover:cursor-pointer active:text-slate-400 fill-slate-100 active:fill-slate-400">
                     <div>
@@ -529,7 +604,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                 }
                 <div>{athlete_result?.best_try != -1 && athlete_result?.best_try} m</div>
             </div>
-            {[1, 2, 3].map(try_number => {
+            {tries.map(try_number => {
                 let try_value: number | string = ""
                 if (try_number == selectedTry.try_number) {
                     try_value = selectedTry.try_value
@@ -571,13 +646,14 @@ function Try({ try_number, try_value, current_try, selected_try, save_value, set
                     {try_number}. Versuch:
                 </div>
                 <div className="flex flex-row items-center justify-center h-full">
-                    <div className={"text-center w-full min-h-[50%] p-1 rounded bg-slate-400 " + (selected_try && "bg-slate-50 border border-green-300")}
+                    <div className={"flex items-center justify-center w-full min-h-[50%] p-1 rounded bg-slate-400 " + (selected_try && "bg-slate-50 border border-green-300")}
                         onClick={() => setSelectedTry({ try_number: try_number, try_value: try_value })}
                     >
+                        <p>
                         {try_value != -1 && try_value}
                         {(try_value == -1 && selected_try) && ""}
                         {(try_value == -1 && !selected_try) && "X"}
-
+                        </p>
                     </div>
                     <div>
                         {try_value != -1 && "m"}

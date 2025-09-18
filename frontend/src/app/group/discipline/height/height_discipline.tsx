@@ -29,7 +29,7 @@ interface HeightDisciplineState {
 }
 
 const empty_state = {
-    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "" },
+    discipline: { name: "", location: "", start_time: "", state: "", starting_order: "", discipline_type: "", try_order_type: "Standard" },
     results: new Map(),
     current_try: 0,
     current_height: 0,
