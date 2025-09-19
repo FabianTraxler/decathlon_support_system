@@ -17,7 +17,7 @@ provider "aws" {
 resource "aws_key_pair" "backup_ec2_key" {
   key_name   = "backup-ec2-key"
   public_key = <<EOT
-ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCom6i1wZLZru4dfOMoFzYyfM/Lf68xadBKh5A+VYBl8ohr1W1In1GKoTfsxtMEffhzEUi5SoTHin7f/mW7XY6urj0AxakT50A3xTLzTW0pjZU+bkVcm/JK+1KuSXZsWlX8S6n+ZehAELG7nqX+chW4lV/poLRRx5UKVn4rRBRN6M+Unaw9Imb4iAG+w+YAmn+IMvkdEVVhMyEdlT83sqWayL3VoJRJhpl0OQtsRN+caQlp9O0QKMZPGAz/LsxjkyDSiZZ0xBBxOf2izxDuwhI419sLymDF0ytbaSppasQS6kuUBg1w00aFt4O0f+4NP+2g2xU8V6i9e/0cs2T/G0y7iJhPyawNWfvcIIGKMd4j1j4CEG347rI5hq223emscyrD9YzbKHIr2RsRczp7PALDBgcm1DAmkoJl8pgALKm/XLKiBp9qTZSqvtTsZPYq4KztioLVSWFin3iu0r5gVI6XO0i/FhW0PqoG82BH5wq+C76PGu7kLqNgNq5wwhAA0SE= fabian@ubuntus
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCxl6dy5VaoVBq0z/BzbCKSX3PcnLbOBh7TwXChcKpH9lXydL+2LesCE6X/mPWZHUnwJzlvZnWUDl20csInLLDN0oCFWIysrfttOPdO3qRdZqL44UzRphjYSK9SYXBLDMfGVwMLSLzisIGcElQr/qAKXyrHnD63pRXbAlxgtw64kmYWo4gy/QJivvG+uPKaUOiNvyLUM0iNvNe7uPsQV6aEvaSAJqYYe9Y/5LQD3aYPLxNSh1modJLFoXFDAg0pLec8BmbhxdjtmVI7J8cOjk+rIHNDI1/RqhiB50jDQsQB6FJkfVZzCV19R5Lf8EfJl6zjtoJLFyuW86QcDM6P8uNzhquQR7aBs+Tb4UnbBTtK2E4USl2xEZr/KRFedz29pSSEnADlXO9f43RsgEZ2hu1yMHFLG4Jct1WDGr+RSphUTh4g3Vbv21AMYY7rvDJAz4bZuHi0yiP+1fiVjYr9iVwNWZL8J6cI5dgc4xzX1NRrXKVj3ru+paypG85zf8vsXRc= fabian@ubuntus
 EOT
 }
 
@@ -144,8 +144,8 @@ resource "aws_iam_role_policy_attachment" "ec2_dynamodb_attach" {
 }
 
 # Instance profile (bridge between EC2 and IAM Role)
-resource "aws_iam_instance_profile" "test_profile" {
-  name = "tf-ec2-instance-profile"
+resource "aws_iam_instance_profile" "backup_profile" {
+  name = "tf-ec2-backup-instance-profile"
   role = aws_iam_role.test_role.name
 }
 
@@ -157,7 +157,7 @@ resource "aws_instance" "backup_decathlon_support_system" {
   vpc_security_group_ids = [aws_security_group.ssh_sg_backup.id]
 
   user_data = data.cloudinit_config.init_backup_ec2.rendered
-  iam_instance_profile = aws_iam_instance_profile.test_profile.name
+  iam_instance_profile = aws_iam_instance_profile.backup_profile.name
   tags = {
     Name = "backup_decathlon_support_system"
   }
