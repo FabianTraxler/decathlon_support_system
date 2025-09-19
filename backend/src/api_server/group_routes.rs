@@ -64,7 +64,7 @@ async fn update_group(
 
     let group_id = query.into_inner();
 
-    match data.update_group(group_id, json_string.as_str()).await {
+    match data.update_group(group_id, json_string.as_str(), false).await {
         Ok(msg) => {
             HttpResponse::Ok().body(msg)
         }

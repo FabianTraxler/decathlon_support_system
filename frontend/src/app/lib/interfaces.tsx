@@ -1,10 +1,13 @@
+import { AchievementValue } from "./athlete_fetching";
+
 export interface Discipline {
     name: string,
     location: string,
     start_time: string,
     state: string,
     starting_order: StartingOrder | string,
-    discipline_type: string
+    discipline_type: string,
+    try_order_type: "Standard" | "Once" | "Subsequent"
 }
 
 export interface StartingOrder {
@@ -20,6 +23,7 @@ export class AthleteID {
     name: string;
     surname: string;
     age_group: string;
+    starting_number?: number;
 
     constructor(name: string, surname: string, age_group: string) {
         this.name = name;
@@ -32,7 +36,15 @@ export class AthleteID {
     }
 }
 
-export class AthleteTimeResult extends AthleteID {
+export interface IAthleteID {
+    name: string;
+    surname: string;
+    age_group: string;
+    starting_number?: number;
+    achievement: AchievementValue
+}
+
+export class AthleteTimeResult extends AthleteID{
     starting_number?: number;
     final_result?: number | string;
 
@@ -42,7 +54,7 @@ export class AthleteTimeResult extends AthleteID {
     }
 }
 
-export class AthleteDistanceResults extends AthleteID {
+export class AthleteDistanceResults extends AthleteID{
     discipline_name: string;
     discipline_unit: string;
     starting_number?: number;

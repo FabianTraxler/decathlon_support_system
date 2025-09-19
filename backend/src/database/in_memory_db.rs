@@ -1,10 +1,13 @@
 use crate::authenticate::{AuthenticateStorage, LoginInfo, Role};
 use crate::certificate_generation::{Achievement, AchievementID, AgeGroup, AgeGroupID, AgeGroupSelector, Athlete, AthleteID, Group, GroupID, GroupStore, SwitchGroupID};
+use crate::notes::{NoteID, NoteStorage};
+use crate::teams::{TeamStorage, Team, TeamID};
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::sync::Mutex;
+use actix_web::web::to;
 use async_trait::async_trait;
 use log::warn;
 use serde::{Deserialize, Serialize};
@@ -130,13 +133,14 @@ impl AchievementStorage for InMemoryDB {
         let group_store = GroupStore {
             name: group.name().to_string(),
             athlete_ids: group.athlete_ids(),
-            competition_type: group.competition_type()
+            competition_type: group.competition_type(),
+            notes: group.notes().clone(),
         };
 
         self.write_group_store(group_id, group_store).await
     }
 
-    async fn update_group(&self, group_id: GroupID, json_string: &str) -> Result<String, Box<dyn Error>> {
+    async fn update_group(&self, group_id: GroupID, json_string: &str, only_time_group: bool) -> Result<String, Box<dyn Error>> {
         // TODO: Implement check if key is updated and then update key also
         let mut group = self.get_group(&group_id).await.ok_or(ItemNotFound::new("Key not found", "404"))?;
 
@@ -249,6 +253,11 @@ impl AchievementStorage for InMemoryDB {
         self.write_athlete(AthleteID::from_athlete(&athlete), athlete).await?;
         Ok(String::from("Achievement updated"))
     }
+
+    async fn get_athlete_group(&self, athlete_id: &AthleteID) -> Option<GroupID>{
+        !todo!("Implement method to get athlete group")
+    }
+
 }
 
 #[async_trait]
@@ -321,6 +330,9 @@ impl TimePlanStorage for InMemoryDB {
             .insert(TimeGroupID::from_time_group(&group), group);
         Ok(String::from("New group stored"))
     }
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>{
+        !todo!("Implement method to get all athlete states")
+    }
 }
 
 #[async_trait]
@@ -331,6 +343,36 @@ impl AuthenticateStorage for InMemoryDB {
 
     async fn store_role(&self, _role: Role) -> Result<String, Box<dyn Error>>{
         Err(Box::from("Not implemented"))
+    }
+}
+
+#[async_trait]
+impl NoteStorage for InMemoryDB {
+    async fn get_note(&self, note_id: NoteID) -> Result<Option<String>, Box<dyn Error>> {
+        todo!("Implement")
+    }
+
+    async fn save_note(&self, note_id: NoteID, note: String) -> Result<String, Box<dyn Error>> {
+        todo!("Implement")
+    }
+}
+
+#[async_trait]
+impl TeamStorage for InMemoryDB {
+    async fn get_teams(&self) -> Result<Vec<Team>, Box<dyn Error>> {
+        todo!("Implement method to get all teams")
+    }
+    async fn get_team(&self, team_id: &TeamID) ->  Result<Option<Team>, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn save_team(&self, team: &Team) ->  Result<String, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn update_team(&self, team_id: &TeamID, team_update: &String) ->  Result<String, Box<dyn Error>>{
+        todo!("Implement method to get all teams")
+    }
+    async fn delete_team(&self, team_id: &TeamID) ->  Result<(), Box<dyn Error>>{
+        todo!("Implement method to get all teams")
     }
 }
 

@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use serde::{ Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
+use std::error::Error;
 
 use super::{Athlete, AthleteID, CompetitionType};
 
@@ -10,6 +11,7 @@ pub struct GroupStore {
     pub name: String,
     pub athlete_ids: HashSet<AthleteID>,
     pub competition_type: CompetitionType,
+    pub notes: HashMap<String, String>
 }
 
 impl GroupStore {
@@ -26,6 +28,7 @@ pub struct Group {
     name: String,
     athletes: Vec<Athlete>,
     competition_type: CompetitionType,
+    notes: HashMap<String, String>,
 }
 
 impl Group {
@@ -34,6 +37,7 @@ impl Group {
             name: groupname.to_string(),
             athletes,
             competition_type,
+            notes: HashMap::new(),
         }
     }
 
@@ -42,13 +46,16 @@ impl Group {
             name: age_group.age_identifier.clone(),
             athletes: age_group.athletes.clone(),
             competition_type,
+            notes: HashMap::new(),
         }
     }
 
     pub fn competition_type(&self) -> CompetitionType {
         self.competition_type.clone()
     }
-
+    pub fn notes(&self) -> &HashMap<String, String> {
+        &self.notes
+    }
     pub fn name(&self) -> &str {
         self.name.as_str()
     }
@@ -159,5 +166,22 @@ impl AgeGroupID {
         AgeGroupID {
             age_identifier: Some(age_identifier.to_string()),
         }
+    }
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AgeGroupIDs {
+    pub age_identifiers: Option<String>,
+}
+
+impl AgeGroupIDs{
+    pub fn convert(&self) -> Result<Vec<AgeGroupID>, Box<dyn Error>> {
+        let mut ids: Vec<AgeGroupID> = vec![];
+        let id_strings = self.age_identifiers.clone().ok_or("Empty string")?;
+        for id_string in id_strings.split(",") {
+            ids.push(AgeGroupID::new(id_string ));
+        }
+
+        return Ok(ids);
     }
 }

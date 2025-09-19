@@ -26,3 +26,8 @@ Cargo.lock
 .certs/
 .env
 *xls#
+.terraform/
+.terraform*
+terraform*
+.aws/
+.envs/

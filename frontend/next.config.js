@@ -11,7 +11,7 @@ const nextConfig = {
         ]
       },
       env: {
-        START_DATE: "2024-09-28"
+        START_DATE: "2025-09-27"
       },
       output: "standalone"
 }

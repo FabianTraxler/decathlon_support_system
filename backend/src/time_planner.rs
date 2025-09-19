@@ -1,10 +1,12 @@
 use async_trait::async_trait;
 use chrono::{DateTime, TimeZone, Utc};
+use env_logger::filter;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::error::Error;
+use std::hash::Hash;
 
 #[async_trait]
 pub trait TimePlanStorage {
@@ -13,6 +15,8 @@ pub trait TimePlanStorage {
     async fn store_time_plan(&self, time_table: Value) -> Result<String, Box<dyn Error>>;
 
     async fn store_time_group(&self, group: TimeGroup) -> Result<String, Box<dyn Error>>;
+
+    async fn get_all_athlete_states(&self) -> Result<HashMap<String, bool>, Box<dyn Error>>;
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -38,6 +42,13 @@ impl Athlete {
             self.surname.clone().unwrap_or("".to_string())
         )
     }
+    pub fn athlete_id(&self) -> String {
+        format!(
+            "{}_{}",
+            self.name.clone().unwrap_or("".to_string()),
+            self.surname.clone().unwrap_or("".to_string())
+        )
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -48,6 +59,15 @@ pub enum DisciplineType {
     Time,
 }
 
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub enum TryOrderType {
+    Standard,
+    Once, // only one try
+    Subsequent // all tries directly after each other
+}
+
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Discipline {
     name: String,
@@ -56,6 +76,7 @@ pub struct Discipline {
     state: DisciplineState,
     starting_order: StartingOrder,
     discipline_type: DisciplineType,
+    try_order_type: TryOrderType,
     #[serde(skip_serializing_if = "Option::is_none")]
     time_started: Option<DateTime<Utc>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -87,6 +108,10 @@ impl Discipline {
 
     pub fn starting_order(&self) -> &StartingOrder {
         &self.starting_order
+    }
+
+    pub fn is_finished(&self) -> bool{
+        &self.state == &DisciplineState::Finished
     }
 }
 
@@ -251,6 +276,19 @@ impl TimeGroup {
                         }
                     };
 
+                    let try_order_type: TryOrderType = match discipline_info.get("try_order_type") {
+                        Some(try_order_value) => match try_order_value.as_str() {
+                            Some(try_order_str) => match try_order_str {
+                                "Standard" => TryOrderType::Standard,
+                                "Once" => TryOrderType::Once,
+                                "Subsequent" => TryOrderType::Subsequent,
+                                _ => TryOrderType::Standard
+                            },
+                            None => TryOrderType::Standard
+                        },
+                        None => TryOrderType::Standard
+                    };
+
                     let discipline = Discipline {
                         name: discipline_name.clone(),
                         location,
@@ -258,6 +296,7 @@ impl TimeGroup {
                         state: DisciplineState::BeforeStart,
                         starting_order,
                         discipline_type,
+                        try_order_type,
                         time_finished: None,
                         time_started: None
                     };
@@ -279,6 +318,9 @@ impl TimeGroup {
         };
 
         Ok(group)
+    }
+    pub fn name(&self) -> &str {
+        &self.name
     }
     pub fn get_disciplines(&self) -> &Vec<Discipline> {
         &self.disciplines
@@ -368,14 +410,23 @@ impl TimeGroup {
     pub fn get_default_track_order(&self) -> StartingOrder {
         StartingOrder::Track(self.default_run_order.clone())
     }
-    pub fn change_starting_order(&mut self, new_order: StartingOrder) {
-        match new_order.clone() {
-            StartingOrder::Default(athletes) => self.default_athlete_order = athletes,
-            StartingOrder::Track(runs) => self.default_run_order = runs,
-            StartingOrder::NoOrder => {}
-        }
+    pub fn change_starting_order(&mut self, new_order: StartingOrder, change_only_hurdle: Option<bool>) {
+        // Do not change default starting order!
+        // match new_order.clone() {
+        //     StartingOrder::Default(athletes) => self.default_athlete_order = athletes,
+        //     StartingOrder::Track(runs) => self.default_run_order = runs,
+        //     StartingOrder::NoOrder => {}
+        // }
 
         for discipline in &mut self.disciplines {
+            if discipline.name().contains("Hürden") && !change_only_hurdle.unwrap_or(false) {
+                // If the discipline is 110 Meter Hürden, we do not change the starting order
+                // unless change_hurdle is set to true
+                continue;
+            }else if (change_only_hurdle.unwrap_or(false) && !discipline.name().contains("Hürden")) {
+                // If change_hurdle is set to true, we only change the starting order for hurdles
+                continue;
+            }
             match discipline.state {
                 DisciplineState::Finished => continue,
                 _ => {
@@ -418,36 +469,110 @@ impl TimeGroup {
         Ok(())
     }
     pub fn delete_athlete(&mut self, athlete: Athlete) -> Result<(), Box<dyn Error>> {
-        let all_athletes: &mut Vec<Athlete> = &mut self.default_athlete_order;
-
-        let index = all_athletes
+        let index = self.default_athlete_order
             .iter()
             .position(|x| x == &athlete)
             .ok_or("Athlete not found")?;
-        all_athletes.remove(index);
+        self.default_athlete_order.remove(index);
 
-        let youth_group = self.disciplines.len() < 10;
-        let (default_athlete_order, default_run_order, default_hurdle_order) =
-            create_default_athlete_order(Some(all_athletes.clone()), youth_group);
-
-        self.default_athlete_order = default_athlete_order.clone();
-        self.default_run_order = default_run_order.clone();
-
+        let run_index = self.default_run_order.iter().position(|run| {
+            run.athletes.0.as_ref() == Some(&athlete)
+                || run.athletes.1.as_ref() == Some(&athlete)
+                || run.athletes.2.as_ref() == Some(&athlete)
+                || run.athletes.3.as_ref() == Some(&athlete)
+                || run.athletes.4.as_ref() == Some(&athlete)
+                || run.athletes.5.as_ref() == Some(&athlete)
+        });
+        match run_index {
+            Some(run_index) => {
+                let run: &mut Run = self.default_run_order.get_mut(run_index).expect("Run should exist");
+                if run.athletes.0.as_ref() == Some(&athlete) {
+                    run.athletes.0 = None;
+                } else if run.athletes.1.as_ref() == Some(&athlete) {
+                    run.athletes.1 = None;
+                } else if run.athletes.2.as_ref() == Some(&athlete) {
+                    run.athletes.2 = None;
+                } else if run.athletes.3.as_ref() == Some(&athlete) {
+                    run.athletes.3 = None;
+                } else if run.athletes.4.as_ref() == Some(&athlete) {
+                    run.athletes.4 = None;
+                } else if run.athletes.5.as_ref() == Some(&athlete) {
+                    run.athletes.5 = None;
+                }
+            }
+            None => (),
+        };
+        
         for discipline in &mut self.disciplines {
-            discipline.starting_order = match discipline.starting_order {
+            discipline.starting_order = match &discipline.starting_order {
                 StartingOrder::NoOrder => StartingOrder::NoOrder,
-                StartingOrder::Default(_) => StartingOrder::Default(default_athlete_order.clone()),
-                StartingOrder::Track(_) => {
-                    if discipline.name() == "110 Meter Hürden" {
-                        StartingOrder::Track(default_hurdle_order.clone())
-                    } else {
-                        StartingOrder::Track(default_run_order.clone())
-                    }
+                StartingOrder::Default(current_order) => {
+                    let mut new_order = current_order.clone();
+                    let index = current_order
+                        .iter()
+                        .position(|x| x == &athlete)
+                        .ok_or("Athlete not found")?;
+                    new_order.remove(index);
+                    StartingOrder::Default(new_order)
+                    },
+                StartingOrder::Track(current_order) => {
+                    let mut new_order = current_order.clone();
+                    let run_index = new_order.iter().position(|run| {
+                        run.athletes.0.as_ref() == Some(&athlete)
+                            || run.athletes.1.as_ref() == Some(&athlete)
+                            || run.athletes.2.as_ref() == Some(&athlete)
+                            || run.athletes.3.as_ref() == Some(&athlete)
+                            || run.athletes.4.as_ref() == Some(&athlete)
+                            || run.athletes.5.as_ref() == Some(&athlete)
+                    });
+                    match run_index {
+                        Some(run_index) => {
+                            let run: &mut Run = new_order.get_mut(run_index).expect("Run should exist");
+                            if run.athletes.0.as_ref() == Some(&athlete) {
+                                run.athletes.0 = None;
+                            } else if run.athletes.1.as_ref() == Some(&athlete) {
+                                run.athletes.1 = None;
+                            } else if run.athletes.2.as_ref() == Some(&athlete) {
+                                run.athletes.2 = None;
+                            } else if run.athletes.3.as_ref() == Some(&athlete) {
+                                run.athletes.3 = None;
+                            } else if run.athletes.4.as_ref() == Some(&athlete) {
+                                run.athletes.4 = None;
+                            } else if run.athletes.5.as_ref() == Some(&athlete) {
+                                run.athletes.5 = None;
+                            }
+                        }
+                        None => (),
+                    };
+                    StartingOrder::Track(new_order)
                 }
             }
         }
 
         Ok(())
+    }
+    pub fn reshuffle_athlete_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
+        let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
+        let mut athletes = self.default_athlete_order.clone();
+        
+        if only_registered_athletes {
+            athletes.retain(|athlete: &Athlete| {
+                if let Some(state) = athlete_states.get(&athlete.athlete_id()) {
+                    *state
+                } else {
+                    false
+                }
+            });
+        }
+
+        let (default_order, run_order, hurdle_order) =
+            create_default_athlete_order(Some(athletes), youth_group);
+
+        self.change_starting_order(StartingOrder::Track(run_order), Some(false));
+        self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
+        self.change_starting_order(StartingOrder::Default(default_order), None);
+
+        Ok("Updated".to_string())
     }
 }
 
@@ -563,7 +688,7 @@ fn create_default_athlete_order(
                     }
                 }
             } else if j == 3 || j == 4 || j == 5 {
-                for age_group in vec!["M", "Staffel"] {
+                for age_group in vec!["M", "S-M", "S-W"] {
                     if let Some(track_athletes) = track_athletes_map.get_mut(age_group) {
                         if track_athletes.len() > 0 {
                             if athletes.3.is_none() {
@@ -607,6 +732,7 @@ fn create_default_athlete_order(
     )
 }
 
+
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
 pub struct TimeGroupID {
     pub name: Option<String>,
@@ -621,6 +747,12 @@ impl TimeGroupID {
     pub fn new(name: String) -> Self {
         TimeGroupID { name: Some(name) }
     }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]
+pub struct DisciplineUpdateId {
+    pub group_name: String,
+    pub change_hurdle: Option<bool>
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq)]

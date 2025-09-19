@@ -26,7 +26,8 @@ pub struct Athlete {
     #[serde(skip_serializing_if = "Option::is_none")]
     t_shirt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    paid: Option<bool>
+    paid: Option<bool>,
+    deregistered: bool
 }
 
 impl Athlete {
@@ -51,7 +52,8 @@ impl Athlete {
             starting_number,
             total_points,
             t_shirt,
-            paid: None
+            paid: None,
+            deregistered: false
         }
     }
 
@@ -84,7 +86,12 @@ impl Athlete {
     pub fn full_name(&self) -> String {
         format!("{} {}", self.name, self.surname)
     }
-
+    pub fn athlete_id(&self) -> String {
+        format!("{}_{}", self.name, self.surname)
+    }
+    pub fn is_active(&self) -> bool {
+        !self.deregistered && self.starting_number.is_some()
+    }
     pub fn competition_type(&self) -> &CompetitionType {
         &self.competition_type
     }
@@ -131,6 +138,15 @@ impl Athlete {
         let mut total_points = 0;
         for achievement in self.achievements.values() {
             total_points += achievement.points(self)
+        }
+        total_points
+    }
+    pub fn total_point_for_disciplines(&self, included_disciplines: &Vec<String>) -> u32 {
+        let mut total_points = 0;
+        for achievement in self.achievements.values() {
+            if included_disciplines.contains(&achievement.name()) {
+                total_points += achievement.points(self)
+            }
         }
         total_points
     }

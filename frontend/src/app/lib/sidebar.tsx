@@ -4,17 +4,25 @@ import { usePathname, useRouter } from 'next/navigation';
 
 import { decathlon_age_groups, groups, youth_groups } from "../lib/config";
 import { signOut } from "@/auth";
+import { Search, SearchQuery } from "./search";
 
 export const NavContext = createContext((x: boolean) => { });
 
 
-export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }: { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean }) {
+export default function Sidebar(
+    { showGroups, showAgeGroups, showLateRegister, showTeams, updateSearchQuery, searchQuery }: 
+    { showGroups: boolean, showAgeGroups: boolean, showLateRegister: boolean, showTeams: boolean, updateSearchQuery?: (query: SearchQuery) => void, searchQuery?: SearchQuery }) {
     const [showNav, setshowNav] = useState(false);
     const pathname = usePathname();
     const { replace } = useRouter();
 
+    const resetSearchQuery = function () {
+        updateSearchQuery && updateSearchQuery({ global: false, queries: [] })
+    }
+
     const getHome = function () {
         setshowNav(false)
+        resetSearchQuery()
         replace(`${pathname}`);
 
     }
@@ -72,15 +80,15 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                 <div className={(showNav ? "flex" : "hidden") + " flex-col justify-start items-center border-b border-gray-600 w-full font-bold bg-gray-600"}>
                     {showAgeGroups &&
                         <div className="p-1 w-full">
-                            <SuperItem name="Altersklassen"><AgeGroup></AgeGroup></SuperItem>
+                            <SuperItem name="Altersklassen"><AgeGroup resetSearchQuery={resetSearchQuery}></AgeGroup></SuperItem>
                             <hr />
                         </div>
                     }
                     {showGroups &&
                         <div className="p-1 w-full">
-                            <SuperItem name="Gruppen"><Groups></Groups></SuperItem>
+                            <SuperItem name="Gruppen"><Groups resetSearchQuery={resetSearchQuery}></Groups></SuperItem>
                             <hr />
-                            <SuperItem name="Jugend"><Youth></Youth></SuperItem>
+                            <SuperItem name="Jugend"><Youth resetSearchQuery={resetSearchQuery}></Youth></SuperItem>
                         </div>
                     }
 
@@ -92,6 +100,23 @@ export default function Sidebar({ showGroups, showAgeGroups, showLateRegister }:
                                     <button onClick={(_) => replace(`${pathname}?group=Nachmeldungen`)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 ">
                                         <p>Nachmeldungen</p>
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    {showTeams &&
+                        <div className="p-1 w-full">
+                            <hr />
+                            <Teams resetSearchQuery={resetSearchQuery}></Teams>
+                        </div>
+                    }
+
+                    {updateSearchQuery &&
+                        <div  className="p-2 w-full">
+                            <hr />
+                            <div className="mt-2 p-2  border-white border rounded-md" >
+                                <div className="overflow-hidden text-white"> 
+                                    <Search updateQuery={updateSearchQuery} searchQuery={searchQuery} showGlobal={true}></Search>
                                 </div>
                             </div>
                         </div>
@@ -109,7 +134,7 @@ function SuperItem({ name, children }: { name: string, children: ReactNode }) {
     return (
         <div className="w-full">
             <div className="flex text-center w-full">
-                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 ">
+                <button onClick={(_) => setshowContent(!showContent)} className="focus:outline-none text-left  text-white flex justify-between items-center w-full py-5 space-x-14 hover:text-slate-300">
                     <p>{name}</p>
                     <svg id="icon1" className={"rotate-180" + (showContent ? "rotate-180" : "")} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M18 15L12 9L6 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -123,30 +148,51 @@ function SuperItem({ name, children }: { name: string, children: ReactNode }) {
     )
 }
 
-function AgeGroup() {
+function AgeGroup({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col  w-full justify-start font-bold bg-gray-400">
-            {decathlon_age_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+            {decathlon_age_groups.map(name => <GroupSelection key={name} name={name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
         </div>
     )
 }
-function Groups() {
+function Groups({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
-            {groups.map(name => <GroupSelection key={name} name={"Gruppe " + name}></GroupSelection>)}
+            {groups.map(name => <GroupSelection key={name} name={"Gruppe " + name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
         </div>
     )
 }
-function Youth() {
+function Youth({resetSearchQuery}: {resetSearchQuery?: () => void}) {
     return (
         <div className="flex-col w-full justify-start font-bold bg-gray-400" >
-            {youth_groups.map(name => <GroupSelection key={name} name={name}></GroupSelection>)}
+            {youth_groups.map(name => <GroupSelection key={name} name={name} resetSearchQuery={resetSearchQuery}></GroupSelection>)}
+        </div>
+    )
+}
+
+function Teams({resetSearchQuery}: {resetSearchQuery?: () => void}){
+    const pathname = usePathname();
+    const { replace } = useRouter();
+    let updateAthlete = useContext(NavContext);
+
+
+    const handle_click = function (e: React.MouseEvent) {
+        updateAthlete(false)
+        resetSearchQuery && resetSearchQuery()
+        replace(`${pathname}?group=teams`);
+    }
+    return (
+        <div className="flex text-center w-full" >
+            <div onClick={handle_click} className="focus:outline-none text-left hover:text-slate-300 text-white flex justify-between items-center w-full py-5 space-x-14 hover:cursor-pointer">
+                <p>Teams</p>
+            </div>
         </div>
     )
 }
 
 type GroupProps = {
     name: string
+    resetSearchQuery?: () => void
 }
 
 function GroupSelection(props: GroupProps) {
@@ -157,6 +203,7 @@ function GroupSelection(props: GroupProps) {
 
     const handle_click = function (group_name: string) {
         updateAthlete(false)
+        props.resetSearchQuery && props.resetSearchQuery()
         replace(`${pathname}?group=${group_name}`);
     }
 

@@ -1,42 +1,12 @@
 import { Athlete, sort_athletes } from "../lib/athlete_fetching";
 import { useState, useEffect, useContext } from "react";
-import { AthleteContext, SearchQuery } from "./group_athletes";
-
-
-class AthleteQuery {
-    queries: SearchQuery[]
-
-    constructor(queries: SearchQuery[]) {
-        this.queries = queries
-    }
-
-    matchAthlete(athlete: Athlete): boolean {
-        let match = true;
-        this.queries.forEach(query => {
-            switch (query.column) {
-                case "name":
-                    match = match && athlete.name.toLocaleLowerCase().includes(query.query.toLocaleLowerCase())
-                    break
-                case "surname":
-                    match = match && athlete.surname.toLocaleLowerCase().includes(query.query.toLocaleLowerCase())
-                    break
-                case "starting_number":
-                    match = match && (!!athlete.starting_number && athlete.starting_number.toString().includes(query.query.toLocaleLowerCase()))
-                    break
-                case "birth_day":
-                    let athlete_bd = new Date(athlete.birth_date * 1000)
-                    let query_date = new Date(query.query)
-                    match = match && athlete_bd.getDate() == query_date.getDate()
-                    break
-            }
-        })
-        return match;
-    }
-}
+import { AthleteContext } from "./group_athletes";
+import { SearchQuery, AthleteQuery } from "../lib/search";
+import { PopUp } from "../lib/achievement_edit/popup";
 
 
 export default function AthleteTable({ athletes, searchQuery }:
-    { athletes: Athlete[], searchQuery: SearchQuery[] }) {
+    { athletes: Athlete[], searchQuery: SearchQuery }) {
     const [sorted, setSorted] = useState({ name: "#", ascending: true })
 
     let query = new AthleteQuery(searchQuery)
@@ -147,6 +117,8 @@ export default function AthleteTable({ athletes, searchQuery }:
 
 
 function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athlete, selected: boolean, groupAvailable: boolean }) {
+    const [athleteState, setAthleteState] = useState(athlete);
+    const [showPopup, setShowPopup] = useState(false);
     const full_name = athlete.name + "_" + athlete.surname;
     let birth_day = "-"
     let age_group = athlete.gender
@@ -188,22 +160,53 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
         age_group = athlete.group_name
     }
 
+    const deregisterAthlete = function () {
+        fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ deregistered: !athleteState.deregistered })
+        }).then(res => {
+            if (res.ok) {
+                setShowPopup(false)
+                setAthleteState({ ...athleteState, deregistered: !athleteState.deregistered });
+            } else {
+                throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+            }
+        }).catch(e => {
+            alert(`Athlet konnte nicht abgemeldet werden! -> ${e}`)
+        }) 
+    }
+
     
     return (
-        <tr key={full_name} className={(!selected ? "bg-slate-400" : "")}>
+        <tr key={full_name} className={(!selected ? "bg-slate-400" : "") + (athleteState.deregistered ? "  bg-red-200" : "")}>
             <td className='border border-slate-800 p-1 pl-3 pr-3'>
                 <StartingNumberInput key={full_name} athlete={athlete}></StartingNumberInput>
             </td>
             {groupAvailable &&
                 <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2'>{athlete.group_name}</td>
             }
-            <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.name}</td>
+            <td className='border border-slate-800 p-1 pl-2 pr-2' onClick={() => setShowPopup(true)}>{athlete.name}</td>
             <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.surname}</td>
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{age_group}</td>
             <td className='hidden sm:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.gender}</td>
             <td className='hidden 2xl:table-cell border border-slate-800 p-1 pl-2 pr-2'>{birth_day}</td>
             <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.t_shirt}</td>
             <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.paid ? <span>&#9989;</span>: <span>&#10060;</span>}</td>
+            {showPopup &&
+                <PopUp onClose={() => setShowPopup(false)} title={`Abmeldung ${athlete.name} ${athlete.surname}`}>
+                    <button onClick={deregisterAthlete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                        {athleteState.deregistered ?
+                            "Abmeldung Rückgängig machen"
+                            :
+                            "Abmelden"
+                        }
+                    </button>
+                </PopUp>
+            }
+
         </tr>
     )
 }

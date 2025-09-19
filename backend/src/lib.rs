@@ -9,12 +9,16 @@ mod certificate_generation;
 mod database;
 mod time_planner;
 mod authenticate;
+mod notes;
+mod teams;
 
 use certificate_generation::AchievementStorage;
 use time_planner::TimePlanStorage;
 use database::Store;
+use notes::NoteStorage;
+use teams::TeamStorage;
 
-pub trait Storage: AchievementStorage + TimePlanStorage + AuthenticateStorage {
+pub trait Storage: AchievementStorage + TimePlanStorage + AuthenticateStorage + NoteStorage + TeamStorage{
     fn serialize(&self);
     fn load(&self);
 }

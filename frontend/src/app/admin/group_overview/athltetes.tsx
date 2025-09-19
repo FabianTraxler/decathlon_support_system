@@ -2,15 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import Achievement from './achievement';
-import { LoadingAnimation, LoadingButton } from '@/app/lib/loading';
+import { LoadingButton } from '@/app/lib/loading';
 import { decathlon_disciplines, groups, hepathlon_disciplines, pentathlon_disciplines, triathlon_discplines, youth_groups } from '@/app/lib/config';
-import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes } from '@/app/lib/athlete_fetching';
+import { Athlete, fetch_age_group_athletes, fetch_group_athletes, sort_athletes, fetch_all_athletes } from '@/app/lib/athlete_fetching';
 import { PopUp } from '@/app/lib/achievement_edit/popup';
-import { AthleteID, Discipline } from '@/app/lib/interfaces';
-import { useSearchParams } from 'next/navigation';
+import { Discipline } from '@/app/lib/interfaces';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { AthleteQuery, SearchQuery } from '@/app/lib/search';
 
-export default function Athletes({ group_name }: { group_name: string }) {
-  const [showAthletes, set_showAthletes] = useState(false);
+export default function Athletes({ group_name, query, show_athletes = false }: { group_name: string,  query?: SearchQuery, show_athletes?: boolean}) {
+  const [showAthletes, set_showAthletes] = useState(show_athletes);
+  useEffect(() => {
+    set_showAthletes(show_athletes)
+  }, [show_athletes])
 
   return (
     <div className="items-center justify-between p-1 w-full ">
@@ -25,9 +29,11 @@ export default function Athletes({ group_name }: { group_name: string }) {
             </svg>
           </button>
         </div>
-        <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
-          <GroupAthletes group_name={group_name}></GroupAthletes>
-        </div>
+        {showAthletes &&
+          <div className={"text-sm 2xl:text-md font-normal overflow-x-scroll " + (showAthletes ? " h-full" : "max-h-0 overflow-hidden")}>
+            <GroupAthletes group_name={group_name} query={query}></GroupAthletes>
+          </div>
+        }
       </div>
     </div>
 
@@ -35,10 +41,22 @@ export default function Athletes({ group_name }: { group_name: string }) {
 }
 
 
-function GroupAthletes({ group_name }: { group_name: string }) {
-  const [athleteState, set_athleteState] = useState<{ athletes: Athlete[], disciplines: [string, string, string][] }>({ athletes: [], disciplines: [] });
+function GroupAthletes({ group_name, query }: { group_name: string, query?: SearchQuery }) {
+  const [athleteState, set_athleteState] = useState<{ 
+    allAthletes: Athlete[], 
+    selectedAthletes?: Athlete[] |  null, 
+    disciplines: [string, string, string][],
+    sort_by: string,
+    sort_ascending: boolean
+  }>({ 
+    allAthletes: [], 
+    selectedAthletes: null, 
+    disciplines: [],
+    sort_by: "Name",
+    sort_ascending: true
+  });
   const [disciplineEdit, setDisciplineEdit] = useState<{ discipline: string, athlete_order: string[] }>({ discipline: "", athlete_order: [] })
-  const [sorted, setSorted] = useState({ name: "Name", ascending: true })
+  //const [sorted, setSorted] = useState({ name: "Name", ascending: true })
 
   const discipline_edit_mode = function (selected_discipline: string) {
     if (selected_discipline != disciplineEdit.discipline) {
@@ -95,7 +113,7 @@ function GroupAthletes({ group_name }: { group_name: string }) {
     const getData = function () {
       if (group_name.startsWith("Gruppe")) {
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: decathlon_disciplines }))
         })
       } else if (group_name.startsWith("U")) {
         var disciplines: [string, string, string][] = [];
@@ -107,72 +125,105 @@ function GroupAthletes({ group_name }: { group_name: string }) {
           disciplines = triathlon_discplines
         }
         fetch_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: disciplines }))
         })
 
+      }else if (group_name == "all") 
+      {
+        fetch_all_athletes((athletes: Athlete[]) => {
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: [] }))
+        })
       } else {
         fetch_age_group_athletes(group_name, (athletes: Athlete[]) => {
-          set_athleteState({ athletes: sortAthletes(athletes), disciplines: decathlon_disciplines })
+          set_athleteState((prevState) => ({ ...prevState, allAthletes: sortAthletes(athletes, prevState.sort_by, prevState.sort_ascending), disciplines: decathlon_disciplines }))
         })
       }
     }
 
     getData()
-
     const interval = setInterval(() => getData(), 2000)
 
     return () => clearInterval(interval)
   }, [group_name])
+  
 
   const sortColumn = function (col_name: string) {
-    if (sorted.name == col_name) {
-      setSorted({ name: col_name, ascending: !sorted.ascending })
+    if (athleteState.sort_by == col_name) {
+      set_athleteState((prevState) => ({ ...prevState, sort_by: col_name, sort_ascending: !athleteState.sort_ascending }))
     } else {
-      setSorted({ name: col_name, ascending: false })
+      set_athleteState((prevState) => ({ ...prevState, sort_by: col_name, sort_ascending: false }))
     }
   }
 
-  const sortAthletes = function (athletes: Athlete[]): Athlete[] {
+  const sortAthletes = function (athletes: Athlete[], sort_by: string, sort_ascending: boolean): Athlete[] {
     if (disciplineEdit.discipline == "" || disciplineEdit.athlete_order.length == 0) {
-      athletes.sort((a, b) => sort_athletes(a, b, sorted));
+      athletes.sort((a, b) => sort_athletes(a, b, {name: sort_by, ascending: sort_ascending}));
     } else {
       // sort athletes like the discipline athlete order for easier manual input
-      athletes.sort((a, b) => disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname) - disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname))
+      athletes.sort((a, b) => {
+        let a_index = disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname)
+        let b_index = disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname)
+        let result = 0;
+        if(a_index == -1 && b_index == -1) {
+          result = sort_athletes(a, b, {name: sort_by, ascending: sort_ascending})
+        }else if(a_index == -1) {
+          result = 1
+        } else if (b_index == -1) {
+          result = -1;
+        } else{
+          result = a_index - b_index
+        }
+        return result;
+      })
     }
     return athletes
   }
 
-  athleteState.athletes = sortAthletes(athleteState.athletes);
+  let selectedAthletes = [];
 
+  if(query != null && query.queries.length > 0){
+    let athlete_query = new AthleteQuery(query)
+    let selected_athletes: Athlete[] = [];
+
+    athleteState.allAthletes.forEach(athlete => {
+        if (athlete_query.matchAthlete(athlete)) {
+            selected_athletes.push(athlete)
+        } 
+      });
+      
+    selectedAthletes = sortAthletes(selected_athletes, athleteState.sort_by, athleteState.sort_ascending)
+  }else{
+    selectedAthletes = sortAthletes(athleteState.allAthletes, athleteState.sort_by, athleteState.sort_ascending)
+  }
 
   return (
     <table className="table-auto border-collapse w-full text-[1rem] sm:text-[0.8rem] 2xl:text-sm">
       <thead>
         <tr>
           <th onClick={() => sortColumn("#")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>#</span>
-            {sorted.name != "#" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "#" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "#" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "#" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "#" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "#" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
-          <th onClick={() => sortColumn("Gender")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Klasse</span>
-            {sorted.name != "Gender" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Gender" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Gender" && !sorted.ascending) && <span>&#x25be;</span>}
+          <th onClick={() => sortColumn("age_group")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Klasse</span>
+            {athleteState.sort_by != "age_group" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "age_group" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "age_group" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("Name")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Name</span>
-            {sorted.name != "Name" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Name" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Name" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "Name" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "Name" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "Name" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("JG")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>JG</span>
-            {sorted.name != "JG" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "JG" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "JG" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "JG" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "JG" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "JG" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           <th onClick={() => sortColumn("Summe")} className="border border-slate-600 p-1 pl-2 pr-2 hover:cursor-pointer"><span className='pr-1'>Summe</span>
-            {sorted.name != "Summe" && <span>&#x25b4;&#x25be;</span>}
-            {(sorted.name == "Summe" && sorted.ascending) && <span>&#x25b4;</span>}
-            {(sorted.name == "Summe" && !sorted.ascending) && <span>&#x25be;</span>}
+            {athleteState.sort_by != "Summe" && <span>&#x25b4;&#x25be;</span>}
+            {(athleteState.sort_by == "Summe" && athleteState.sort_ascending) && <span>&#x25b4;</span>}
+            {(athleteState.sort_by == "Summe" && !athleteState.sort_ascending) && <span>&#x25be;</span>}
           </th>
           {athleteState.disciplines.map((info) => {
             return <th key={info[0]} onClick={(_) => {
@@ -186,18 +237,21 @@ function GroupAthletes({ group_name }: { group_name: string }) {
         </tr>
       </thead>
       <tbody>
-        {athleteState.athletes.map((athlete, i) => {
-          return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
-            disciplineEdit={disciplineEdit.discipline}></AthleteTableRow>
-        })}
+        {
+          selectedAthletes.map((athlete, i) => {
+                return <AthleteTableRow key={i} index={i} athlete={athlete} disciplines={athleteState.disciplines}
+                  disciplineEdit={disciplineEdit.discipline} query={query}></AthleteTableRow>
+          })
+        }
+          
       </tbody>
     </table>
   )
 }
 
 
-function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
-  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string }) {
+function AthleteTableRow({ index, athlete, disciplines, disciplineEdit, query}:
+  { index: number, athlete: Athlete, disciplines: [string, string, string][], disciplineEdit: string, query?: SearchQuery  }) {
   const [popupOpen, setPopupOpen] = useState(false)
   var achievements = new Map(Object.entries(athlete.achievements));
   const birthdate = new Date(athlete.birth_date * 1000);
@@ -234,7 +288,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   }
 
   return (
-    <tr key={full_name}>
+    <tr key={full_name} className={(athlete.deregistered ? "  bg-red-200" : "")}>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{athlete.starting_number}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2'>{age_group}</td>
       <td className='border border-slate-800 p-1 pl-2 pr-2 hover:bg-slate-400 hover:cursor-pointer' onClick={() => setPopupOpen(true)}>{athlete.name + " " + athlete.surname}</td>
@@ -256,7 +310,7 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
         {
           popupOpen &&
           <PopUp title="Athleten Einstellungen" onClose={() => setPopupOpen(false)}>
-            <AthleteEditPopup athlete={athlete} onClose={() => setPopupOpen(false)}></AthleteEditPopup>
+            <AthleteEditPopup athlete={athlete} onClose={() => setPopupOpen(false)} query={query}></AthleteEditPopup>
 
           </PopUp>
         }
@@ -265,14 +319,50 @@ function AthleteTableRow({ index, athlete, disciplines, disciplineEdit }:
   )
 }
 
-function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () => void }) {
+function AthleteEditPopup({ athlete, onClose, query}: { athlete: Athlete, onClose: () => void, query?: SearchQuery  }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  const [athleteState, setAthleteState] = useState<Athlete>(athlete);
   const birthdate = new Date(athlete.birth_date * 1000);
   const [birthyear, changeBirthyear] = useState<number | string>(birthdate.getFullYear())
   const [startingNumber, changeStartingNumber] = useState<number | string>(athlete.starting_number)
-
   let searchParams = useSearchParams();
-  const groupName = searchParams.get('group') ?? "";
-  const [newGroup, changeNewGroup] = useState<string>(groupName)
+  let initial_group = searchParams.get('group') ?? ""
+  let group_loaded = true;
+  if (!initial_group.startsWith("G") && !initial_group.startsWith("U")) {
+    group_loaded = false;
+  }
+  if (query?.global){
+    group_loaded = false;
+  }
+  const [groupInfo, setGroupInfo] = useState<{ 
+    oldGroup: string, 
+    newGroup: string, 
+    groupLoaded: boolean }>({ 
+      oldGroup: initial_group, 
+      newGroup: "",
+      groupLoaded: group_loaded
+    });
+
+    useEffect(() => {
+        if (!groupInfo.groupLoaded){
+      fetch("/api/athlete_group?name=" + athlete.name + "&surname=" + athlete.surname)
+        .then(res => {
+          if (res.ok) {
+            return res.json()
+          } else {
+            throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+          }
+        })
+        .then(res => {
+          setGroupInfo((prevState) => ({ ...prevState, oldGroup: res.name, groupLoaded: true }))
+        })
+        .catch(e => {
+          console.error(e)
+        })
+      }
+    }, [athlete.name, athlete.surname]);
 
   const deleteAthlete = function () {
     if (confirm("Athlet:in löschen?")) {
@@ -319,10 +409,10 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
   }
   const handleGroupChange = function (e: React.ChangeEvent<HTMLSelectElement>) {
     if (e.target.value.length == 0) {
-      changeNewGroup("")
+      setGroupInfo((prevState) => ({ ...prevState, newGroup: "" }))
     }
-     else {
-      changeNewGroup(e.target.value)
+    else {
+      setGroupInfo((prevState) => ({ ...prevState, newGroup: e.target.value }))
     }
   }
 
@@ -369,14 +459,14 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
   }
 
   const switchGroup = function (stop_load: () => void) {
-    if (newGroup.includes("U")){
+    if (groupInfo.newGroup.includes("U")){
       // Yotuh group
             // 2. Check if group matches birth year
       let max_age;
-      if(newGroup == "U4/U6"){
+      if(groupInfo.newGroup == "U4/U6"){
         max_age = 6
       }else {
-        max_age = parseInt(newGroup.replace("U", "")) || 16
+        max_age = parseInt(groupInfo.newGroup.replace("U", "")) || 16
       }
       
       let age = new Date().getFullYear() - ((typeof birthyear == "string") ? parseInt(birthyear) : birthyear)
@@ -387,7 +477,7 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       }
     }
 
-    fetch(`/api/switch_group?to=${newGroup}&from=${groupName}`, {
+    fetch(`/api/switch_group?to=${groupInfo.newGroup}&from=${groupInfo.oldGroup}`, {
       method: "PUT",
       body: JSON.stringify({
         athlete_ids: [
@@ -408,6 +498,35 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       .catch(error => {
         console.error('Error deleting Athlete:', error);
       });
+  }
+
+  const deregisterAthlete = function () {
+      fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+          method: "PUT",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ deregistered: !athleteState.deregistered })
+      }).then(res => {
+          if (res.ok) {
+              setAthleteState({ ...athleteState, deregistered: !athleteState.deregistered });
+          } else {
+              throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+          }
+      }).catch(e => {
+          alert(`Athlet konnte nicht abgemeldet werden! -> ${e}`)
+      }) 
+  }
+
+  const goToGroup = function () {
+    let query_items: string[] = []
+    query?.queries.forEach((query, _) => {
+      query_items.push(query.column + ":" + query.query);
+    })
+    let athlete_query = query_items.join(";")
+    router.push(`${pathname}?group=${groupInfo.oldGroup}&athlete_query=${athlete_query}`);
+    location.reload();
+    //router.refresh()
   }
 
 
@@ -441,36 +560,60 @@ function AthleteEditPopup({ athlete, onClose }: { athlete: Athlete, onClose: () 
       </div>
       <div className='grid grid-cols-3'>
         <div className='mr-2 font-bold'>Gruppe wechseln:</div>
-        <select
-          className='border-black border rounded w-24 text-center shadow-md'
-          onChange={handleGroupChange}
-          defaultValue={groupName}
-        >
-          {groupName.includes("Gruppe") &&
-            groups.map(group_number => {
-              return (
-                <option key={group_number}>Gruppe {group_number}</option>
-              )
-            })
-          }
-          {groupName.includes("U") &&
-            youth_groups.map(group_name => {
-              return (
-                <option key={group_name}>{group_name}</option>
-              )
-            })
-          }
-        </select>
+        {groupInfo.groupLoaded &&
+          <select
+            className='border-black border rounded w-24 text-center shadow-md'
+            onChange={handleGroupChange}
+            defaultValue={groupInfo.oldGroup}
+          >
+            {groupInfo.oldGroup.includes("Gruppe") &&
+              groups.map(group_number => {
+                return (
+                  <option key={group_number}>Gruppe {group_number}</option>
+                )
+              })
+            }
+            {groupInfo.oldGroup.includes("U") &&
+              youth_groups.map(group_name => {
+                return (
+                  <option key={group_name}>{group_name}</option>
+                )
+              })
+            }
+          </select>
+        }        
         <div className='text-lg'>
           <LoadingButton size={"2"} onclick={switchGroup} >&#9989;</LoadingButton>
         </div>
       </div>
-      <div className='flex justify-end mt-5'>
+      {
+        query?.global &&
+        <div className='flex justify-center mt-5'>
+          <div
+            className='p-2 font-bold shadow-lg bg-slate-300 rounded-md hover:cursor-pointer hover:bg-slate-400'
+            onClick={goToGroup}
+          >
+            Zur Gruppenansich wechseln
+          </div>
+        </div>
+      }
+
+      <div className='flex justify-between mt-5'>
         <div
           className='p-2 font-bold shadow-lg bg-red-500 rounded-md'
           onClick={deleteAthlete}
         >
           Löschen
+        </div>
+        <div
+          className={'p-2 font-bold shadow-lg rounded-md ' + (athleteState.deregistered ? "bg-green-300" : "bg-red-300")}
+          onClick={deregisterAthlete}
+        >
+        {athleteState.deregistered ?
+            "Abmeldung Rückgängig machen"
+            :
+            "Abmelden"
+        }
         </div>
       </div>
 
