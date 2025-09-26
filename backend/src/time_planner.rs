@@ -568,8 +568,12 @@ impl TimeGroup {
         let (default_order, run_order, hurdle_order) =
             create_default_athlete_order(Some(athletes), youth_group);
 
+        if group_name.starts_with("U") { // For youth groups, we use track order also for hurdles
+            self.change_starting_order(StartingOrder::Track(run_order.clone()), Some(true));
+        }else{
+            self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
+        }
         self.change_starting_order(StartingOrder::Track(run_order), Some(false));
-        self.change_starting_order(StartingOrder::Track(hurdle_order), Some(true));
         self.change_starting_order(StartingOrder::Default(default_order), None);
 
         Ok("Updated".to_string())
