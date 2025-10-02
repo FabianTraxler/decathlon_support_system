@@ -351,7 +351,8 @@
       },
       "Vortex": {
         "location": "Speer / Vortex",
-        "time": "13:45, Sonntag"
+        "time": "13:45, Sonntag",
+        "try_order_type": "Once"
       },
       "1200 Meter Cross Lauf": {
         "location": "Start 1200 / 1000",
@@ -365,7 +366,8 @@
       },
       "Schlagball": {
         "location": "Schlagball",
-        "time": "14:00, Samstag"
+        "time": "14:00, Samstag",
+        "try_order_type": "Once"
       },
       "Weitsprung": {
         "location": "Weit 1",
@@ -379,7 +381,8 @@
       },
       "Schlagball": {
         "location": "Schlagball",
-        "time": "15:00, Samstag"
+        "time": "15:00, Samstag",
+        "try_order_type": "Once"
       },
       "Weitsprung": {
         "location": "Weit 1",
@@ -394,7 +397,7 @@
       "Schlagball": {
         "location": "Schlagball",
         "time": "13:30, Samstag",
-        "try_order_type": "Subsequent"
+        "try_order_type": "Once"
       },
       "Weitsprung": {
         "location": "Weit 3",
@@ -474,10 +477,6 @@
       "role": "group",
       "group": "Gruppe 8"
     },
-    "JU16": {
-      "role": "group",
-      "group": "U16"
-    },
     "JU1416": {
       "role": "group",
       "group": "U14/U16"
@@ -498,15 +497,15 @@
       "role": "group",
       "group": "U4/U6"
     },
-    "jzk-admin": {
+    "jzk-2025-admin": {
       "role": "admin",
       "group": ""
     },
-    "jzk-zeitnehmung": {
+    "jzk-2025-zeitnehmung": {
       "role": "timing",
       "group": ""
     },
-    "jzk-anmeldung": {
+    "jzk-2025-anmeldung": {
       "role": "register",
       "group": ""
     }
