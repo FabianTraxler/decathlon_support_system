@@ -516,6 +516,10 @@ fn add_height_page(current_layer: PdfLayerReference, col_widths: &HashMap<&str, 
 
     match discipline.starting_order() {
         StartingOrder::Default(athlete_order) => {
+            athletes = athletes.iter()
+            .map(|athlete| athlete.clone())
+            .filter(|item| athlete_order.iter().any(|x| *x.full_name() == *item.full_name()))
+            .collect();
             athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.full_name() == *item.full_name()).unwrap());
         }
         _ => {} // leave it the way it is

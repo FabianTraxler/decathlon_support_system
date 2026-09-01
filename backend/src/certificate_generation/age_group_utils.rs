@@ -60,7 +60,7 @@ impl AgeGroupSelector {
             match min_age {
                 Ok(min_age) => {
                     end_year = current_year - min_age;
-                    if min_age == 70 {
+                    if min_age == 60 {
                         start_year = 0; // All athletes older than 70
                     }else{
                         start_year = end_year - 10;

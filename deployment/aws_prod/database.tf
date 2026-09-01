@@ -1,6 +1,6 @@
 # ---------- IAM Role for DynamoDB AutoScaling ----------
 resource "aws_iam_role" "dynamodb_autoscale_role" {
-  name = "DynamoDBAutoscaleRole"
+  name = "DynamoDBAutoscaleRoleProd"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",

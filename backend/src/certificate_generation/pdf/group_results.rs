@@ -85,6 +85,7 @@ pub fn add_group_result_to_page(
     alignments.insert("Decathlon: 110 Meter Hürden", 15.);
     alignments.insert("Decathlon: Diskuswurf", 14.);
     alignments.insert("Decathlon: 1500 Meter Lauf", 17.);
+    alignments.insert("Decathlon: 400 Meter Lauf", 12.5);
 
     alignments.insert("Pentathlon: 60 Meter Hürden", 30.);
     alignments.insert("Pentathlon: 60 Meter Lauf", 20.);

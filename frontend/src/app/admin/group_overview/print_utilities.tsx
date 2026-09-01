@@ -127,7 +127,7 @@ function GroupResultsCard() {
   let group_name = searchParams.get('group') ?? "";
   let handle_click;
   let single_group_view = group_name.startsWith("Gruppe") || group_name.startsWith("U");
-  let card_name = single_group_view ? "Zwischenergebnis" : "Gesamtergebnis" 
+  let card_name = single_group_view ? "Ergebnisse" : "Gesamtergebnis" 
   if (group_name.startsWith("Gruppe")) {
     handle_click = function (done: () => void) {
       fetch(`/api/group_results?name=${group_name}`)
