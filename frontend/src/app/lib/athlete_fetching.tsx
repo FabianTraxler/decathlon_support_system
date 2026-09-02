@@ -121,8 +121,8 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
   var return_value = 0;
   switch (sort_query.name) {
     case "#":
-      if (!a.starting_number) return_value = 1
-      else if (!b.starting_number) return_value = -1
+      if (!a.starting_number && b.starting_number) return_value = 1
+      else if (!b.starting_number && a.starting_number) return_value = -1
       else if (a.starting_number < b.starting_number) return_value = -1
       else if (a.starting_number > b.starting_number) return_value = 1
       else return_value = 0
@@ -204,6 +204,11 @@ export function sort_athletes(a: Athlete, b: Athlete, sort_query: { name: string
     else {
       if (a.surname < b.surname) return_value = -1
       else if (a.surname > b.surname) return_value = 1
+      else return_value = 0
+    }
+    if (return_value == 0) {
+      if (a.name < b.name) return_value = -1
+      else if (a.name > b.name) return_value = 1
       else return_value = 0
     }
   }

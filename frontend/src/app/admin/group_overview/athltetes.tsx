@@ -164,6 +164,11 @@ function GroupAthletes({ group_name, query }: { group_name: string, query?: Sear
         let a_index = disciplineEdit.athlete_order.indexOf(a.name + "_" + a.surname)
         let b_index = disciplineEdit.athlete_order.indexOf(b.name + "_" + b.surname)
         let result = 0;
+        if(a.starting_number == null) {
+          return 1;
+        }else if(b.starting_number == null) {
+          return -1;
+        }
         if(a_index == -1 && b_index == -1) {
           result = sort_athletes(a, b, {name: sort_by, ascending: sort_ascending})
         }else if(a_index == -1) {
