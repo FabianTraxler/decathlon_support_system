@@ -128,8 +128,15 @@ fn add_distance_discipline(current_layer: &PdfLayerReference, font: &IndirectFon
     col_widths.insert("try", 20.);
     col_widths.insert("best_try", 30.);
 
-    let mut athletes = group.athletes().clone().into_iter().filter(|item| item.is_active()).collect::<Vec<_>>();
+    let mut athletes = group.athletes().clone();
 
+    // Only show active athletes if discipline is not finished
+    if !discipline.is_finished(){
+        athletes.retain(|item: &Athlete| item.is_active());
+    } else {
+        athletes.retain(|item: &Athlete| item.starting_number().is_some() && item.get_achievement(discipline.name()).is_some());
+    }
+    
     match discipline.starting_order() {
         StartingOrder::Default(athlete_order) => {
             athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.full_name() == *item.full_name()).unwrap_or(0));
@@ -237,11 +244,16 @@ fn add_time_discipline(current_layer: &PdfLayerReference, font: &IndirectFontRef
     col_widths.insert("empty_col", 10.);
     col_widths.insert("race_position", 40.);
 
-    let athletes: Vec<_> = group.athletes().clone()
+    let mut athletes: Vec<_> = group.athletes().clone()
         .into_iter()
-        .filter(|item| item.is_active())
         .sorted_by_key(|item| item.starting_number().unwrap_or(0))
         .collect();
+
+    if !discipline.is_finished(){
+        athletes.retain(|item: &Athlete| item.is_active());
+    } else {
+        athletes.retain(|item: &Athlete| item.starting_number().is_some() && item.get_achievement(discipline.name()).is_some());
+    }
 
     let mut y_coord = initial_y_coord;
     let mut x_coord = LEFT_PAGE_EDGE;
@@ -523,8 +535,15 @@ fn add_height_page(current_layer: PdfLayerReference, col_widths: &HashMap<&str, 
         StartingOrder::Default(athlete_order) => {
             athletes = athletes.iter()
             .map(|athlete| athlete.clone())
-            .filter(|item| athlete_order.iter().any(|x| *x.full_name() == *item.full_name()) && item.is_active())
+            .filter(|item| athlete_order.iter().any(|x| *x.full_name() == *item.full_name()))
             .collect();
+
+            // Only show active athletes if discipline is not finished
+            if !discipline.is_finished(){
+                athletes.retain(|item: &Athlete| item.is_active());
+            } else {
+                athletes.retain(|item: &Athlete| item.starting_number().is_some() && item.get_achievement(discipline.name()).is_some());
+            }
             athletes.sort_by_key(|item| athlete_order.iter().position(|x| *x.full_name() == *item.full_name()).unwrap());
         }
         _ => {} // leave it the way it is

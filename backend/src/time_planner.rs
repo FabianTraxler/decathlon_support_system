@@ -454,6 +454,9 @@ impl TimeGroup {
         self.default_run_order = default_run_order.clone();
 
         for discipline in &mut self.disciplines {
+            if discipline.is_finished() {
+                continue;
+            }
             discipline.starting_order = match discipline.starting_order {
                 StartingOrder::NoOrder => StartingOrder::NoOrder,
                 StartingOrder::Default(_) => StartingOrder::Default(default_athlete_order.clone()),
@@ -494,6 +497,9 @@ impl TimeGroup {
         });
         
         for discipline in &mut self.disciplines {
+            if discipline.is_finished() {
+                continue;
+            }
             discipline.starting_order = match &discipline.starting_order {
                 StartingOrder::NoOrder => StartingOrder::NoOrder,
                 StartingOrder::Default(current_order) => {
