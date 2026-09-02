@@ -9,6 +9,7 @@ import AthleteEditPopup from "./athlete_edit_popup";
 import { finish_discipline } from "@/app/lib/discipline_edit";
 import { useAsyncError } from "@/app/lib/asyncError";
 import { MAX_DISCIPLINE_PERFORMANCE } from "@/app/lib/config";
+import { formatNumberDisplay } from "@/app/lib/parsing";
 
 
 interface DistanceDisciplineState {
@@ -31,12 +32,17 @@ const AthleteResults = createContext<{ state: DistanceDisciplineState, update_st
     ({ state: empty_state, update_state: (empty_state) => { } });
 
 
-
 export default function DistanceDiscipline({ group_name, discipline }: { group_name: string, discipline: Discipline }) {
     const [disciplineState, setDisciplineState] = useState<DistanceDisciplineState>({ ...empty_state, discipline: discipline })
     const [showResultsPopUp, setShowResultsPopUp] = useState<boolean>(false)
 
     const throwError = useAsyncError();
+
+    const parseDistanceValue = function (integral: number | string, fractional: number | string) {
+        const integralPart = String(integral)
+        const fractionalPart = String(fractional).padStart(2, "0")
+        return parseFloat(integralPart + "." + fractionalPart)
+    }
 
     useEffect(() => {
         const get_discipline_results = function (athletes: Athlete[]) {
@@ -59,15 +65,15 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                 if (achievement) {
                     let all_results = []
                     if (achievement.first_try) {
-                        athlete_result.first_try = parseFloat(achievement.first_try.integral + "." + achievement.first_try.fractional)
+                        athlete_result.first_try = parseDistanceValue(achievement.first_try.integral, achievement.first_try.fractional)
                         all_results.push(athlete_result.first_try)
                     }
                     if (achievement.second_try) {
-                        athlete_result.second_try = parseFloat(achievement.second_try.integral + "." + achievement.second_try.fractional)
+                        athlete_result.second_try = parseDistanceValue(achievement.second_try.integral, achievement.second_try.fractional)
                         all_results.push(athlete_result.second_try)
                     }
                     if (achievement.third_try) {
-                        athlete_result.third_try = parseFloat(achievement.third_try.integral + "." + achievement.third_try.fractional)
+                        athlete_result.third_try = parseDistanceValue(achievement.third_try.integral, achievement.third_try.fractional)
                         all_results.push(athlete_result.third_try)
                     }
                     if (all_results.length > 0) {
@@ -75,7 +81,7 @@ export default function DistanceDiscipline({ group_name, discipline }: { group_n
                     }
                     if (achievement.final_result) {
                         if (all_results.length == 0 || Math.max(...all_results) == -1) {
-                            athlete_result.first_try = parseFloat(achievement.final_result.integral + "." + achievement.final_result.fractional)
+                            athlete_result.first_try = parseDistanceValue(achievement.final_result.integral, achievement.final_result.fractional)
                             athlete_result.best_try = athlete_result.first_try
                         }
                     }
@@ -602,7 +608,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                         }}
                     ></AthleteEditPopup>
                 }
-                <div>{athlete_result?.best_try != -1 && athlete_result?.best_try} m</div>
+                <div>{athlete_result?.best_try != -1 && typeof athlete_result?.best_try === "number" && formatNumberDisplay(athlete_result.best_try)} m</div>
             </div>
             {tries.map(try_number => {
                 let try_value: number | string = ""
@@ -650,7 +656,7 @@ function Try({ try_number, try_value, current_try, selected_try, save_value, set
                         onClick={() => setSelectedTry({ try_number: try_number, try_value: try_value })}
                     >
                         <p>
-                        {try_value != -1 && try_value}
+                        {try_value != -1 && (typeof try_value === "number" ? formatNumberDisplay(try_value) : try_value)}
                         {(try_value == -1 && selected_try) && ""}
                         {(try_value == -1 && !selected_try) && "X"}
                         </p>

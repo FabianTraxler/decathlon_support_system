@@ -31,21 +31,21 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
         }
         if (achievement.first_try) {
             if (typeof achievement.first_try === "number") {
-                first_try = achievement.first_try == -1 ? "X" : achievement.first_try;
+                first_try = achievement.first_try == -1 ? "X" : parseFloat(achievement.first_try).toFixed(2);
             }else{
                 first_try = convert_from_integral_fractional(achievement.first_try)
             }
         }
         if (achievement.second_try) {
             if (typeof achievement.second_try === "number") {
-                second_try = achievement.second_try == -1 ? "X" : achievement.second_try;
+                second_try = achievement.second_try == -1 ? "X" : parseFloat(achievement.second_try).toFixed(2);
             }else{
                 second_try = convert_from_integral_fractional(achievement.second_try)
             }
         }
         if (achievement.third_try) {
             if (typeof achievement.third_try === "number") {
-                third_try = achievement.third_try == -1 ? "X" : achievement.third_try;
+                third_try = achievement.third_try == -1 ? "X" : parseFloat(achievement.third_try).toFixed(2);
             }else{
                 third_try = convert_from_integral_fractional(achievement.third_try)
             }

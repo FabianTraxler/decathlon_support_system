@@ -35,7 +35,7 @@ export function convert_from_integral_fractional(integral_fraction: { integral: 
         final_number += "."
         final_number += integral_fraction.fractional.toString().padStart(2, "0") || ""
 
-        return parseFloat(final_number)
+        return parseFloat(final_number).toFixed(2)
     }
 }
 
@@ -66,4 +66,9 @@ export function convert_date_to_time(date_str: string): string {
     }
 
     return hour + ":" + minute
+}
+
+
+export function formatNumberDisplay(value: number) {
+    return value.toFixed(2)
 }
