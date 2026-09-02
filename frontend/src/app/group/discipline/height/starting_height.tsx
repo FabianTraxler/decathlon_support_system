@@ -99,7 +99,7 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
                                             <td className="border pt-1 pb-1">{athlete_result.starting_number}</td>
                                             <td className="border pt-1 pb-1">{athlete_result.name} {athlete_result.surname}</td>
                                             <td className={"flex pl-2 pr-2 border pt-1 pb-1 text-xl " + (athlete_result.start_height_set ? "bg-green-100 justify-center" : "bg-yellow-100 justify-between ")}>
-                                                <select defaultValue={athlete_result?.start_height} onChange={(e) => update_starting_height(e, athlete_result)}>
+                                                <select className="rounded-none" defaultValue={athlete_result?.start_height} onChange={(e) => update_starting_height(e, athlete_result)}>
                                                     {start_height_values.map(val => {
                                                         return (<option key={val}>{val}</option>)
                                                     })}

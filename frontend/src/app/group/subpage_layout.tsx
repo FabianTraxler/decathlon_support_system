@@ -5,6 +5,7 @@ import { discipline_mapping } from "../lib/config";
 import { PopUp } from "../lib/achievement_edit/popup";
 import {Notes} from "./notes";
 import { useSearchParams } from "next/navigation";
+import { HeightSkipPopupContent } from "./discipline/height/height_skip_popup";
 
 export default function Title_Footer_Layout({ title, enableHeightSkip = false, children }: { title: string, enableHeightSkip?: boolean, children: React.ReactNode }) {
     var show_notes = title == "Notizen" ? false : true;
@@ -30,7 +31,7 @@ export default function Title_Footer_Layout({ title, enableHeightSkip = false, c
             }
             {showHeightSkipPopup &&
                 <PopUp onClose={() => setShowHeightSkipPopup(false)} title="Höhe überspringen">
-                    {/* Your height skip content goes here */}
+                    <HeightSkipPopupContent group_name={groupName} discipline_name={title}></HeightSkipPopupContent>
                 </PopUp>
             }
         </div>

@@ -206,7 +206,7 @@ function update_try_string_with_surrender(athlete_result: AthleteHeightResults, 
 
 
 /// Function to fill the try string of the current height with / and start next height with current try by filling with / until current try
-function update_try_string_with_skip(athlete_result: AthleteHeightResults, current_height: number, current_try: number): string {
+export function update_try_string_with_skip(athlete_result: AthleteHeightResults, current_height: number, current_try: number): string {
     let all_tries_string = athlete_result.tries;
     let height_index_from_starting_height = (current_height - (athlete_result.start_height || 0)) / (athlete_result.height_increase || 1)
 
