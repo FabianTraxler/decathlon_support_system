@@ -1,5 +1,5 @@
 import { Athlete, sort_athletes } from "../lib/athlete_fetching";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef, KeyboardEvent } from "react";
 import { AthleteContext } from "./group_athletes";
 import { SearchQuery, AthleteQuery } from "../lib/search";
 import { PopUp } from "../lib/achievement_edit/popup";
@@ -196,6 +196,7 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
             <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.t_shirt}</td>
             <td className='hidden xl:table-cell border border-slate-800 p-1 pl-2 pr-2 text-center'>{athlete.paid ? <span>&#9989;</span>: <span>&#10060;</span>}</td>
             {showPopup &&
+            <td>
                 <PopUp onClose={() => setShowPopup(false)} title={`Abmeldung ${athlete.name} ${athlete.surname}`}>
                     <button onClick={deregisterAthlete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
                         {athleteState.deregistered ?
@@ -205,6 +206,7 @@ function AthleteTableRow({ athlete, selected, groupAvailable }: { athlete: Athle
                         }
                     </button>
                 </PopUp>
+            </td>
             }
 
         </tr>
@@ -216,46 +218,57 @@ function StartingNumberInput({ athlete }: { athlete: Athlete }) {
     const [currentState, set_currentState] = useState({ starting_number: athlete.starting_number, isUploaded: !!athlete.starting_number, isError: false })
 
     let { update_athlete } = useContext(AthleteContext);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const uploadStartingNumber = function () {
+        let changed_value = {
+            "starting_number": currentState.starting_number
+        }
+
+        fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(changed_value)
+        }).then(res => {
+            if (res.ok) {
+                athlete.starting_number = currentState.starting_number
+                update_athlete(athlete)
+                set_currentState(prevState => ({
+                    ...prevState,
+                    isUploaded: true
+                }))
+            } else {
+                throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
+            }
+        }).catch(e => {
+            set_currentState(prevState => ({
+                ...prevState,
+                isError: true
+            }))
+            alert(`Startnummer nicht gespeichert! Händisch niederschreiben! -> ${e}`)
+        })
+    }
 
     useEffect(() => {
         if (currentState.starting_number != athlete.starting_number && !currentState.isUploaded) {
-            let changed_value = {
-                "starting_number": currentState.starting_number
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
             }
 
-            let timer = setTimeout(() => {
-                fetch(`/api/athlete?name=${athlete.name}&surname=${athlete.surname}`, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(changed_value)
-                }).then(res => {
-                    if (res.ok) {
-                        athlete.starting_number = currentState.starting_number
-                        update_athlete(athlete)
-                        set_currentState(prevState => ({
-                            ...prevState,
-                            isUploaded: true
-                        }))
-                    } else {
-                        throw new Error(`Network response was not ok: ${res.status} - ${res.statusText}`);
-                    }
-                }).catch(e => {
-                    set_currentState(prevState => ({
-                        ...prevState,
-                        isError: true
-                    }))
-                    alert(`Startnummer nicht gespeichert! Händisch niederschreiben! -> ${e}`)
-                }
-                )
-
-            }, 500)
-            return () => {
-                clearTimeout(timer);
-            };
+            timerRef.current = setTimeout(() => {
+                uploadStartingNumber();
+            }, 5000)
         }
-    })
+
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+        }
+    }, [currentState.starting_number, currentState.isUploaded, athlete.starting_number])
 
     let handleOnChange = function (e: any) {
         let value = e.target.value;
@@ -273,13 +286,47 @@ function StartingNumberInput({ athlete }: { athlete: Athlete }) {
         }
     }
 
+    let handleOnKeyDown = function (e: KeyboardEvent<HTMLInputElement>) {
+        if (e.key == "Enter") {
+            e.preventDefault();
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+                timerRef.current = null;
+            }
+
+            if (currentState.starting_number != athlete.starting_number && !currentState.isUploaded) {
+                uploadStartingNumber();
+            }
+        }
+    }
+
+    let handleOnClick = function () {
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
+        }
+
+        if (currentState.starting_number != athlete.starting_number && !currentState.isUploaded) {
+            uploadStartingNumber();
+        }
+    }
+
     return (
-        <input
-            onChange={handleOnChange}
-            className={"text-center shadow-sm hover:cursor-pointer max-w-[6rem] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none " +
-                (currentState.isError ? " bg-red-400" : "") + ((!currentState.isError && currentState.isUploaded) ? " bg-green-100" : "") +
-                ((!currentState.isError && !currentState.isUploaded) ? " bg-yellow-100" : "")}
-            defaultValue={currentState.starting_number || ""}></input>
+        <div className="flex flex-row justify-between">
+            <input
+                onChange={handleOnChange}
+                onKeyDown={handleOnKeyDown}
+                className={"text-center shadow-sm hover:cursor-pointer max-w-[6rem] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none " +
+                    (currentState.isError ? " bg-red-400" : "") + ((!currentState.isError && currentState.isUploaded) ? " bg-green-100" : "") +
+                    ((!currentState.isError && !currentState.isUploaded) ? " bg-yellow-100" : "")}
+                defaultValue={currentState.starting_number || ""}>
+            </input>
+            { (currentState.starting_number != undefined && !currentState.isUploaded ) &&
+            <button onClick={handleOnClick}><span className="text-xl">&#x23E9;</span></button>
+            }
+        </div>
+
+        
     )
 }
 
