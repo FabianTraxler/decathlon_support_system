@@ -444,6 +444,7 @@ impl TimeGroup {
 
         let mut new_athletes = new_athletes.clone();
         all_athletes.append(&mut new_athletes);
+        all_athletes.dedup_by_key(|athlete| athlete.athlete_id());
 
         let youth_group = self.disciplines.len() < 10;
         let (default_athlete_order, default_run_order, default_hurdle_order) =
@@ -469,81 +470,59 @@ impl TimeGroup {
         Ok(())
     }
     pub fn delete_athlete(&mut self, athlete: Athlete) -> Result<(), Box<dyn Error>> {
-        let index = self.default_athlete_order
-            .iter()
-            .position(|x| x == &athlete)
-            .ok_or("Athlete not found")?;
-        self.default_athlete_order.remove(index);
+        self.default_athlete_order.retain(|x| x != &athlete);
 
-        let run_index = self.default_run_order.iter().position(|run| {
-            run.athletes.0.as_ref() == Some(&athlete)
-                || run.athletes.1.as_ref() == Some(&athlete)
-                || run.athletes.2.as_ref() == Some(&athlete)
-                || run.athletes.3.as_ref() == Some(&athlete)
-                || run.athletes.4.as_ref() == Some(&athlete)
-                || run.athletes.5.as_ref() == Some(&athlete)
-        });
-        match run_index {
-            Some(run_index) => {
-                let run: &mut Run = self.default_run_order.get_mut(run_index).expect("Run should exist");
-                if run.athletes.0.as_ref() == Some(&athlete) {
-                    run.athletes.0 = None;
-                } else if run.athletes.1.as_ref() == Some(&athlete) {
-                    run.athletes.1 = None;
-                } else if run.athletes.2.as_ref() == Some(&athlete) {
-                    run.athletes.2 = None;
-                } else if run.athletes.3.as_ref() == Some(&athlete) {
-                    run.athletes.3 = None;
-                } else if run.athletes.4.as_ref() == Some(&athlete) {
-                    run.athletes.4 = None;
-                } else if run.athletes.5.as_ref() == Some(&athlete) {
-                    run.athletes.5 = None;
-                }
+        self.default_run_order.iter_mut().for_each(|run| {
+            if run.athletes.0.as_ref() == Some(&athlete) {
+                run.athletes.0 = None;
             }
-            None => (),
-        };
+            if run.athletes.1.as_ref() == Some(&athlete) {
+                run.athletes.1 = None;
+            }
+            if run.athletes.2.as_ref() == Some(&athlete) {
+                run.athletes.2 = None;
+            }
+            if run.athletes.3.as_ref() == Some(&athlete) {
+                run.athletes.3 = None;
+            }
+            if run.athletes.4.as_ref() == Some(&athlete) {
+                run.athletes.4 = None;
+            }
+            if run.athletes.5.as_ref() == Some(&athlete) {
+                run.athletes.5 = None;
+            }
+        });
         
         for discipline in &mut self.disciplines {
             discipline.starting_order = match &discipline.starting_order {
                 StartingOrder::NoOrder => StartingOrder::NoOrder,
                 StartingOrder::Default(current_order) => {
                     let mut new_order = current_order.clone();
-                    let index = current_order
-                        .iter()
-                        .position(|x| x == &athlete)
-                        .ok_or("Athlete not found")?;
-                    new_order.remove(index);
+                    new_order.retain(|item| item != &athlete);
                     StartingOrder::Default(new_order)
                     },
                 StartingOrder::Track(current_order) => {
                     let mut new_order = current_order.clone();
-                    let run_index = new_order.iter().position(|run| {
-                        run.athletes.0.as_ref() == Some(&athlete)
-                            || run.athletes.1.as_ref() == Some(&athlete)
-                            || run.athletes.2.as_ref() == Some(&athlete)
-                            || run.athletes.3.as_ref() == Some(&athlete)
-                            || run.athletes.4.as_ref() == Some(&athlete)
-                            || run.athletes.5.as_ref() == Some(&athlete)
-                    });
-                    match run_index {
-                        Some(run_index) => {
-                            let run: &mut Run = new_order.get_mut(run_index).expect("Run should exist");
-                            if run.athletes.0.as_ref() == Some(&athlete) {
-                                run.athletes.0 = None;
-                            } else if run.athletes.1.as_ref() == Some(&athlete) {
-                                run.athletes.1 = None;
-                            } else if run.athletes.2.as_ref() == Some(&athlete) {
-                                run.athletes.2 = None;
-                            } else if run.athletes.3.as_ref() == Some(&athlete) {
-                                run.athletes.3 = None;
-                            } else if run.athletes.4.as_ref() == Some(&athlete) {
-                                run.athletes.4 = None;
-                            } else if run.athletes.5.as_ref() == Some(&athlete) {
-                                run.athletes.5 = None;
-                            }
+                    new_order.iter_mut().for_each(|run| {
+                        if run.athletes.0.as_ref() == Some(&athlete) {
+                            run.athletes.0 = None;
                         }
-                        None => (),
-                    };
+                        if run.athletes.1.as_ref() == Some(&athlete) {
+                            run.athletes.1 = None;
+                        }
+                        if run.athletes.2.as_ref() == Some(&athlete) {
+                            run.athletes.2 = None;
+                        }
+                        if run.athletes.3.as_ref() == Some(&athlete) {
+                            run.athletes.3 = None;
+                        }
+                        if run.athletes.4.as_ref() == Some(&athlete) {
+                            run.athletes.4 = None;
+                        }
+                        if run.athletes.5.as_ref() == Some(&athlete) {
+                            run.athletes.5 = None;
+                        }
+                    });
                     StartingOrder::Track(new_order)
                 }
             }
@@ -554,6 +533,7 @@ impl TimeGroup {
     pub fn reshuffle_athlete_order(&mut self, group_name: String, only_registered_athletes: bool, athlete_states: HashMap<String, bool>) -> Result<String, Box<dyn Error>> {
         let youth_group = !group_name.contains("Gruppe"); // Sort by gender for youth groups
         let mut athletes = self.default_athlete_order.clone();
+        athletes.dedup_by_key(|athlete| athlete.athlete_id());
         
         if only_registered_athletes {
             athletes.retain(|athlete: &Athlete| {
