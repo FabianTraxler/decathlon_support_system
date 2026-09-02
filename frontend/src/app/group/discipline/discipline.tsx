@@ -296,7 +296,7 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit 
                                 if (typeof final_result === "number") {
                                     result = final_result.toString();
                                 }else{
-                                    result = final_result.integral + "," + (final_result.fractional || "00");
+                                    result = final_result.integral + "," + (final_result.fractional.toString().padStart(2, "0")  || "00");
                                 }
                             }
                             return <tr onClick={() => changeResult(athlete)} key={athlete.starting_number} className="even:bg-slate-200 odd:bg-slate-400">
