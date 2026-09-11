@@ -93,6 +93,10 @@ export default function EditPopup({ achievement, achievementType, athleteName, o
 
     return (
         <PopUp onClose={onClose} title={achievement_name}>
+            <div className="flex items-start justify-between rounded-t border-b-2 border-neutral-100 border-opacity-100 p-2 dark:border-opacity-50">
+                <div><b>Name:</b> </div>
+                <div>{athleteName.replace("_", " ")}</div>
+            </div>
             <div className="relative flex-auto p-4" data-te-modal-body-ref>
                 {(achievementType == "Time") &&
                     <TimeResult achievement={achievement.Time} athleteName={athleteName} onSubmit={saveChanges}></TimeResult>

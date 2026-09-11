@@ -233,9 +233,64 @@ interface AchievementDisplayProps {
     athlete_name: string, type: string, achievement: AchievementValue, 
 }
 
+function sort_athletes(athletes: IAthleteID[], sort_by: string, sort_ascending: boolean): IAthleteID[] {
+    var sorted_athletes = [...athletes];
+    if (sort_by == "name") {
+        sorted_athletes.sort((a, b) => {
+            if (a.surname < b.surname) return sort_ascending ? -1 : 1;
+            if (a.surname > b.surname) return sort_ascending ? 1 : -1;
+            return 0;
+        });
+    } else if (sort_by == "achievement") {
+        sorted_athletes.sort((a, b) => {
+            var resultA = a.achievement.Time?.final_result || a.achievement.Distance?.final_result || a.achievement.Height?.final_result || 0;
+            var resultB = b.achievement.Time?.final_result || b.achievement.Distance?.final_result || b.achievement.Height?.final_result || 0;
+            if (typeof resultA === "object" && typeof resultB === "object") {
+                resultA = resultA.integral + resultA.fractional / 100;
+                resultB = resultB.integral + resultB.fractional / 100;
+            }
+            if (resultA < resultB) return sort_ascending ? -1 : 1;
+            if (resultA > resultB) return sort_ascending ? 1 : -1;
+            return 0;
+        });
+    } else if (sort_by == "starting_number") {
+        sorted_athletes.sort((a, b) => {
+            const numA = a.starting_number || 0;
+            const numB = b.starting_number || 0;
+
+            if (numA < numB) return sort_ascending ? -1 : 1;
+            if (numA > numB) return sort_ascending ? 1 : -1;
+            return 0;
+        });
+    }
+    return sorted_athletes;
+}
 export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit }: { athletes: IAthleteID[], type: string, setShowResultsPopUp: (show: boolean) => void, unit: string }) {
     const [editPopup, setEditPopup] = useState<{show: boolean, athlete?: AchievementDisplayProps}>({show: false});
-    const [athletesState, setAthletesState] = useState<IAthleteID[]>(athletes);
+    const [sorted, setSorted] = useState<{ sort_by: string, sort_ascending: boolean }>({ sort_by: "achievement", sort_ascending: false });
+
+    var sorted_athletes = sort_athletes(athletes, sorted.sort_by, sorted.sort_ascending);
+    const [athletesState, setAthletesState] = useState<IAthleteID[]>(sorted_athletes);
+
+    useEffect(() => {
+        setAthletesState(sort_athletes(athletesState, sorted.sort_by, sorted.sort_ascending));
+    }, [athletesState, sorted.sort_by, sorted.sort_ascending]);
+
+    const handleSort = (sort_by: string) => {
+        if (sorted.sort_by === sort_by) {
+            setSorted({ sort_by, sort_ascending: !sorted.sort_ascending });
+        } else {
+            setSorted({ sort_by, sort_ascending: true });
+        }
+    };
+
+    const getSortIndicator = (column: string) => {
+        if (sorted.sort_by === column) {
+            return sorted.sort_ascending ? "▲" : "▼";
+        }
+        return "";
+    };
+
 
     const changeResult = function(athlete: IAthleteID) {
         let athlete_achievement = {
@@ -280,9 +335,9 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit 
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
-                            <th className="border border-slate-600 p-1 pl-2 pr-2">#</th>
-                            <th className="border border-slate-600 p-1 pl-2 pr-2">Name</th>
-                            <th className="border border-slate-600 p-1 pl-2 pr-2">Leistung</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2" onClick={() => handleSort("starting_number")}># {getSortIndicator("starting_number")}</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2" onClick={() => handleSort("name")}>Name {getSortIndicator("name")}</th>
+                            <th className="border border-slate-600 p-1 pl-2 pr-2" onClick={() => handleSort("achievement")}>Leistung {getSortIndicator("achievement")}</th>
 
                         </tr>
                     </thead>
