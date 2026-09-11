@@ -31,7 +31,7 @@ export default function Title_Footer_Layout({ title, enableHeightSkip = false, c
             }
             {showHeightSkipPopup &&
                 <PopUp onClose={() => setShowHeightSkipPopup(false)} title="Höhe überspringen">
-                    <HeightSkipPopupContent group_name={groupName} discipline_name={title}></HeightSkipPopupContent>
+                    <HeightSkipPopupContent group_name={groupName} discipline_name={title} close={() => setShowHeightSkipPopup(false)}></HeightSkipPopupContent>
                 </PopUp>
             }
         </div>

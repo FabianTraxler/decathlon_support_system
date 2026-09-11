@@ -16,13 +16,15 @@ interface ActiveHeightAthlete {
 	result: AthleteHeightResults
 }
 
-export function HeightSkipPopupContent({ group_name, discipline_name }: { group_name: string, discipline_name: string }) {
+export function HeightSkipPopupContent({ group_name, discipline_name, close }: { group_name: string, discipline_name: string, close: () => void }) {
 	const throwError = useAsyncError();
 	const [loading, setLoading] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [allAthletes, setAllAthletes] = useState<ActiveHeightAthlete[]>([]);
 	const [activeAthletes, setActiveAthletes] = useState<ActiveHeightAthlete[]>([]);
 	const [selectedAthleteId, setSelectedAthleteId] = useState<string | undefined>(undefined);
 	const [skipCount, setSkipCount] = useState(0);
+	const [searchQuery, setSearchQuery] = useState("");
 
 	const min_start_height = discipline_name == "Hochsprung" ? 80 : 120;
 	const default_height_increase = discipline_name == "Hochsprung" ? 4 : 20;
@@ -42,6 +44,7 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 
 	const loadAthletes = useCallback(function () {
 		if (!group_name || !discipline_name) {
+			setAllAthletes([]);
 			setActiveAthletes([]);
 			return;
 		}
@@ -113,6 +116,7 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 
 				nextAthletes.sort((a, b) => a.starting_number - b.starting_number);
 				setActiveAthletes(nextAthletes);
+				setAllAthletes(nextAthletes);
 
 				setSelectedAthleteId((previousSelectedId) => {
 					if (previousSelectedId && !nextAthletes.find((athlete) => athlete.id === previousSelectedId)) {
@@ -131,6 +135,19 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 	useEffect(() => {
 		loadAthletes();
 	}, [loadAthletes]);
+	useEffect(() => {
+		if (searchQuery.trim() === "") {
+			setActiveAthletes(allAthletes);
+			return;
+		}
+		const filteredAthletes = allAthletes.filter((athlete) => {
+			const fullName = `${athlete.name} ${athlete.surname}`.toLowerCase();
+			var nameMatch = fullName.includes(searchQuery.toLowerCase());
+			var startingNumberMatch = athlete.starting_number.toString().includes(searchQuery);
+			return nameMatch || startingNumberMatch;
+		});
+		setActiveAthletes(filteredAthletes);
+	}, [searchQuery]);
 
 	const toggleSkipAtIndex = function (index: number) {
 		if (skipCount === index + 1) {
@@ -188,11 +205,16 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 				if (typeof window !== "undefined") {
 					window.dispatchEvent(new CustomEvent("height-skip-updated"));
 				}
+				
 			}, true)
-				.catch((e) => {
+			.catch((e) => {
 					throwError(e instanceof Error ? e : new Error("Error while saving skipped heights"));
 				})
-				.finally(() => setSaving(false));
+			.finally(() => {
+				setSaving(false);
+				setSelectedAthleteId(undefined);
+				close();
+			});
 		} catch (e) {
 			setSaving(false);
 			if (e instanceof Error) {
@@ -204,12 +226,20 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 	};
 
 	return (
-		<div className="relative flex-auto p-4">
+		<div className="relative flex-auto p-4 max-h-[95vh] overflow-scroll">
 			<div className="grid gap-4">
-				<div className="text-sm text-slate-700">
+				
+				<div className="text-sm text-slate-700 [@media(max-height:100px)]:hidden">
 					Aktive Athlet:innen auswählen und die nächsten 1 bis 5 Höhen überspringen.
 				</div>
-
+				<div className="border rounded-md text-xl">
+					<input
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						placeholder="Suche..."
+						className="w-full focus:outline-none focus:ring focus:border-blue-300"
+					></input>
+				</div>
 				{loading &&
 					<div className="text-center font-semibold">Lade Athlet:innen...</div>
 				}
@@ -219,36 +249,40 @@ export function HeightSkipPopupContent({ group_name, discipline_name }: { group_
 				}
 
 				{!loading && activeAthletes.length > 0 &&
-					<div className="max-h-56 overflow-scroll border rounded-md">
-						{activeAthletes.map((athlete) => {
-							const isSelected = selectedAthlete?.id == athlete.id;
-							return (
-								<div
-									key={athlete.id}
-									className={"grid grid-cols-8 border-b p-2 hover:cursor-pointer " + (isSelected ? "bg-green-200" : "bg-white")}
-									onClick={() => {
-										setSelectedAthleteId(athlete.id);
-										setSkipCount(0);
-									}}
-								>
-									<div className="col-span-1 text-center">{athlete.starting_number}</div>
-									<div className="col-span-4">{athlete.name} {athlete.surname}</div>
-									<div className="col-span-3 text-right">Nächste: {athlete.current_height} cm</div>
-								</div>
-							);
-						})}
+					<div>
+						<div className="grid grid-cols-8 border-b bg-white">
+							<div className="col-span-1 text-center">#</div>
+							<div className="col-span-4">Name</div>
+							<div className="col-span-3 text-right">Nächste Höhe</div>
+						</div>
+						<div className="max-h-[20vh] overflow-scroll border rounded-md">
+							{activeAthletes.map((athlete) => {
+								const isSelected = selectedAthlete?.id == athlete.id;
+								return (
+									<div
+										key={athlete.id}
+										className={"grid grid-cols-8 border-b p-2 hover:cursor-pointer " + (isSelected ? "bg-green-200" : "bg-white")}
+										onClick={() => {
+											setSelectedAthleteId(athlete.id);
+											setSkipCount(0);
+										}}
+									>
+										<div className="col-span-1 text-center">{athlete.starting_number}</div>
+										<div className="col-span-4">{athlete.name} {athlete.surname}</div>
+										<div className="col-span-3 text-right">{athlete.current_height} cm</div>
+									</div>
+								);
+							})}
+						</div>
 					</div>
 				}
 
 				{selectedAthlete &&
-					<div className="border rounded-md p-3 bg-slate-50">
+					<div className="border rounded-md p-3 bg-slate-50 overflow-scroll">
 						<div className="font-semibold mb-2">
 							Ausgewählt: {selectedAthlete.name} {selectedAthlete.surname}
 						</div>
-						<div className="text-sm mb-3">
-							Kommende 5 Höhen:
-						</div>
-						<div className="grid gap-2">
+						<div className="grid gap-1 max-h-[30vh] overflow-scroll">
 							{upcomingHeights.map((height, index) => {
 								const checked = index < skipCount;
 								return (
