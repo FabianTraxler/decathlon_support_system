@@ -131,6 +131,25 @@ export default function HeightDiscipline({ group_name, discipline }: { group_nam
         })
     }, [group_name])
 
+    useEffect(() => {
+        const refreshAfterSkip = function () {
+            get_group_achievements(group_name, (athletes) => get_discipline_results(athletes, disciplineState.discipline))
+            .catch((e) => {
+                throwError(e);
+            })
+        }
+
+        if (typeof window !== "undefined") {
+            window.addEventListener("height-skip-updated", refreshAfterSkip)
+        }
+
+        return () => {
+            if (typeof window !== "undefined") {
+                window.removeEventListener("height-skip-updated", refreshAfterSkip)
+            }
+        }
+    }, [group_name, disciplineState.discipline])
+
     const finish_height_discipline = function () {
         finish_discipline(group_name, disciplineState.discipline, (discipline: Discipline) => {
             setDisciplineState({
@@ -300,7 +319,7 @@ function NewHeightOverview() {
                 {state.new_athletes_for_new_height.size >= 1 ?
                     <div className="h-full w-full grid grid-rows-8">
                         <div className="text-xl underline">
-                            Neu im Bewerb:
+                            Neu bzw. wieder im Bewerb:
                         </div>
                         <div className="row-span-7 mt-2 w-full overflow-scroll">
                             {

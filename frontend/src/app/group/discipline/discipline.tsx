@@ -70,7 +70,7 @@ export default function Disciplines({ group_name, discipline_name }: { group_nam
         )
     } else {
         return (
-            <Title_Footer_Layout title={discipline.name}>
+            <Title_Footer_Layout title={discipline.name} enableHeightSkip={discipline.discipline_type == "Height"}>
                 {
                     (discipline.discipline_type == "Time" || discipline.discipline_type == "Track") &&
                     <TimeDiscipline discipline={discipline} group_name={group_name}></TimeDiscipline>
