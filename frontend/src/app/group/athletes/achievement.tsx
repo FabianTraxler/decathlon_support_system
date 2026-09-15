@@ -41,7 +41,7 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
     }
 
     return (
-        <div key={athlete_name} className="h-fit odd:bg-slate-200 even:bg-slate-300 border border-slate-100 border-collapse">
+        <div key={athlete_name} className={"h-fit odd:bg-slate-200 even:bg-slate-300 border border-slate-100 border-collapse " + (achievement_string == "/" && "odd:bg-red-100 even:bg-red-200")}>
             <div className="grid grid-cols-12 grid-col text-lg pt-1 p-1 "
                 onClick={() => setAchievement({ showEdit: true, value: current_achievement.value })}>
                 <div className="col-span-6">{name}</div>
