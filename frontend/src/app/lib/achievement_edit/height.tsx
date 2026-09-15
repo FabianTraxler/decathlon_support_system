@@ -20,6 +20,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
     let height_increase = ""
     let start_height = ""
     let tries = ""
+    var achievement_available = false;
     if (achievement) {
         if (achievement.final_result) {
             final_result = achievement.final_result?.toString() || ""
@@ -32,6 +33,7 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         }
         if (achievement.tries) {
             tries = achievement.tries?.toString() || ""
+            achievement_available = true;
         }
         unit = achievement.unit;
     }
@@ -87,12 +89,18 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         }
 
         if (start_height_changed) {
+            if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1) {
+                if (!confirm("Ungültige Anfangshöhe oder Höhenänderung --> Leistung wird gelöscht. Ganz sicher?")) {
+                    return;
+                }
+            }
             fetch(`/api/achievement?name=${achievement?.name}&athlete_name=${athleteName}`, {
                 method: "DELETE",
             }).then(async function(res) {
                 if (res.ok) {
                     if (new_achievement.Height?.start_height == -1 || new_achievement.Height?.height_increase == -1) {
-                        alert("Invalid values for start height or height incrase --> Achievement deleted")
+                        alert("Ungültige Anfangshöhe oder Höhenänderung --> Leistung gelöscht")
+                        onSubmit(new_achievement)
                     } else {
                         return await create_new_achievement(athleteName, new_achievement, onSubmit)
                     }
@@ -151,7 +159,37 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
         setAchievementState(new_state)
     }
 
+    const handle_skip = function (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+        e.preventDefault();
+        let new_achievement = {
+            Height: {
+                name: achievement?.name || "",
+                unit: achievement?.unit || "",
+                final_result: -1,
+                height_increase: 0,
+                start_height: 0,
+                tries: "XXX"
+            }
+        } as AchievementValue
 
+        fetch(`/api/achievement?name=${achievement?.name}&athlete_name=${athleteName}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(new_achievement)
+        }).then(async function(res) {
+            if (res.ok) {
+                onSubmit(new_achievement)
+            } else {
+                await create_new_achievement(athleteName, new_achievement, onSubmit)
+                    .catch((e) => throwError(e))
+            }
+        }).catch(e => {
+            throwError(new Error(`Not updated: ${e}`))
+        }
+        )
+    }
 
     return (
         <div>
@@ -189,11 +227,18 @@ export function HeightResult({ achievement, athleteName, onSubmit }: { achieveme
                 </div>
 
                 <div
-                    className="flex flex-shrink-0 flex-wrap items-center justify-end rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
+                    className={"flex flex-shrink-0 flex-wrap items-center rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50" +  ((!achievement_available) ? " justify-between" : " justify-end")}>
+                    { (!achievement_available) && 
+                    <button
+                        onClick={handle_skip}
+                        className="border rounded-md shadow-md inline-block bg-red-100 hover:bg-red-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        Auslassen
+                    </button>
+                    }
                     <button
                         type="submit" form="time_form"
                         value="Submit"
-                        className="border rounded-md shadow-md inline-block hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        className="border rounded-md shadow-md inline-block bg-green-100 hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
                         Save
                     </button>
                 </div>

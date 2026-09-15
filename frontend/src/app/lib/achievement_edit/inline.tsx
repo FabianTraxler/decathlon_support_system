@@ -9,10 +9,15 @@ export function InlineEdit({ index, name, achievement, achievement_type, athlete
     { index: string, name: string, achievement: AchievementValue, achievement_type: string, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
     const throwError = useAsyncError();
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    let discipline_skipped = false;
     
     let [achievement_string, achievement_unit] = convert_achievement_to_string(achievement, achievement_type);
     if (achievement_string == "-" || achievement_string == "/") {
         achievement_string = ""
+    }
+    if (achievement_string == "" && achievement_type == "Time" && achievement.Time?.final_result?.integral == -1) {
+        achievement_string = "DNS"
+        discipline_skipped = true;
     }
     const [currentState, set_currentState] = useState({ achievement_string: achievement_string, isUploaded: (achievement_string != "" && achievement_string != "-") });
     

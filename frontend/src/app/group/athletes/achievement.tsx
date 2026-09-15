@@ -34,7 +34,6 @@ export default function AchievementDisplay({ athlete_number, name, type, achieve
 
     var saveChanges = function (new_achievement?: AchievementValue) {
         if (new_achievement) {
-            alert("Achievement not saved in this part! Please check!!")
             setAchievement({ showEdit: false, value: new_achievement })
         } else {
             setAchievement({ ...current_achievement, showEdit: false })

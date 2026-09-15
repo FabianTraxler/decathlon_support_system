@@ -44,8 +44,75 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
             }
         } as AchievementValue
 
-        if (final_result){ // value available
-            if(final_result.fractional >= 100){
+        upload_achievement(new_achievement, athleteName, onSubmit, throwError)
+
+    }
+
+
+    const handle_skip = function (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+        e.preventDefault();
+        let new_achievement = {
+            Time: {
+                name: achievement?.name || "",
+                unit: achievement?.unit || "",
+                final_result: {integral: -1, fractional: 0}
+            }
+        } as AchievementValue
+
+        upload_achievement(new_achievement, athleteName, onSubmit, throwError)
+    }
+
+    let final_result = "";
+    let unit = ""
+    let achievement_available = false;
+    if (achievement) {
+        if (achievement.final_result) {
+            final_result = achievement.final_result?.integral.toString() || ""
+            final_result += ","
+            final_result += achievement.final_result?.fractional.toString() || ""
+            achievement_available = true;
+        }
+        if (long_distance_disciplines.includes(achievement.name)){
+            unit = "mm:ss,ss"
+        } else{
+            unit = "ss,ss"
+        }
+        if (achievement.final_result?.integral == -1) {
+            final_result = "X"
+        }
+    }
+
+
+    return (
+        <div>
+            <form id="time_form" onSubmit={(e) => form_submit(e, unit)}>
+                <label>Endergebnis [{unit}]: </label>
+                <input name="final_result" className="shadow-md rounded-md bg-slate-200 w-16 text-center" defaultValue={final_result}></input>
+                <div
+                    className={"flex flex-shrink-0 flex-wrap items-center rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50" +  ((!achievement_available) ? " justify-between" : " justify-end")}>
+                    { (!achievement_available) && 
+                    <button
+                        onClick={handle_skip}
+                        className="border rounded-md shadow-md inline-block bg-red-100 hover:bg-red-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        Auslassen
+                    </button>
+                    }
+                    <button
+                        type="submit" form="time_form"
+                        value="Submit"
+                        className="border rounded-md shadow-md inline-block bg-green-100 hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    )
+}
+
+
+function upload_achievement(new_achievement: AchievementValue, athleteName: string, onSubmit: (form_submit: AchievementValue) => void, throwError: (e: Error) => void) {
+        if (new_achievement.Time?.final_result){ // value available
+            if(new_achievement.Time?.final_result.fractional >= 100){
                 alert("Invalid format: Only 2 decimal values allowed -> not uploaded")
                 return
             }
@@ -97,40 +164,4 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
             }
             )
         }
-
-
-    }
-
-    let final_result = "";
-    let unit = ""
-    if (achievement) {
-        if (achievement.final_result) {
-            final_result = achievement.final_result?.integral.toString() || ""
-            final_result += ","
-            final_result += achievement.final_result?.fractional.toString() || ""
-        }
-        if (long_distance_disciplines.includes(achievement.name)){
-            unit = "mm:ss,ss"
-        } else{
-            unit = "ss,ss"
-        }
-    }
-
-    return (
-        <div>
-            <form id="time_form" onSubmit={(e) => form_submit(e, unit)}>
-                <label>Endergebnis [{unit}]: </label>
-                <input name="final_result" className="shadow-md rounded-md bg-slate-200 w-16 text-center" defaultValue={final_result}></input>
-                <div
-                    className="flex flex-shrink-0 flex-wrap items-center justify-end rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
-                    <button
-                        type="submit" form="time_form"
-                        value="Submit"
-                        className="border rounded-md shadow-md inline-block hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    )
 }

@@ -21,6 +21,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
     let first_try: number | string = ""
     let second_try: number | string = ""
     let third_try: number | string = ""
+    var achievement_available = false;
     if (achievement) {
         if (achievement.final_result) {
             if (typeof achievement.final_result === "number") {
@@ -35,6 +36,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
             }else{
                 first_try = convert_from_integral_fractional(achievement.first_try)
             }
+            achievement_available = true;   
         }
         if (achievement.second_try) {
             if (typeof achievement.second_try === "number") {
@@ -42,6 +44,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
             }else{
                 second_try = convert_from_integral_fractional(achievement.second_try)
             }
+            achievement_available = true;   
         }
         if (achievement.third_try) {
             if (typeof achievement.third_try === "number") {
@@ -49,6 +52,7 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
             }else{
                 third_try = convert_from_integral_fractional(achievement.third_try)
             }
+            achievement_available = true;
         }
         unit = achievement.unit;
     }
@@ -167,6 +171,56 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
         setAchievementState(new_state)
     }
 
+    const handle_skip = function (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+        e.preventDefault();
+        let new_achievement = {
+            Distance: {
+                name: achievement?.name || "",
+                unit: achievement?.unit || "",
+                final_result: {integral: -1, fractional: 0},
+                first_try: {integral: -1, fractional: 0},
+                second_try: {integral: -1, fractional: 0},
+                third_try: {integral: -1, fractional: 0}
+            }
+        } as AchievementValue
+
+        fetch(`/api/achievement?athlete_name=${athleteName}&name=${new_achievement.Distance?.name}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                final_result: "-1.0",
+                first_try: "-1.0",
+                second_try: "-1.0",
+                third_try: "-1.0"
+            })
+        }).then(res => {
+            if (res.ok) {
+                onSubmit(new_achievement)
+            } else {
+                let name = athleteName.split("_")[0];
+                let surname = athleteName.split("_")[1]
+                fetch(`/api/achievement?name=${name}&surname=${surname}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(new_achievement)
+                }).then(res => {
+                    if (res.ok) {
+                        onSubmit(new_achievement)
+                    } else {
+                        throwError(new Error(`Network response was not ok: ${res.status} - ${res.statusText}`));
+                    }
+                })
+            }
+        }).catch(e => {
+            throwError(new Error(`Not updated: ${e}`))
+        }
+        )
+    }
+
 
     return (
         <div>
@@ -208,12 +262,19 @@ export function DistanceResult({ achievement, athleteName, onSubmit }: { achieve
                 </div>
 
                 <div
-                    className="flex flex-shrink-0 flex-wrap items-center justify-end rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-4 dark:border-opacity-50">
+                    className={"flex flex-shrink-0 flex-wrap items-center rounded-b-md border-t-2 border-neutral-100 border-opacity-100 p-2 pt-4 dark:border-opacity-50" +  ((!achievement_available) ? " justify-between" : " justify-end")}>
+                    { (!achievement_available) && 
+                    <button
+                        onClick={handle_skip}
+                        className="border rounded-md shadow-md inline-block bg-red-100 hover:bg-red-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        Auslassen
+                    </button>
+                    }
                     <button
                         type="submit" form="time_form"
                         value="Submit"
-                        className="border rounded-md shadow-md inline-block hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
-                        Save
+                        className="border rounded-md shadow-md inline-block bg-green-100 hover:bg-green-300 bg-primary-100 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-primary-700 transition duration-150 ease-in-out hover:bg-primary-accent-100 focus:bg-primary-accent-100 focus:outline-none focus:ring-0 active:bg-primary-accent-200">
+                        Speichern
                     </button>
                 </div>
             </form>
