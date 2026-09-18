@@ -152,7 +152,7 @@ resource "aws_iam_instance_profile" "prod_profile" {
 
 resource "aws_instance" "prod_decathlon_support_system" {
   ami                    = data.aws_ami.al2023.id
-  instance_type          = "t2.micro"
+  instance_type          = "t2.small"
   key_name               = aws_key_pair.prod_ec2_key.key_name
   vpc_security_group_ids = [aws_security_group.ssh_sg_prod.id]
 
