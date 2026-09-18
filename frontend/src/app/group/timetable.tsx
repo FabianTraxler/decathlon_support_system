@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { Discipline } from "../lib/interfaces";
 import { convert_date_to_time } from "../lib/parsing";
-import { DisciplineEditButton } from "../admin/group_overview/disciplines/discipline_edit";
+import { DisciplineEditButton } from "@/app/lib/discipline_edit/discipline_edit";
 import Title_Footer_Layout from "./subpage_layout";
 import { LoadingAnimation, LoadingButton } from "../lib/loading";
 import { NavigationContext } from "./navigation";

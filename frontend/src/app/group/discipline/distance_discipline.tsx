@@ -1,7 +1,7 @@
 import { AthleteDistanceResults, AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
 import { BeforeStartInfoBox, start_discipline } from "./discipline";
-import { AthleteResultsPopUp } from "./result_popup";
+import { AthleteResultsPopUp } from "@/app/lib/discipline_edit/result_popup";
 import { get_group_achievements, save_distance_achievement, skip_distance_discipline } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { NavigationContext } from "../navigation";

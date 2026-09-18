@@ -4,7 +4,7 @@ import { german_discipline_states } from '@/app/lib/config';
 import { LoadingButton } from '@/app/lib/loading';
 import { useEffect, useState } from 'react';
 
-import { DisciplineEditButton } from './discipline_edit';
+import { DisciplineEditButton } from '@/app/lib/discipline_edit/discipline_edit';
 import { Discipline } from '@/app/lib/interfaces';
 import { convert_date } from '@/app/lib/parsing';
 

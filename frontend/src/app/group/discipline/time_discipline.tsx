@@ -1,7 +1,7 @@
 import { AthleteID, AthleteTimeResult, Discipline, IAthleteID, StartingOrder } from "@/app/lib/interfaces";
 import { useEffect, useState } from "react";
 import { BeforeStartInfoBox, start_discipline } from "./discipline";
-import { AthleteResultsPopUp } from "./result_popup";
+import { AthleteResultsPopUp } from "@/app/lib/discipline_edit/result_popup";
 import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { LoadingAnimation, LoadingButton } from "@/app/lib/loading";
@@ -180,6 +180,7 @@ export default function TimeDiscipline({ group_name, discipline }: { group_name:
                     type="Time" 
                     setShowResultsPopUp={(setShow: boolean) => setResultsPopUp({...resultsPopUp, show: setShow})}
                     unit="s"
+                    sort_ascending={true}
                 ></AthleteResultsPopUp>
             }
         </div>
