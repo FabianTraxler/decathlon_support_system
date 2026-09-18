@@ -17,7 +17,7 @@ cd /home/ec2-user
 git clone https://github.com/FabianTraxler/decathlon_support_system.git
 cd decathlon_support_system
 # switch to deployment branch
-git checkout origin/release/v.1.1.0
+git checkout origin/release/1.2
 
 # go to deployment folder
 cd deployment
