@@ -459,7 +459,7 @@
     },
     "JG4": {
       "role": "group",
-      "group": "Gruppe 3"
+      "group": "Gruppe 4"
     },
     "JG5": {
       "role": "group",
@@ -497,15 +497,15 @@
       "role": "group",
       "group": "U4/U6"
     },
-    "jzk-2025-admin": {
+    "jzk-2026-admin": {
       "role": "admin",
       "group": ""
     },
-    "jzk-2025-zeitnehmung": {
+    "jzk-2026-zeitnehmung": {
       "role": "timing",
       "group": ""
     },
-    "jzk-2025-anmeldung": {
+    "jzk-2026-anmeldung": {
       "role": "register",
       "group": ""
     }
