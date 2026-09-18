@@ -248,7 +248,7 @@ export default function GroupDisciplines({ group_name }: { group_name: string })
                                                     }
 
                                                     return (
-                                                        <tr className={'' + (athlete.starting_number ? "bg-slate-400" : "bg-slate-50 opacity-45")}
+                                                        <tr className={'' + (athlete.starting_number ? "bg-slate-400" : "bg-slate-50 opacity-40 line-through")}
                                                             key={athlete.full_name() + "_" + groupState.selected_discipline?.name || ""}>
                                                             {run.name != "Massenstart" && <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>}
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>

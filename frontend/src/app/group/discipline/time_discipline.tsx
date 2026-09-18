@@ -1,6 +1,7 @@
 import { AthleteID, AthleteTimeResult, Discipline, IAthleteID, StartingOrder } from "@/app/lib/interfaces";
 import { useEffect, useState } from "react";
-import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "./discipline";
+import { BeforeStartInfoBox, start_discipline } from "./discipline";
+import { AthleteResultsPopUp } from "./result_popup";
 import { get_group_achievements, saveStartingOrder } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { LoadingAnimation, LoadingButton } from "@/app/lib/loading";
