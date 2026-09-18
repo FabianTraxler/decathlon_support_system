@@ -1,6 +1,7 @@
 import { AthleteHeightID, AthleteHeightResults, AthleteID, Discipline, IAthleteID } from "@/app/lib/interfaces";
 import { createContext, useContext, useEffect, useState } from "react";
-import { AthleteResultsPopUp, BeforeStartInfoBox, start_discipline } from "../discipline";
+import { BeforeStartInfoBox, start_discipline } from "../discipline";
+import { AthleteResultsPopUp } from "../result_popup";
 import { get_group_achievements } from "@/app/lib/achievement_edit/api_calls";
 import { AchievementValue, Athlete } from "@/app/lib/athlete_fetching";
 import { StartHeightInput } from "./starting_height";
