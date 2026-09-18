@@ -26,7 +26,8 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
                 state.results.set(athlete_result.full_name(), athlete_result)
                 let all_athletes_set = true;
                 state.results.forEach(athlete => {
-                    if (athlete.starting_number != undefined && !athlete.start_height_set) {
+                    let tries = athlete.tries || ""
+                    if (athlete.starting_number != undefined && !athlete.start_height_set && !tries.includes("XXX")) {
                         all_athletes_set = false
                     }
                 })
@@ -57,7 +58,8 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
                 state.results.set(athlete_result.full_name(), athlete_result)
                 let all_athletes_set = true;
                 state.results.forEach(athlete => {
-                    if (athlete.starting_number != undefined && !athlete.start_height_set) {
+                    let tries = athlete.tries || ""
+                    if (athlete.starting_number != undefined && !athlete.start_height_set && !tries.includes("XXX")) {
                         all_athletes_set = false
                     }
                 })
@@ -93,7 +95,8 @@ export function StartHeightInput({ close, min_height, max_height, step_size }: {
                         <tbody className="">
                             {state.default_order.map(athlete => {
                                 let athlete_result = state.results.get(athlete.full_name())
-                                if (athlete_result && athlete.starting_number) {
+                                let tries = athlete_result?.tries || ""
+                                if (athlete_result && athlete.starting_number && !tries.includes("XXX")) {
                                     return (
                                         <tr className="border" key={athlete.starting_number}>
                                             <td className="border pt-1 pb-1">{athlete_result.starting_number}</td>

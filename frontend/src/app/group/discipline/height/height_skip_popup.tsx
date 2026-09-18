@@ -62,7 +62,7 @@ export function HeightSkipPopupContent({ group_name, discipline_name, close }: {
 				const nextAthletes: ActiveHeightAthlete[] = [];
 
 				athletes.forEach((athlete) => {
-					if (athlete.starting_number == undefined) {
+					if (athlete.starting_number == undefined || athlete.deregistered) {
 						return;
 					}
 

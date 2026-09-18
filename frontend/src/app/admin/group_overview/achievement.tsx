@@ -56,7 +56,7 @@ export default function Achievement({ index, name, achievement, achievement_type
         )
     } else {
         return (
-            <td className='group flex-col border border-slate-800 text-right hover:bg-slate-400 hover:cursor-pointer'>
+            <td className={'group flex-col border border-slate-800 text-right hover:bg-slate-400 hover:cursor-pointer ' + (achievement_string == "/" && "bg-red-100" )}>
                 <div onClick={handleOpenPopup} className='p-1 w-full h-full text-right'>
                     {achievement_string != "" ?
                         <div>{ achievement_string } {achievement_unit}</div>

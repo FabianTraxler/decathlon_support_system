@@ -394,8 +394,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
 
     let active_athletes: AthleteHeightResults[] = []
     athletes.forEach(athlete => {
-        if (athlete.starting_number != undefined) { // Only consider activce atheltes
-
+        if (athlete.starting_number != undefined && !athlete.deregistered) { // Only consider active athletes
             // Setup athlete results with default value 
             let athlete_result: AthleteHeightResults = {
                 name: athlete.name,
@@ -420,9 +419,7 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                 if (achievement.start_height) {
                     athlete_result.start_height = achievement.start_height
                     athlete_result.start_height_set = true;
-                } else {
-                    all_athletes_start_height_set = false
-                }
+                } 
                 if (achievement.height_increase) {
                     athlete_result.height_increase = achievement.height_increase
                 }
@@ -446,6 +443,10 @@ function get_descipline_state_from_results(athletes: Athlete[], discipline: Disc
                         current_height = achievement.start_height
                     }
                 }
+                if (athlete_result.still_active && !athlete_result.start_height_set) {
+                    all_athletes_start_height_set = false
+                }
+
             } else {
                 // Never started discipline and therefore still active
                 athlete_result.still_active = true

@@ -366,7 +366,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                     {!editActive &&
                                         <tbody>
                                             {run.athletes.map((athlete, athlete_id) => {
-                                                if (athlete == null) {
+                                                if (athlete == null || athlete.starting_number == undefined) {
                                                     return (
                                                         <tr
                                                             key={athlete_id + "undraggable"}>
@@ -396,7 +396,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                     {editActive &&
                                         <tbody>
                                             {run.athletes.map((athlete, athlete_id) => {
-                                                if (athlete == null) {
+                                                if (athlete == null || athlete.starting_number == undefined) {
                                                     return (
                                                         <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
                                                             ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
@@ -496,13 +496,15 @@ function MassStartStartingOrderSummary({ athletes, finishDiscipline }:
                     </thead>
                     <tbody>
                         {athletes.map((athlete) => {
-                            return (
-                                <tr key={athlete.starting_number}>
-                                    <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number || ""}</td>
-                                    <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 13)}{athlete.name.length > 13 && "..."}</td>
-                                    <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 13)}{athlete.surname.length > 13 && "..."}</td>
-                                </tr>
-                            )
+                            if (athlete.starting_number != undefined) {
+                                return (
+                                    <tr key={athlete.starting_number}>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number || ""}</td>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 13)}{athlete.name.length > 13 && "..."}</td>
+                                        <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.surname.substring(0, 13)}{athlete.surname.length > 13 && "..."}</td>
+                                    </tr>
+                                )
+                            }
                         })}
                     </tbody>
                 </table>

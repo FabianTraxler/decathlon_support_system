@@ -346,13 +346,16 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit 
                             var result = "";
 
                             var final_result = athlete.achievement.Time?.final_result || athlete.achievement.Distance?.final_result || athlete.achievement.Height?.final_result;
-
                             if(final_result){
                                 if (typeof final_result === "number") {
                                     result = final_result.toString();
                                 }else{
                                     result = final_result.integral + "," + (final_result.fractional.toString().padStart(2, "0")  || "00");
                                 }
+                            }
+                            if(result == "-1.0" || result == "-1,00" || result == "" || result == "0,00" ||result == "0.0") {
+                                result = "X";
+                                unit = "";
                             }
                             return <tr onClick={() => changeResult(athlete)} key={athlete.starting_number} className="even:bg-slate-200 odd:bg-slate-400">
                                 <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
