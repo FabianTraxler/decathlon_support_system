@@ -330,7 +330,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
         max_tries = 1
     }
 
-    const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) {
+    const save_athlete_try = function (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean, callback?: () => void) {
         let selected_athlete = state.current_order[0]
         if (typeof new_value == "string") {
             new_value = parseFloat(new_value)
@@ -389,9 +389,14 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
                     try_completed(new_results)
                 }
             })
-                .catch((e) => {
-                    if (!skip_error) throwError(e);
-                })
+            .catch((e) => {
+                if (!skip_error) throwError(e);
+            })
+            .finally(() => {
+                if (callback) {
+                    callback()
+                }
+            })
         } else {
             if (!skip_error) throwError(new Error("Error while saving achievement: Athlete result not found locally for distance discipline"));
         }
@@ -527,7 +532,7 @@ function StartingOrderOverview({ finish_discipline }: { finish_discipline: () =>
 }
 
 function DistanceInput({ athlete, save_athlete_try, try_completed }:
-    { athlete: AthleteID, save_athlete_try: (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean) => void, try_completed: (new_results: Map<string, AthleteDistanceResults>) => void }) {
+    { athlete: AthleteID, save_athlete_try: (athlete: AthleteID, try_number: number, new_value: number | string, skip_error: boolean, callback?: () => void) => void, try_completed: (new_results: Map<string, AthleteDistanceResults>) => void }) {
     const { state } = useContext(AthleteResults)
     const [showAthleteEdit, setShowAthleteEdit] = useState(false)
     const athlete_result = state.results.get(athlete.full_name())
@@ -548,7 +553,7 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
     }
     const [selectedTry, setSelectedTry] = useState({ try_number: state.current_try, try_value: try_value })
 
-    const save_and_check_try = function (try_number: number, new_value: number | string) {
+    const save_and_check_try = function (try_number: number, new_value: number | string, callback?: () => void) {
         if (new_value == "") {
             new_value = -1
         } else if (typeof new_value == "string") {
@@ -563,7 +568,16 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
                 return;
             }
         }
-        save_athlete_try(athlete, try_number, new_value, false)
+        if (state.current_try != try_number && callback) {
+            let callback_wrapper = function () {
+                callback()
+                setSelectedTry({ try_number:state.current_try, try_value: "" })
+            }
+            save_athlete_try(athlete, try_number, new_value, false, callback_wrapper)
+        }else{
+            save_athlete_try(athlete, try_number, new_value, false)
+
+        }
         if (state.discipline.try_order_type == "Subsequent"){
             setSelectedTry({ try_number: try_number + 1, try_value: "" })
         }
@@ -644,7 +658,18 @@ function DistanceInput({ athlete, save_athlete_try, try_completed }:
 
 
 function Try({ try_number, try_value, current_try, selected_try, save_value, setSelectedTry }:
-    { try_number: number, try_value: number | string, current_try: boolean, selected_try: boolean, save_value: (try_number: number, new_value: number | string) => void, setSelectedTry: (val: { try_number: number, try_value: number | string }) => void }) {
+    { try_number: number, try_value: number | string, current_try: boolean, selected_try: boolean, save_value: (try_number: number, new_value: number | string, callback?: () => void) => void, setSelectedTry: (val: { try_number: number, try_value: number | string }) => void }) {
+    
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSave = async (try_number: number, new_value: number | string) => {
+        setIsLoading(true);
+        try {
+            await save_value(try_number, new_value, () => { setIsLoading(false); });
+        } catch (error) {
+            console.error("Error saving value:", error);
+        }
+    }
 
     return (
         <div className="text-xl sm:text-4xl">
@@ -672,17 +697,23 @@ function Try({ try_number, try_value, current_try, selected_try, save_value, set
                         {
                             (try_value != "" && try_value != -1) &&
                             <div className="flex items-center justify-center border rounded-md shadow-lg h-full w-[75%] border-stw_green active:bg-slate-100"
-                                onClick={() => save_value(try_number, try_value)}
+                                onClick={() => handleSave(try_number, try_value)}
                             >
-                                &#9989;
+                                { (isLoading) ? 
+                                    <span>&#9851;</span>
+                                    : <span>&#9989;</span>
+                                }
                             </div>
                         }
                         {
                             (try_value == "" || try_value == -1) &&
                             <div className="flex items-center justify-center  border rounded-md shadow-lg h-full  w-[75%] border-stw_orange active:bg-slate-100"
-                                onClick={() => save_value(try_number, -1)}
+                                onClick={() => handleSave(try_number, -1)}
                             >
-                                &#10060;
+                                { (isLoading) ? 
+                                    <span>&#9851;</span>
+                                    : <span>&#10060;</span>
+                                }
                             </div>
                         }
                     </div>
