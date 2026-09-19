@@ -110,6 +110,9 @@ pub fn all_group_certificates(group: &Group) -> PdfDocumentReference {
     }
 
     for athlete in &athletes{
+        if athlete.starting_number().is_none() {
+            continue;
+        }
         pdf = match athlete.competition_type() {
             CompetitionType::Decathlon => new_decathlon_certificate(athlete, pdf, page, layer),
             CompetitionType::Heptathlon => new_heptathlon_certificate(athlete, pdf, page, layer),
