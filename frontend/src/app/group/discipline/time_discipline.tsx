@@ -195,6 +195,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
     const [openRuns, setOpenRuns] = useState<Set<string>>(new Set([]));
     const [currentRuns, setcurrentRuns] = useState(starting_order)
     const [lastDraggedOver, setLastDraggedOver] = useState({ run_index: NaN, row_index: NaN })
+    const [draggedRow, setDraggedRow] = useState({ run_index: NaN, row_index: NaN, cell_empty: false })
     const [submitted, setSubmitted] = useState("")
 
     const handleOpenRun = function (run_name: string, remove: boolean) {
@@ -215,9 +216,15 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
     const handleDragDrop = function (e: React.DragEvent, runIndex: number, rowIndex: number, dragStopRowEmpty: boolean) {
         e.preventDefault();
         setLastDraggedOver({ run_index: NaN, row_index: NaN });
-        const dragRowIndex = e.dataTransfer.getData('rowIndex');
-        const dragRunIndex = e.dataTransfer.getData('runIndex');
-        const startCellEmpty = e.dataTransfer.getData('cell_empty');
+        var dragRowIndex = e.dataTransfer.getData('rowIndex');
+        var dragRunIndex = e.dataTransfer.getData('runIndex');
+        var startCellEmpty = e.dataTransfer.getData('cell_empty');
+        if (!dragRowIndex || !dragRunIndex) {
+            dragRowIndex = draggedRow.row_index.toString();
+            dragRunIndex = draggedRow.run_index.toString();
+            startCellEmpty = draggedRow.cell_empty.toString();
+            setDraggedRow({ run_index: NaN, row_index: NaN, cell_empty: false })
+        }
 
         if (dragRowIndex !== rowIndex.toString() || dragRunIndex !== runIndex.toString()) {
             let newRun = currentRuns[runIndex]
@@ -247,6 +254,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
         e.dataTransfer.setData('rowIndex', rowIndex.toString());
         e.dataTransfer.setData('runIndex', runIndex.toString());
         e.dataTransfer.setData('cell_empty', cell_empty.toString());
+        setDraggedRow({ run_index: runIndex, row_index: rowIndex, cell_empty: cell_empty });
     }
     const addRun = function () {
         let newRuns = [...currentRuns]
@@ -343,7 +351,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                 onDragOver={() => handleOpenRun(run.name, false)}>
                                 <span>{run.name}</span>
                                 {
-                                    (editActive && run.athletes.every(e => e === null)) &&
+                                    (editActive && run.athletes.every(e => e === null || e.starting_number === undefined)) &&
                                     <div
                                         className="pl-1 pr-1 text-red-500 border border-red-500 shadow-lg rounded-md"
                                         onClick={() => deleteRun(run.name, run_id)}
@@ -371,7 +379,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                 if (athlete == null || athlete.starting_number == undefined) {
                                                     return (
                                                         <tr
-                                                            key={athlete_id + "undraggable"}>
+                                                            key={athlete_id}>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center"></td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
@@ -382,7 +390,7 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                 } else {
                                                     return (
                                                         <tr
-                                                            key={athlete_id + "undraggable"}>
+                                                            key={athlete_id}>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
@@ -397,18 +405,26 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
 
                                     {editActive &&
                                         <tbody>
-                                            {run.athletes.map((athlete, athlete_id) => {
+                                            {run.athletes.map((athlete, track_number) => {
+                                                let droppedBelow = false;
+                                                if (draggedRow.row_index < track_number) {
+                                                    droppedBelow = true;
+                                                }
+                                                if (run_id != draggedRow.run_index){
+                                                    droppedBelow = false;
+                                                }
+                                                let isDraggedOver = (track_number == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index)
                                                 if (athlete == null || athlete.starting_number == undefined) {
                                                     return (
                                                         <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
-                                                            ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
+                                                            (isDraggedOver && " bg-white")
                                                         }
                                                             draggable="true"
-                                                            onDrop={(e) => handleDragDrop(e, run_id, athlete_id, true)}
-                                                            onDragStart={(e) => handleDragStart(e, run_id, athlete_id, true)}
-                                                            onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
-                                                            key={athlete_id + "draggable"}>
-                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            onDrop={(e) => handleDragDrop(e, run_id, track_number, true)}
+                                                            onDragStart={(e) => handleDragStart(e, run_id, track_number, true)}
+                                                            onDragOver={(e) => handleDragOver(e, run_id, track_number)}
+                                                            key={track_number}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center"></td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2"></td>
@@ -421,14 +437,16 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                                                 } else {
                                                     return (
                                                         <tr className={'cursor-move select-none bg-slate-300 active:bg-slate-600 active:text-slate-50 ' +
-                                                            ((athlete_id == lastDraggedOver.row_index && run_id == lastDraggedOver.run_index) && " bg-white")
+                                                            (isDraggedOver && " bg-white ") +
+                                                            ((isDraggedOver && droppedBelow) && " border-b-red-600 border-b-4 ") +
+                                                            ((isDraggedOver && !droppedBelow) && " border-t-red-600 border-t-4") 
                                                         }
-                                                            draggable
-                                                            onDrop={(e) => handleDragDrop(e, run_id, athlete_id, false)}
-                                                            onDragStart={(e) => handleDragStart(e, run_id, athlete_id, false)}
-                                                            onDragOver={(e) => handleDragOver(e, run_id, athlete_id)}
-                                                            key={athlete_id + "draggable"}>
-                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete_id + 1}.</td>
+                                                            draggable="true"
+                                                            onDrop={(e) => handleDragDrop(e, run_id, track_number, false)}
+                                                            onDragStart={(e) => handleDragStart(e, run_id, track_number, false)}
+                                                            onDragOver={(e) => handleDragOver(e, run_id, track_number)}
+                                                            key={track_number}>
+                                                            <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{track_number + 1}.</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2 text-center">{athlete.starting_number}</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.age_group}</td>
                                                             <td className="border border-slate-600 p-1 pl-2 pr-2">{athlete.name.substring(0, 6)}{athlete.name.length > 6 && "..."}</td>
