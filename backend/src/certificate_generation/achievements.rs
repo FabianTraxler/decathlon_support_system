@@ -224,10 +224,13 @@ impl HeightResult {
             Some(value) => *value,
             None => self.compute_final_result(),
         };
+        let mut result_str = String::new();
+        if (result != -1) {
+            let m_result = result as f64 / 100.; // convert from cm to m
+            result_str = format!("{}", Float::from_f64(m_result));
+        }
 
-        let m_result = result as f64 / 100.; // convert from cm to m
-
-        (format!("{}", Float::from_f64(m_result)), "m".to_string())
+        (result_str, "m".to_string())
     }
 
     fn compute_final_result(&self) -> i32 {
@@ -757,12 +760,16 @@ impl TimeResult {
         {
             (format!("{}", final_result), "s".to_string())
         } else {
-            // convert to min:ss
-            let minutes = final_result.integral / 60;
-            let seconds =
-                (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
+            let mut result_str = String::new();
+            if final_result.integral != -1 {
+                // convert to min:ss
+                let minutes = final_result.integral / 60;
+                let seconds =
+                    (final_result.integral % 60) as f64 + final_result.fractional as f64 / 100.;
+                    result_str = format!("{}:{}", minutes, Float::from_f64(seconds));
+            }
             (
-                format!("{}:{}", minutes, Float::from_f64(seconds)),
+                result_str,
                 "min".to_string(),
             )
         }

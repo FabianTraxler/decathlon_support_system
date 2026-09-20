@@ -88,8 +88,8 @@ export function DisciplineEditButton(
                     unit = achievement.Time?.unit || achievement.Distance?.unit || achievement.Height?.unit || "";
                 }
             })
-            setState({ ...state, showPopup: false, showResultsPopup: true, athleteResults: athletes, achievementUnit: unit, showPopupLoading: false })
         })
+        setState({ ...state, showPopup: false, showResultsPopup: true, athleteResults: athletes, achievementUnit: unit, showPopupLoading: false })
     })  
   }
 
@@ -163,7 +163,7 @@ export function DisciplineEditButton(
       {(state.showResultsPopup) &&
         <AthleteResultsPopUp 
           athletes={state.athleteResults} 
-          type="Time" 
+          type={state.discipline.discipline_type == "Track" ? "Time" : state.discipline.discipline_type}
           setShowResultsPopUp={(setShow: boolean) => setState({ ...state, showResultsPopup: setShow })} 
           unit={state.achievementUnit}
           sort_ascending={state.discipline.discipline_type == "Time" ? true : false}

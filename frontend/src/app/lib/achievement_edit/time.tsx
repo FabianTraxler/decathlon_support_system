@@ -3,6 +3,7 @@ import { AchievementValue, TimeAchievement } from "@/app/lib/athlete_fetching";
 import { convert_to_integral_fractional } from "@/app/lib/parsing";
 import { long_distance_disciplines, MAX_DISCIPLINE_PERFORMANCE } from "../config";
 import { useAsyncError } from "../asyncError";
+import { convert_achievement_to_string } from "./popup";
 
 
 export function TimeResult({ achievement, athleteName, onSubmit }: { achievement?: TimeAchievement, athleteName: string, onSubmit: (form_submit: AchievementValue) => void }) {
@@ -67,9 +68,10 @@ export function TimeResult({ achievement, athleteName, onSubmit }: { achievement
     let achievement_available = false;
     if (achievement) {
         if (achievement.final_result) {
-            final_result = achievement.final_result?.integral.toString() || ""
-            final_result += ","
-            final_result += achievement.final_result?.fractional.toString() || ""
+            let achievement_value = {
+                Time: achievement
+            } as AchievementValue
+            [final_result, unit] = convert_achievement_to_string(achievement_value, "Time")
             achievement_available = true;
         }
         if (long_distance_disciplines.includes(achievement.name)){
