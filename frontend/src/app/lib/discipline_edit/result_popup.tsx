@@ -95,7 +95,7 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit,
                                     result = final_result.integral + "," + (final_result.fractional.toString().padStart(2, "0")  || "00");
                                 }
                             }
-                            if(result == "-1.0" || result == "-1,00" || result == "" || result == "0,00" ||result == "0.0") {
+                            if(result == "-1.0" || result == "-1,00" || result == "" || result == "0,00" ||result == "0.0" || result == "-1"){
                                 result = "X";
                                 unit = "";
                             }

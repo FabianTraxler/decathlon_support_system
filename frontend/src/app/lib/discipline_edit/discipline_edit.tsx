@@ -88,8 +88,8 @@ export function DisciplineEditButton(
                     unit = achievement.Time?.unit || achievement.Distance?.unit || achievement.Height?.unit || "";
                 }
             })
-            setState({ ...state, showPopup: false, showResultsPopup: true, athleteResults: athletes, achievementUnit: unit, showPopupLoading: false })
         })
+        setState({ ...state, showPopup: false, showResultsPopup: true, athleteResults: athletes, achievementUnit: unit, showPopupLoading: false })
     })  
   }
 
