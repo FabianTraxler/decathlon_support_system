@@ -275,6 +275,12 @@ function StartingOrderSummary({ starting_order, saveStartingOrder, finishDiscipl
                 setSubmitted("wrong")
                 alert("Maximal 6 Athlet:innen pro Lauf erlaubt")
             } else if (run.athletes.length > 0) {
+                run.athletes = run.athletes.map(athlete => {
+                    if (athlete != null && athlete.starting_number == undefined) {
+                        athlete = null;
+                    }
+                    return athlete;
+                })
                 used_runs.push(run)
             }
         })
