@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { IAthleteID } from "@/app/lib/interfaces";
 import { AchievementValue } from "@/app/lib/athlete_fetching";
-import EditPopup from "@/app/lib/achievement_edit/popup";
+import EditPopup, { convert_achievement_to_string } from "@/app/lib/achievement_edit/popup";
 
 interface AchievementDisplayProps {
     athlete_name: string, type: string, achievement: AchievementValue, 
@@ -86,16 +86,10 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit,
                     <tbody>
                         {athletesState.map((athlete, idx) => {
                             var result = "";
+                            [result, unit] = convert_achievement_to_string(athlete.achievement, type);
 
-                            var final_result = athlete.achievement.Time?.final_result || athlete.achievement.Distance?.final_result || athlete.achievement.Height?.final_result;
-                            if(final_result){
-                                if (typeof final_result === "number") {
-                                    result = final_result.toString();
-                                }else{
-                                    result = final_result.integral + "," + (final_result.fractional.toString().padStart(2, "0")  || "00");
-                                }
-                            }
-                            if(result == "-1.0" || result == "-1,00" || result == "" || result == "0,00" ||result == "0.0" || result == "-1"){
+
+                            if(result == "/" || result == "-1.0" || result == "-1,00" || result == "" || result == "0,00" ||result == "0.0" || result == "-1"){
                                 result = "X";
                                 unit = "";
                             }

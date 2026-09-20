@@ -163,7 +163,7 @@ export function DisciplineEditButton(
       {(state.showResultsPopup) &&
         <AthleteResultsPopUp 
           athletes={state.athleteResults} 
-          type="Time" 
+          type={state.discipline.discipline_type == "Track" ? "Time" : state.discipline.discipline_type}
           setShowResultsPopUp={(setShow: boolean) => setState({ ...state, showResultsPopup: setShow })} 
           unit={state.achievementUnit}
           sort_ascending={state.discipline.discipline_type == "Time" ? true : false}
