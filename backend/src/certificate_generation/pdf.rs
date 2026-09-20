@@ -30,8 +30,8 @@ use crate::time_planner::Discipline;
 
 //const FONT_DIR: &'static str = "assets/fonts";
 //const DEFAULT_FONT: &'static str = "times_new_roman";
-const COMPETITION_NUMBER: &'static str = "30";
-const DATE: &'static str = "27. / 28. September 2025";
+const COMPETITION_NUMBER: &'static str = "31";
+const DATE: &'static str = "26. / 27. September 2026";
 
 pub struct PDFMessage {
     body: Vec<u8>,
