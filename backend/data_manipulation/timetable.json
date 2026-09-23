@@ -351,8 +351,7 @@
       },
       "Vortex": {
         "location": "Speer / Vortex",
-        "time": "13:45, Sonntag",
-        "try_order_type": "Once"
+        "time": "13:45, Sonntag"
       },
       "1200 Meter Cross Lauf": {
         "location": "Start 1200 / 1000",
@@ -366,8 +365,7 @@
       },
       "Schlagball": {
         "location": "Schlagball",
-        "time": "14:00, Samstag",
-        "try_order_type": "Once"
+        "time": "14:00, Samstag"
       },
       "Weitsprung": {
         "location": "Weit 1",
