@@ -116,14 +116,14 @@ data "cloudinit_config" "init_backup_ec2" {
   part {
     content_type = "text/x-shellscript"
     filename     = "init_ec2.sh"
-    content  = file("${path.module}/../init_ec2.sh")
+    content  = file("${path.module}/../init_ec2_v1.1.sh")
   }
 }
 # --------------------------
 # IAM Role for EC2 instance
 # --------------------------
-resource "aws_iam_role" "test_role" {
-  name = "test_role"
+resource "aws_iam_role" "backup_role" {
+  name = "backup_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -139,14 +139,14 @@ resource "aws_iam_role" "test_role" {
 
 # Attach DynamoDB full access policy
 resource "aws_iam_role_policy_attachment" "ec2_dynamodb_attach" {
-  role       = aws_iam_role.test_role.name
+  role       = aws_iam_role.backup_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
 
 # Instance profile (bridge between EC2 and IAM Role)
 resource "aws_iam_instance_profile" "backup_profile" {
   name = "tf-ec2-backup-instance-profile"
-  role = aws_iam_role.test_role.name
+  role = aws_iam_role.backup_role.name
 }
 
 

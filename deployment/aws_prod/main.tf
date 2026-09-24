@@ -116,7 +116,7 @@ data "cloudinit_config" "init_prod_ec2" {
   part {
     content_type = "text/x-shellscript"
     filename     = "init_ec2.sh"
-    content  = file("${path.module}/../init_ec2.sh")
+    content  = file("${path.module}/../init_ec2_v1.2.sh")
   }
 }
 # --------------------------
