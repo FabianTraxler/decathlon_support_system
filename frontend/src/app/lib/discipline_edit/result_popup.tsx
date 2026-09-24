@@ -15,8 +15,8 @@ export function AthleteResultsPopUp({ athletes, type, setShowResultsPopUp, unit,
     const [athletesState, setAthletesState] = useState<IAthleteID[]>(sorted_athletes);
 
     useEffect(() => {
-        setAthletesState(sort_athletes(athletesState, sorted.sort_by, sorted.sort_ascending));
-    }, [athletesState, sorted.sort_by, sorted.sort_ascending]);
+        setAthletesState(sort_athletes(athletes, sorted.sort_by, sorted.sort_ascending));
+    }, [athletes, sorted.sort_by, sorted.sort_ascending]);
 
     const handleSort = (sort_by: string) => {
         if (sorted.sort_by === sort_by) {
